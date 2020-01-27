@@ -23,33 +23,33 @@ extern Vector2 Vector2Up; //! (1, 0)
 extern Vector2 Vector2Right; //! (0, 1)
 
 //! Adds two vectors (x + x, y + y)
-inline Vector2 Vector2Add(Vector2 v1, Vector2 v2) { return (Vector2) { v1.X + v2.X, v1.Y + v2.Y }; }
+static inline Vector2 Vector2Add(Vector2 v1, Vector2 v2) { return (Vector2) { v1.X + v2.X, v1.Y + v2.Y }; }
 //! Subtracts two vectors (x - x, y - y)
-inline Vector2 Vector2Subtract(Vector2 v1, Vector2 v2) { return (Vector2) { v1.X - v2.X, v1.Y - v2.Y }; }
+static inline Vector2 Vector2Subtract(Vector2 v1, Vector2 v2) { return (Vector2) { v1.X - v2.X, v1.Y - v2.Y }; }
 //! Multiplies two vectors (x * x, y * y)
-inline Vector2 Vector2Multiply(Vector2 v1, Vector2 v2) { return (Vector2) { v1.X* v2.X, v1.Y* v2.Y }; }
+static inline Vector2 Vector2Multiply(Vector2 v1, Vector2 v2) { return (Vector2) { v1.X* v2.X, v1.Y* v2.Y }; }
 //! Divides two vectors (x / x, y / y)
-inline Vector2 Vector2Divide(Vector2 v1, Vector2 v2) { return (Vector2) { v1.X / v2.X, v1.Y / v2.Y }; }
+static inline Vector2 Vector2Divide(Vector2 v1, Vector2 v2) { return (Vector2) { v1.X / v2.X, v1.Y / v2.Y }; }
 //! Adds a scalar to a vector (x + s, y + s)
-inline Vector2 Vector2AddScalar(Vector2 v, Scalar s) { return (Vector2) { v.X + s, v.Y + s }; }
+static inline Vector2 Vector2AddScalar(Vector2 v, Scalar s) { return (Vector2) { v.X + s, v.Y + s }; }
 //! Subtracts a scalar from a vector (x - s, y - s)
-inline Vector2 Vector2SubtractScalar(Vector2 v, Scalar s) { return (Vector2) { v.X - s, v.Y - s }; }
+static inline Vector2 Vector2SubtractScalar(Vector2 v, Scalar s) { return (Vector2) { v.X - s, v.Y - s }; }
 //! Multiplies a vector by a scalar (x * s, y * s)
-inline Vector2 Vector2MultiplyScalar(Vector2 v, Scalar s) { return (Vector2) { v.X* s, v.Y* s }; }
+static inline Vector2 Vector2MultiplyScalar(Vector2 v, Scalar s) { return (Vector2) { v.X* s, v.Y* s }; }
 //! Divides a vector by a scalar (x / s, y / s)
-inline Vector2 Vector2DivideScalar(Vector2 v, Scalar s) { return (Vector2) { v.X / s, v.Y / s }; }
+static inline Vector2 Vector2DivideScalar(Vector2 v, Scalar s) { return (Vector2) { v.X / s, v.Y / s }; }
 //! Negates a vector (-x, -y)
-inline Vector2 Vector2Negate(Vector2 v) { return (Vector2) { -v.X, -v.Y }; }
+static inline Vector2 Vector2Negate(Vector2 v) { return (Vector2) { -v.X, -v.Y }; }
 //! Dot product of two vectors
-inline Scalar Vector2Dot(Vector2 v1, Vector2 v2) { return v1.X * v2.X + v1.Y * v2.Y; }
+static inline Scalar Vector2Dot(Vector2 v1, Vector2 v2) { return v1.X * v2.X + v1.Y * v2.Y; }
 //! Length of a vector (distance to zero)
-inline Scalar Vector2Length(Vector2 v) { return (Scalar)sqrt(v.X * v.X + v.Y * v.Y); }
+static inline Scalar Vector2Length(Vector2 v) { return (Scalar)sqrt(v.X * v.X + v.Y * v.Y); }
 //! Angle between two vectors
-inline Scalar Vector2Angle(Vector2 v1, Vector2 v2) { return (Scalar)acos(Vector2Dot(v1, v2) / (Vector2Length(v1) * Vector2Length(v2))); }
+static inline Scalar Vector2Angle(Vector2 v1, Vector2 v2) { return (Scalar)acos(Vector2Dot(v1, v2) / (Vector2Length(v1) * Vector2Length(v2))); }
 //! Distance between two vectors
-inline Scalar Vector2Distance(Vector2 v1, Vector2 v2) { return Vector2Length(Vector2Subtract(v2, v1)); }
+static inline Scalar Vector2Distance(Vector2 v1, Vector2 v2) { return Vector2Length(Vector2Subtract(v2, v1)); }
 //! Normalizes a vector
-inline Vector2 Vector2Normalize(Vector2 v) { return Vector2DivideScalar(v, Vector2Length(v)); }
+static inline Vector2 Vector2Normalize(Vector2 v) { return Vector2DivideScalar(v, Vector2Length(v)); }
 
 extern Vector3 Vector3Zero; //! (0, 0, 0)
 extern Vector3 Vector3One; //! (1, 1, 1)
@@ -58,36 +58,36 @@ extern Vector3 Vector3Right; //! (1, 0, 0)
 extern Vector3 Vector3Forward; //! (0, 0, 1)
 
 //! Adds two vectors (x + x, y + y, z + z)
-inline Vector3 Vector3Add(Vector3 v1, Vector3 v2) { return (Vector3) { v1.X + v2.X, v1.Y + v2.Y, v1.Z + v2.Z }; }
+static inline Vector3 Vector3Add(Vector3 v1, Vector3 v2) { return (Vector3) { v1.X + v2.X, v1.Y + v2.Y, v1.Z + v2.Z }; }
 //! Subtracts two vectors (x - x, y - y, z - z)
-inline Vector3 Vector3Subtract(Vector3 v1, Vector3 v2) { return (Vector3) { v1.X - v2.X, v1.Y - v2.Y, v1.Z - v2.Z }; }
+static inline Vector3 Vector3Subtract(Vector3 v1, Vector3 v2) { return (Vector3) { v1.X - v2.X, v1.Y - v2.Y, v1.Z - v2.Z }; }
 //! Multiplies two vectors (x * x, y * y, z * z)
-inline Vector3 Vector3Multiply(Vector3 v1, Vector3 v2) { return (Vector3) { v1.X * v2.X, v1.Y * v2.Y, v1.Z * v2.Z }; }
+static inline Vector3 Vector3Multiply(Vector3 v1, Vector3 v2) { return (Vector3) { v1.X * v2.X, v1.Y * v2.Y, v1.Z * v2.Z }; }
 //! Divides two vectors (x / x, y / y, z / z)
-inline Vector3 Vector3Divide(Vector3 v1, Vector3 v2) { return (Vector3) { v1.X / v2.X, v1.Y / v2.Y, v1.Z / v2.Z }; }
+static inline Vector3 Vector3Divide(Vector3 v1, Vector3 v2) { return (Vector3) { v1.X / v2.X, v1.Y / v2.Y, v1.Z / v2.Z }; }
 //! Adds a scalar to a vector (x + s, y + s, z + s)
-inline Vector3 Vector3AddScalar(Vector3 v, Scalar s) { return (Vector3) { v.X + s, v.Y + s, v.Z + s }; }
+static inline Vector3 Vector3AddScalar(Vector3 v, Scalar s) { return (Vector3) { v.X + s, v.Y + s, v.Z + s }; }
 //! Subtracts a scalar from a vector (x - s, y - s, z - s)
-inline Vector3 Vector3SubtractScalar(Vector3 v, Scalar s) { return (Vector3) { v.X - s, v.Y - s, v.Z - s }; }
+static inline Vector3 Vector3SubtractScalar(Vector3 v, Scalar s) { return (Vector3) { v.X - s, v.Y - s, v.Z - s }; }
 //! Multiplies a vector by a scalar (x * s, y * s, z * s)
-inline Vector3 Vector3MultiplyScalar(Vector3 v, Scalar s) { return (Vector3) { v.X * s, v.Y * s, v.Z * s }; }
+static inline Vector3 Vector3MultiplyScalar(Vector3 v, Scalar s) { return (Vector3) { v.X * s, v.Y * s, v.Z * s }; }
 //! Divides a vector by a scalar (x / s, y / s, z / s)
-inline Vector3 Vector3DivideScalar(Vector3 v, Scalar s) { return (Vector3) { v.X / s, v.Y / s, v.Z / s }; }
+static inline Vector3 Vector3DivideScalar(Vector3 v, Scalar s) { return (Vector3) { v.X / s, v.Y / s, v.Z / s }; }
 //! Cross product between two vectors
-inline Vector3 Vector3Cross(Vector3 v1, Vector3 v2) { return (Vector3) { v1.Y * v2.Z - v1.Z * v2.Y, v1.Z * v2.X - v1.X * v2.Z, v1.X * v2.Y - v1.Y * v2.X }; }
+static inline Vector3 Vector3Cross(Vector3 v1, Vector3 v2) { return (Vector3) { v1.Y * v2.Z - v1.Z * v2.Y, v1.Z * v2.X - v1.X * v2.Z, v1.X * v2.Y - v1.Y * v2.X }; }
 //! Negates a vector (-x, -y, -z)
-inline Vector3 Vector3Negate(Vector3 v) { return (Vector3) { -v.X, -v.Y, -v.Z }; }
+static inline Vector3 Vector3Negate(Vector3 v) { return (Vector3) { -v.X, -v.Y, -v.Z }; }
 //! Dot product between two vectors
-inline Scalar Vector3Dot(Vector3 v1, Vector3 v2) { return v1.X * v2.X + v1.Y * v2.Y + v1.Z * v2.Z; }
+static inline Scalar Vector3Dot(Vector3 v1, Vector3 v2) { return v1.X * v2.X + v1.Y * v2.Y + v1.Z * v2.Z; }
 //! Length of a vector (distance to zero)
-inline Scalar Vector3Length(Vector3 v) { return (Scalar)sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z); }
+static inline Scalar Vector3Length(Vector3 v) { return (Scalar)sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z); }
 //! Angle between two vectors
-inline Scalar Vector3Angle(Vector3 v1, Vector3 v2) { return (Scalar)acos(Vector3Dot(v1, v2) / (Vector3Length(v1) * Vector3Length(v2))); }
+static inline Scalar Vector3Angle(Vector3 v1, Vector3 v2) { return (Scalar)acos(Vector3Dot(v1, v2) / (Vector3Length(v1) * Vector3Length(v2))); }
 //! Distance between two vectors
-inline Scalar Vector3Distance(Vector3 v1, Vector3 v2) { return Vector3Length(Vector3Subtract(v2, v1)); }
+static inline Scalar Vector3Distance(Vector3 v1, Vector3 v2) { return Vector3Length(Vector3Subtract(v2, v1)); }
 //! Normalizes a vector
-inline Vector3 Vector3Normalize(Vector3 v) { return Vector3DivideScalar(v, Vector3Length(v)); }
-inline Vector3 Vector3Lerp(Vector3 v1, Vector3 v2, Scalar t) { return Vector3Add(Vector3MultiplyScalar(v1, t), Vector3MultiplyScalar(v2, 1.0 - t)); }
+static inline Vector3 Vector3Normalize(Vector3 v) { return Vector3DivideScalar(v, Vector3Length(v)); }
+static inline Vector3 Vector3Lerp(Vector3 v1, Vector3 v2, Scalar t) { return Vector3Add(Vector3MultiplyScalar(v1, t), Vector3MultiplyScalar(v2, 1.0 - t)); }
 
 //! Linear interpolate between two vectors: v1 * t + v2 * (1.0 - t)
 Vector3 Vector3Lerp(Vector3 v1, Vector3 v2, Scalar t);
@@ -106,26 +106,26 @@ extern Matrix4x4 Matrix4x4Identity; //! Identitiy matrix
  @param l The left operand
  @param r The right operand
  */
-inline Matrix4x4 Matrix4x4Multiply(Matrix4x4 l, Matrix4x4 r)
+static inline Matrix4x4 Matrix4x4Multiply(Matrix4x4 l, Matrix4x4 r)
 {
 	return (Matrix4x4)
 	{
-		r.M00* l.M00 + r.M10 * l.M01 + r.M20 * l.M02 + r.M30 * l.M03,
-			r.M00* l.M10 + r.M10 * l.M11 + r.M20 * l.M12 + r.M30 * l.M13,
-			r.M00* l.M20 + r.M10 * l.M21 + r.M20 * l.M22 + r.M30 * l.M23,
-			r.M00* l.M30 + r.M10 * l.M31 + r.M20 * l.M32 + r.M30 * l.M33,
-			r.M01* l.M00 + r.M11 * l.M01 + r.M21 * l.M02 + r.M31 * l.M03,
-			r.M01* l.M10 + r.M11 * l.M11 + r.M21 * l.M12 + r.M31 * l.M13,
-			r.M01* l.M20 + r.M11 * l.M21 + r.M21 * l.M22 + r.M31 * l.M23,
-			r.M01* l.M30 + r.M11 * l.M31 + r.M21 * l.M32 + r.M31 * l.M33,
-			r.M02* l.M00 + r.M12 * l.M01 + r.M22 * l.M02 + r.M32 * l.M03,
-			r.M02* l.M10 + r.M12 * l.M11 + r.M22 * l.M12 + r.M32 * l.M13,
-			r.M02* l.M20 + r.M12 * l.M21 + r.M22 * l.M22 + r.M32 * l.M23,
-			r.M02* l.M30 + r.M12 * l.M31 + r.M22 * l.M32 + r.M32 * l.M33,
-			r.M03* l.M00 + r.M13 * l.M01 + r.M23 * l.M02 + r.M33 * l.M03,
-			r.M03* l.M10 + r.M13 * l.M11 + r.M23 * l.M12 + r.M33 * l.M13,
-			r.M03* l.M20 + r.M13 * l.M21 + r.M23 * l.M22 + r.M33 * l.M23,
-			r.M03* l.M30 + r.M13 * l.M31 + r.M23 * l.M32 + r.M33 * l.M33,
+		r.M00 * l.M00 + r.M10 * l.M01 + r.M20 * l.M02 + r.M30 * l.M03,
+		r.M00 * l.M10 + r.M10 * l.M11 + r.M20 * l.M12 + r.M30 * l.M13,
+		r.M00 * l.M20 + r.M10 * l.M21 + r.M20 * l.M22 + r.M30 * l.M23,
+		r.M00 * l.M30 + r.M10 * l.M31 + r.M20 * l.M32 + r.M30 * l.M33,
+		r.M01 * l.M00 + r.M11 * l.M01 + r.M21 * l.M02 + r.M31 * l.M03,
+		r.M01 * l.M10 + r.M11 * l.M11 + r.M21 * l.M12 + r.M31 * l.M13,
+		r.M01 * l.M20 + r.M11 * l.M21 + r.M21 * l.M22 + r.M31 * l.M23,
+		r.M01 * l.M30 + r.M11 * l.M31 + r.M21 * l.M32 + r.M31 * l.M33,
+		r.M02 * l.M00 + r.M12 * l.M01 + r.M22 * l.M02 + r.M32 * l.M03,
+		r.M02 * l.M10 + r.M12 * l.M11 + r.M22 * l.M12 + r.M32 * l.M13,
+		r.M02 * l.M20 + r.M12 * l.M21 + r.M22 * l.M22 + r.M32 * l.M23,
+		r.M02 * l.M30 + r.M12 * l.M31 + r.M22 * l.M32 + r.M32 * l.M33,
+		r.M03 * l.M00 + r.M13 * l.M01 + r.M23 * l.M02 + r.M33 * l.M03,
+		r.M03 * l.M10 + r.M13 * l.M11 + r.M23 * l.M12 + r.M33 * l.M13,
+		r.M03 * l.M20 + r.M13 * l.M21 + r.M23 * l.M22 + r.M33 * l.M23,
+		r.M03 * l.M30 + r.M13 * l.M31 + r.M23 * l.M32 + r.M33 * l.M33,
 	};
 }
 /*!
@@ -133,14 +133,14 @@ inline Matrix4x4 Matrix4x4Multiply(Matrix4x4 l, Matrix4x4 r)
  @param l The left operand
  @param r The right operand
 */
-inline Vector4 Matrix4x4MultiplyVector4(Matrix4x4 l, Vector4 r)
+static inline Vector4 Matrix4x4MultiplyVector4(Matrix4x4 l, Vector4 r)
 {
 	return (Vector4)
 	{
-		r.X* l.M00 + r.Y * l.M01 + r.Z * l.M02 + r.W * l.M03,
-			r.X* l.M10 + r.Y * l.M11 + r.Z * l.M12 + r.W * l.M13,
-			r.X* l.M20 + r.Y * l.M21 + r.Z * l.M22 + r.W * l.M23,
-			r.X* l.M30 + r.Y * l.M31 + r.Z * l.M32 + r.W * l.M33,
+		r.X * l.M00 + r.Y * l.M01 + r.Z * l.M02 + r.W * l.M03,
+		r.X * l.M10 + r.Y * l.M11 + r.Z * l.M12 + r.W * l.M13,
+		r.X * l.M20 + r.Y * l.M21 + r.Z * l.M22 + r.W * l.M23,
+		r.X * l.M30 + r.Y * l.M31 + r.Z * l.M32 + r.W * l.M33,
 	};
 }
 /*!
@@ -148,17 +148,17 @@ inline Vector4 Matrix4x4MultiplyVector4(Matrix4x4 l, Vector4 r)
  @param l The transforming matrix
  @param r The vector to transform
  */
-inline Vector3 Matrix4x4MultiplyVector3(Matrix4x4 l, Vector3 r)
+static inline Vector3 Matrix4x4MultiplyVector3(Matrix4x4 l, Vector3 r)
 {
 	return (Vector3)
 	{
-		r.X* l.M00 + r.Y * l.M01 + r.Z * l.M02 + l.M03,
-			r.X* l.M10 + r.Y * l.M11 + r.Z * l.M12 + l.M13,
-			r.X* l.M20 + r.Y * l.M21 + r.Z * l.M22 + l.M23,
+		r.X * l.M00 + r.Y * l.M01 + r.Z * l.M02 + l.M03,
+		r.X * l.M10 + r.Y * l.M11 + r.Z * l.M12 + l.M13,
+		r.X * l.M20 + r.Y * l.M21 + r.Z * l.M22 + l.M23,
 	};
 }
 //! Creates a matrix that translates a point
-inline Matrix4x4 Matrix4x4FromTranslate(Vector3 v)
+static inline Matrix4x4 Matrix4x4FromTranslate(Vector3 v)
 {
 	return (Matrix4x4)
 	{
@@ -169,7 +169,7 @@ inline Matrix4x4 Matrix4x4FromTranslate(Vector3 v)
 	};
 }
 //! Creates a matrix that scales a point
-inline Matrix4x4 Matrix4x4FromScale(Vector3 v)
+static inline Matrix4x4 Matrix4x4FromScale(Vector3 v)
 {
 	return (Matrix4x4)
 	{
@@ -182,9 +182,9 @@ inline Matrix4x4 Matrix4x4FromScale(Vector3 v)
 /*!
  Creates a matrix that rotates a point around an axis
  @param v The axis to rotate around
- @param s The angle to rotate
+ @param a The angle to rotate
  */
-inline Matrix4x4 Matrix4x4FromAxisAngle(Vector3 v, Scalar a)
+static inline Matrix4x4 Matrix4x4FromAxisAngle(Vector3 v, Scalar a)
 {
 	Scalar c, c2, s, xx, xy, xz, yy, yz, zz;
 	c = cos(a);
@@ -214,7 +214,7 @@ inline Matrix4x4 Matrix4x4FromAxisAngle(Vector3 v, Scalar a)
 	};
 }
 //! Creates a rotation matrix from euler angles in the order z, y, x
-inline Matrix4x4 Matrix4x4FromEuler(Vector3 v)
+static inline Matrix4x4 Matrix4x4FromEuler(Vector3 v)
 {
 	Matrix4x4 matrix = Matrix4x4Identity;
 	matrix = Matrix4x4Multiply(Matrix4x4FromAxisAngle((Vector3) { 0.0, 0.0, 1.0 }, v.Z), matrix);
@@ -227,10 +227,10 @@ inline Matrix4x4 Matrix4x4FromEuler(Vector3 v)
  @param fov The field of view
  @param w Width of the camera
  @param h Height of the camera
- @param n Near clipping plane distance
- @param f Far clipping plane distance
+ @param near Near clipping plane distance
+ @param far Far clipping plane distance
  */
-inline Matrix4x4 Matrix4x4FromPerspective(Scalar fov, Scalar w, Scalar h, Scalar near, Scalar far)
+static inline Matrix4x4 Matrix4x4FromPerspective(Scalar fov, Scalar w, Scalar h, Scalar near, Scalar far)
 {
 	Scalar f = 1.0f / tan(0.5f * fov);
 	return (Matrix4x4)
@@ -247,7 +247,7 @@ inline Matrix4x4 Matrix4x4FromPerspective(Scalar fov, Scalar w, Scalar h, Scalar
  @param target The position the camera is looking at
  @param up The up vector
  */
-inline Matrix4x4 Matrix4x4FromLookAt(Vector3 position, Vector3 target, Vector3 up)
+static inline Matrix4x4 Matrix4x4FromLookAt(Vector3 position, Vector3 target, Vector3 up)
 {
 	Vector3 f = Vector3Normalize(Vector3Subtract(target, position));
 	Vector3 r = Vector3Normalize(Vector3Cross(up, f));
@@ -268,7 +268,7 @@ inline Matrix4x4 Matrix4x4FromLookAt(Vector3 position, Vector3 target, Vector3 u
  @param direction The direction vector
  @param up The up vector
  */
-inline Matrix4x4 Matrix4x4FromDirection(Vector3 direction, Vector3 up)
+static inline Matrix4x4 Matrix4x4FromDirection(Vector3 direction, Vector3 up)
 {
 	Vector3 f = Vector3Normalize(direction);
 	Vector3 r = Vector3Normalize(Vector3Cross(up, f));
@@ -287,7 +287,7 @@ typedef struct Color { unsigned char R, G, B, A; } Color; //! RGBA color using 1
  Convert a 32-bit hexadecimal number into a color
  @param hex A hexadecimal number e.g. 0xff4800ff --> (255, 72, 0, 255)
  */
-inline Color ColorFromHex(unsigned int hex)
+static inline Color ColorFromHex(unsigned int hex)
 {
 	return (Color)
 	{
@@ -298,7 +298,7 @@ inline Color ColorFromHex(unsigned int hex)
 	};
 }
 //! Converts from a vector4 floating point color
-inline Color ColorFromVector4(Vector4 rgba)
+static inline Color ColorFromVector4(Vector4 rgba)
 {
 	return (Color)
 	{
@@ -309,7 +309,7 @@ inline Color ColorFromVector4(Vector4 rgba)
 	};
 }
 //! Converts to a vector4 floating point color
-inline Vector4 ColorToVector4(Color color)
+static inline Vector4 ColorToVector4(Color color)
 {
 	return (Vector4)
 	{
