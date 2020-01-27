@@ -245,8 +245,8 @@ void SwapchainAquireNextImage()
 	vkResetFences(Graphics.Device, 1, &Graphics.FrameResources[i].FrameReady);
 	for (int j = 0; j < Graphics.FrameResources[i].DestroyVertexBufferQueue->Count; j++)
 	{
-		VertexBuffer_T vertexBuffer = ListIndex(Graphics.FrameResources[i].DestroyVertexBufferQueue, j);
-		VertexBuffer.Destroy(vertexBuffer);
+		VertexBuffer vertexBuffer = ListIndex(Graphics.FrameResources[i].DestroyVertexBufferQueue, j);
+		VertexBufferDestroy(vertexBuffer);
 	}
 	ListClear(Graphics.FrameResources[i].DestroyVertexBufferQueue);
 	

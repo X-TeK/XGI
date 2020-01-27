@@ -424,53 +424,6 @@ static void CreateFrameResources()
 	Graphics.PreRenderSemaphores = ListCreate();
 }
 
-static void CreateVertexDescriptions()
-{
-	Graphics.VertexBindingDescription = (VkVertexInputBindingDescription)
-	{
-		.binding = 0,
-		.stride = sizeof(Vertex),
-		.inputRate = VK_VERTEX_INPUT_RATE_VERTEX,
-	};
-	
-	Graphics.VertexPositionDescription = (VkVertexInputAttributeDescription)
-	{
-		.binding = 0,
-		.location = 0,
-		.format = VK_FORMAT_R32G32B32_SFLOAT,
-		.offset = 0,
-	};
-	Graphics.VertexColorDescription = (VkVertexInputAttributeDescription)
-	{
-		.binding = 0,
-		.location = 1,
-		.format = VK_FORMAT_R8G8B8A8_UNORM,
-		.offset = 12,
-	};
-	Graphics.VertexNormalDescription = (VkVertexInputAttributeDescription)
-	{
-		.binding = 0,
-		.location = 2,
-		.format = VK_FORMAT_R32G32B32_SFLOAT,
-		.offset = 16,
-	};
-}
-
-static void CreateQuad()
-{
-	Graphics.Quad = VertexBuffer.Create(6);
-	Vertex * vertices = VertexBuffer.MapVertices(Graphics.Quad);
-	vertices[0] = (Vertex){ .Position = { -1.0f, -1.0f, 0.0f } };
-	vertices[1] = (Vertex){ .Position = {  1.0f, -1.0f, 0.0f } };
-	vertices[2] = (Vertex){ .Position = { -1.0f,  1.0f, 0.0f } };
-	vertices[3] = (Vertex){ .Position = {  1.0f, -1.0f, 0.0f } };
-	vertices[4] = (Vertex){ .Position = {  1.0f,  1.0f, 0.0f } };
-	vertices[5] = (Vertex){ .Position = { -1.0f,  1.0f, 0.0f } };
-	VertexBuffer.UnmapVertices(Graphics.Quad);
-	VertexBuffer.UploadStagingBuffer(Graphics.Quad);
-	Graphics.QuadUniform = UniformBuffer.Create((uniform_t){ .Transform = Matrix4x4Identity, .Camera = Matrix4x4Identity, .Dimensions = (Vector4){ Window.Width, Window.Height, 0.0, 0.0 } });
-}
-
 void GraphicsInitialize(GraphicsConfig config)
 {
 	printf("\n[Log] Initializing Graphics...\n");
@@ -485,8 +438,6 @@ void GraphicsInitialize(GraphicsConfig config)
 	CreateDescriptorLayouts();
 	CreateDescriptorPool();
 	CreateFrameResources();
-	CreateVertexDescriptions();
-	CreateQuad();
 	printf("\n[Log] Successfully initialized vulkan\n");
 }
 
@@ -589,7 +540,7 @@ void GraphicsBindPipeline(Pipeline pipeline)
 	}
 }
 
-void GraphicsRenderVertexBuffer(VertexBuffer_T vertexBuffer, UniformBuffer_T uniformBuffer, FrameBuffer sampler)
+void GraphicsRenderVertexBuffer(VertexBuffer vertexBuffer, UniformBuffer_T uniformBuffer, FrameBuffer sampler)
 {
 	if (uniformBuffer != NULL && sampler == NULL)
 	{
@@ -680,14 +631,12 @@ void GraphicsDeinitialize()
 {
 	vkDeviceWaitIdle(Graphics.Device);
 	ListDestroy(Graphics.PreRenderSemaphores);
-	VertexBuffer.Destroy(Graphics.Quad);
-	UniformBuffer.Destroy(Graphics.QuadUniform);
 	for (int i = 0; i < Graphics.FrameResourceCount; i++)
 	{
 		for (int j = 0; j < Graphics.FrameResources[i].DestroyVertexBufferQueue->Count; j++)
 		{
-			VertexBuffer_T _VertexBuffer = ListIndex(Graphics.FrameResources[i].DestroyVertexBufferQueue, j);
-			VertexBuffer.Destroy(_VertexBuffer);
+			VertexBuffer vertexBuffer = ListIndex(Graphics.FrameResources[i].DestroyVertexBufferQueue, j);
+			VertexBufferDestroy(vertexBuffer);
 		}
 		ListDestroy(Graphics.FrameResources[i].DestroyVertexBufferQueue);
 		vkDestroyFence(Graphics.Device, Graphics.FrameResources[i].FrameReady, NULL);

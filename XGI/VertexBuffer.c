@@ -4,12 +4,59 @@
 #include "VertexBuffer.h"
 #include "vk_mem_alloc.h"
 
-static VertexBuffer_T Create(int vertexCount)
+static int VertexLayoutCount = 0;
+
+VertexLayout VertexLayoutCreate(int attributeCount, VertexAttribute * attributes)
 {
-	VertexBuffer_T vertexBuffer = malloc(sizeof(struct VertexBuffer));
-	*vertexBuffer = (struct VertexBuffer){ .VertexCount = vertexCount };
+	VertexLayout layout = malloc(sizeof(struct VertexLayout));
+	*layout = (struct VertexLayout)
+	{
+		.BindingIndex = VertexLayoutCount,
+		.AttributeCount = attributeCount,
+		.Attributes = malloc(attributeCount * sizeof(VkVertexInputAttributeDescription)),
+	};
+	int size = 0;
+	for (int i = 0; i < attributeCount; i++)
+	{
+		layout->Attributes[i] = (VkVertexInputAttributeDescription)
+		{
+			.binding = layout->BindingIndex,
+			.format = (VkFormat)attributes[i],
+			.location = i,
+			.offset = size,
+		};
+		switch (attributes[i])
+		{
+			case VertexAttributeVector4: size += 16; break;
+			case VertexAttributeVector3: size += 12; break;
+			case VertexAttributeVector2: size += 8; break;
+			case VertexAttributeFloat: size += 4; break;
+			case VertexAttributeByte4: size += 4; break;
+		}
+	}
+	layout->Binding = (VkVertexInputBindingDescription)
+	{
+		.binding = layout->BindingIndex,
+		.stride = size,
+		.inputRate = VK_VERTEX_INPUT_RATE_VERTEX,
+	};
+	layout->Size = size;
+	VertexLayoutCount++;
+	return layout;
+}
+
+void VertexLayoutDestroy(VertexLayout layout)
+{
+	free(layout->Attributes);
+	free(layout);
+}
+
+VertexBuffer VertexBufferCreate(int vertexCount, int vertexSize)
+{
+	VertexBuffer vertexBuffer = malloc(sizeof(struct VertexBuffer));
+	*vertexBuffer = (struct VertexBuffer){ .VertexCount = vertexCount, .VertexSize = vertexSize };
 	
-	size_t size = vertexCount * sizeof(Vertex);
+	size_t size = vertexCount * vertexSize;
 	
 	VkBufferCreateInfo stagingInfo =
 	{
@@ -64,19 +111,19 @@ static VertexBuffer_T Create(int vertexCount)
 	return vertexBuffer;
 }
 
-static Vertex * MapVertices(VertexBuffer_T vertexBuffer)
+void * VertexBufferMapVertices(VertexBuffer vertexBuffer)
 {
 	void * data;
 	vmaMapMemory(Graphics.Allocator, vertexBuffer->StagingAllocation, &data);
 	return data;
 }
 
-static void UnmapVertices(VertexBuffer_T vertexBuffer)
+void VertexBufferUnmapVertices(VertexBuffer vertexBuffer)
 {
 	vmaUnmapMemory(Graphics.Allocator, vertexBuffer->StagingAllocation);
 }
 
-static void UploadStagingBuffer(VertexBuffer_T vertexBuffer)
+void VertexBufferUploadStagingBuffer(VertexBuffer vertexBuffer)
 {
 	vkWaitForFences(Graphics.Device, 1, &vertexBuffer->Fence, VK_TRUE, UINT64_MAX);
 	vkResetFences(Graphics.Device, 1, &vertexBuffer->Fence);
@@ -92,7 +139,7 @@ static void UploadStagingBuffer(VertexBuffer_T vertexBuffer)
 	{
 		.srcOffset = 0,
 		.dstOffset = 0,
-		.size = vertexBuffer->VertexCount * sizeof(Vertex),
+		.size = vertexBuffer->VertexCount * vertexBuffer->VertexSize,
 	};
 	vkCmdCopyBuffer(vertexBuffer->CommandBuffer, vertexBuffer->StagingBuffer, vertexBuffer->VertexBuffer, 1, &copyInfo);
 	vkEndCommandBuffer(vertexBuffer->CommandBuffer);
@@ -109,12 +156,12 @@ static void UploadStagingBuffer(VertexBuffer_T vertexBuffer)
 	ListPush(Graphics.PreRenderSemaphores, &vertexBuffer->Semaphore);
 }
 
-static void QueueDestroy(VertexBuffer_T vertexBuffer)
+void VertexBufferQueueDestroy(VertexBuffer vertexBuffer)
 {
 	ListPush(Graphics.FrameResources[Graphics.FrameIndex].DestroyVertexBufferQueue, vertexBuffer);
 }
 
-static void Destroy(VertexBuffer_T vertexBuffer)
+void VertexBufferDestroy(VertexBuffer vertexBuffer)
 {
 	Graphics.VertexBufferCount--;
 	Graphics.VertexCount -= vertexBuffer->VertexCount;
@@ -126,13 +173,3 @@ static void Destroy(VertexBuffer_T vertexBuffer)
 	vmaDestroyBuffer(Graphics.Allocator, vertexBuffer->VertexBuffer, vertexBuffer->VertexAllocation);
 	free(vertexBuffer);
 }
-
-struct VertexBufferInterface VertexBuffer =
-{
-	.Create = Create,
-	.MapVertices = MapVertices,
-	.UnmapVertices = UnmapVertices,
-	.UploadStagingBuffer = UploadStagingBuffer,
-	.QueueDestroy = QueueDestroy,
-	.Destroy = Destroy,
-};

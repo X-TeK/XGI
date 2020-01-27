@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.h>
 #include <stdbool.h>
 #include "spirv/spirv_reflect.h"
+#include "VertexBuffer.h"
 
 typedef struct Shader
 {
@@ -21,6 +22,7 @@ typedef struct Pipeline
 {
 	VkPipeline Instance;
 	VkPipelineLayout Layout;
+	VertexLayout VertexLayout;
 	
 	SpvReflectShaderModule VSModule;
 	SpvReflectShaderModule FSModule;
@@ -36,7 +38,7 @@ typedef struct Pipeline
 	SpvReflectDescriptorSet * FSDescriptorSets;
 } * Pipeline;
 
-Pipeline PipelineCreate(Shader shader);
+Pipeline PipelineCreate(Shader shader, VertexLayout vertexLayout);
 void PipelineSetPushConstant(Pipeline pipeline, const char * variableName, void * value);
 void PipelineDestroy(Pipeline pipeline);
 

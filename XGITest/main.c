@@ -27,6 +27,9 @@ int main(int argc, const char * argv[])
 	
 	FrameBuffer framebuffer = FrameBufferCreate(Window.Width, Window.Height, false);
 	
+	VertexAttribute attributes[] = { VertexAttributeVector4, VertexAttributeByte4 };
+	VertexLayout vertexLayout = VertexLayoutCreate(2, attributes);
+	
 #include "Shaders/Default.vert.c"
 #include "Shaders/Default.frag.c"
 	Shader shader =
@@ -36,7 +39,7 @@ int main(int argc, const char * argv[])
 		.FragmentSPVSize = sizeof(SPV_DefaultFragmentShader),
 		.FragmentSPV = SPV_DefaultFragmentShader,
 	};
-	Pipeline pipeline = PipelineCreate(shader);
+	Pipeline pipeline = PipelineCreate(shader, vertexLayout);
 	float t = 0.0f;
 	PipelineSetPushConstant(pipeline, "Time", &t);
 	while (Window.Running)
@@ -59,6 +62,7 @@ int main(int argc, const char * argv[])
 	
 	PipelineDestroy(pipeline);
 	FrameBufferDestroy(framebuffer);
+	VertexLayoutDestroy(vertexLayout);
 	
 	XGIDeinitialize();
 	return 0;

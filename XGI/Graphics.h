@@ -45,16 +45,8 @@ struct Graphics
 	} * FrameResources;
 	int FrameIndex;
 	
-	VkVertexInputBindingDescription VertexBindingDescription;
-	VkVertexInputAttributeDescription VertexPositionDescription;
-	VkVertexInputAttributeDescription VertexColorDescription;
-	VkVertexInputAttributeDescription VertexNormalDescription;
-	
 	FrameBuffer BoundFrameBuffer;
 	Pipeline BoundPipeline;
-	
-	VertexBuffer_T Quad;
-	UniformBuffer_T QuadUniform;
 	
 	int VertexBufferCount;
 	int VertexCount;
@@ -66,7 +58,7 @@ void GraphicsClearColor(Color clearColor);
 void GraphicsDepthStencil(float depth, int stencil);
 void GraphicsClear(Color clearColor, float depth, int stencil);
 void GraphicsBindPipeline(Pipeline pipeline);
-void GraphicsRenderVertexBuffer(VertexBuffer_T vertexBuffer, UniformBuffer_T uniformBuffer, FrameBuffer sampler);
+void GraphicsRenderVertexBuffer(VertexBuffer vertexBuffer, UniformBuffer_T uniformBuffer, FrameBuffer sampler);
 void GraphicsEnd(void);
 void GraphicsCopyToSwapchain(FrameBuffer frameBuffer);
 void GraphicsStopOperations(void);

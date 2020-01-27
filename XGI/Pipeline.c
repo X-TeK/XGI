@@ -39,6 +39,15 @@ static void CreatePipelineLayout(Pipeline pipeline, struct Shader shader)
 		};
 	}
 	
+	for (int i = 0; i < pipeline->VSDescriptorCount; i++)
+	{
+		SpvReflectDescriptorSet set = pipeline->VSDescriptorSets[i];
+		for (int j = 0; j < set.binding_count; j++)
+		{
+			SpvReflectDescriptorBinding * binding = set.bindings[j];
+			printf("set:%i binding:%i %s\n", binding->set, binding->binding, binding->name);
+		}
+	}
 	for (int i = 0; i < pipeline->FSDescriptorCount; i++)
 	{
 		SpvReflectDescriptorSet set = pipeline->FSDescriptorSets[i];
@@ -67,9 +76,10 @@ static void CreatePipelineLayout(Pipeline pipeline, struct Shader shader)
 	}
 }
 
-Pipeline PipelineCreate(struct Shader shader)
+Pipeline PipelineCreate(struct Shader shader, VertexLayout vertexLayout)
 {
 	Pipeline pipeline = malloc(sizeof(struct Pipeline));
+	*pipeline = (struct Pipeline){ .VertexLayout = vertexLayout };
 	
 	VkShaderModuleCreateInfo moduleInfo =
 	{
@@ -115,19 +125,14 @@ Pipeline PipelineCreate(struct Shader shader)
 	
 	VkPipelineShaderStageCreateInfo shaderStages[2] = { vsInfo, fsInfo };
 	
-	VkVertexInputAttributeDescription attributes[] =
-	{
-		Graphics.VertexPositionDescription,
-		Graphics.VertexColorDescription,
-		Graphics.VertexNormalDescription,
-	};
+	printf("%i\n", vertexLayout->AttributeCount);
 	VkPipelineVertexInputStateCreateInfo vertexInput =
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 		.vertexBindingDescriptionCount = 1,
-		.pVertexBindingDescriptions = &Graphics.VertexBindingDescription,
-		.vertexAttributeDescriptionCount = 3,
-		.pVertexAttributeDescriptions = attributes,
+		.pVertexBindingDescriptions = &vertexLayout->Binding,
+		.vertexAttributeDescriptionCount = vertexLayout->AttributeCount,
+		.pVertexAttributeDescriptions = vertexLayout->Attributes,
 	};
 	
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly =
