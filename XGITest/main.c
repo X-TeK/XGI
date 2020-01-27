@@ -37,7 +37,8 @@ int main(int argc, const char * argv[])
 		.FragmentSPV = SPV_DefaultFragmentShader,
 	};
 	Pipeline pipeline = PipelineCreate(shader);
-	
+	float t = 0.0f;
+	PipelineSetPushConstant(pipeline, "Time", &t);
 	while (Window.Running)
 	{
 		EventHandlerPoll();
@@ -49,6 +50,7 @@ int main(int argc, const char * argv[])
 		SwapchainAquireNextImage();
 		GraphicsBegin(framebuffer);
 		GraphicsClear(ColorFromHex(0x204080ff), 1.0f, 0);
+		GraphicsBindPipeline(pipeline);
 		GraphicsEnd();
 		GraphicsCopyToSwapchain(framebuffer);
 		SwapchainPresent();
