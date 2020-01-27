@@ -10,6 +10,13 @@ layout (push_constant) uniform PushConstant
 	vec4 Color;
 } Input;
 
+layout (binding = 0) uniform sampler2D Texture;
+
+layout (binding = 1) uniform UBO
+{
+	float Time;
+} UBOInput;
+
 layout (location = 0) out vec4 FragColor;
 
 void main()

@@ -11,35 +11,43 @@ static void CreatePipelineLayout(Pipeline pipeline, struct Shader shader)
 {
 	VkPushConstantRange pushConstantRange;
 	
-	SpvReflectShaderModule vsModule;
-	spvReflectCreateShaderModule(shader.VertexSPVSize, shader.VertexSPV, &vsModule);
-	SpvReflectShaderModule fsModule;
-	spvReflectCreateShaderModule(shader.FragmentSPVSize, shader.FragmentSPV, &fsModule);
+	spvReflectCreateShaderModule(shader.VertexSPVSize, shader.VertexSPV, &pipeline->VSModule);
+	spvReflectCreateShaderModule(shader.FragmentSPVSize, shader.FragmentSPV, &pipeline->FSModule);
+	
+	spvReflectEnumerateDescriptorSets(&pipeline->FSModule, &pipeline->FSDescriptorCount, NULL);
+	pipeline->FSDescriptorSets = malloc(pipeline->FSDescriptorCount * sizeof(SpvReflectDescriptorSet));
+	spvReflectEnumerateDescriptorSets(&pipeline->FSModule, &pipeline->FSDescriptorCount, &pipeline->FSDescriptorSets);
+	spvReflectEnumerateDescriptorSets(&pipeline->VSModule, &pipeline->VSDescriptorCount, NULL);
+	pipeline->VSDescriptorSets = malloc(pipeline->VSDescriptorCount * sizeof(SpvReflectDescriptorSet));
+	spvReflectEnumerateDescriptorSets(&pipeline->VSModule, &pipeline->VSDescriptorCount, &pipeline->VSDescriptorSets);
 	
 	unsigned int pushConstantCount;
-	spvReflectEnumeratePushConstantBlocks(&vsModule, &pushConstantCount, NULL);
-	SpvReflectBlockVariable * vsPushConstants = malloc(pushConstantCount * sizeof(SpvReflectBlockVariable));
-	spvReflectEnumeratePushConstantBlocks(&vsModule, &pushConstantCount, &vsPushConstants);
+	spvReflectEnumeratePushConstantBlocks(&pipeline->VSModule, &pushConstantCount, NULL);
+	SpvReflectBlockVariable * pushConstants = malloc(pushConstantCount * sizeof(SpvReflectBlockVariable));
+	spvReflectEnumeratePushConstantBlocks(&pipeline->VSModule, &pushConstantCount, &pushConstants);
 	if (pushConstantCount > 0)
 	{
+		pipeline->UsesPushConstants = true;
+		pipeline->PushConstants = pushConstants[0];
+		pipeline->PushConstantData = malloc(pushConstants[0].size);
+		pipeline->PushConstantSize = pushConstants[0].size;
 		pushConstantRange = (VkPushConstantRange)
 		{
 			.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-			.offset = vsPushConstants[0].offset,
-			.size = vsPushConstants[0].size,
+			.offset = pushConstants[0].offset,
+			.size = pushConstants[0].size,
 		};
 	}
 	
-	unsigned int fsDescriptorSetCount;
-	spvReflectEnumerateDescriptorSets(&fsModule, &fsDescriptorSetCount, NULL);
-	SpvReflectDescriptorSet * fsDescriptorSets = malloc(fsDescriptorSetCount * sizeof(SpvReflectDescriptorSet));
-	spvReflectEnumerateDescriptorSets(&fsModule, &fsDescriptorSetCount, &fsDescriptorSets);
-	if (fsDescriptorSetCount > 0)
+	for (int i = 0; i < pipeline->FSDescriptorCount; i++)
 	{
+		SpvReflectDescriptorSet set = pipeline->FSDescriptorSets[i];
+		for (int j = 0; j < set.binding_count; j++)
+		{
+			SpvReflectDescriptorBinding * binding = set.bindings[j];
+			printf("set:%i binding:%i %s\n", binding->set, binding->binding, binding->name);
+		}
 	}
-
-	spvReflectDestroyShaderModule(&vsModule);
-	spvReflectDestroyShaderModule(&fsModule);
 	
 	VkDescriptorSetLayout layouts[] = { Graphics.DescriptorSetLayout0, Graphics.DescriptorSetLayout1 };
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo =
@@ -233,10 +241,28 @@ Pipeline PipelineCreate(struct Shader shader)
 	return pipeline;
 }
 
+void PipelineSetPushConstant(Pipeline pipeline, const char * variable, void * value)
+{
+	if (pipeline->UsesPushConstants)
+	{
+		for (int i = 0; i < pipeline->PushConstants.member_count; i++)
+		{
+			SpvReflectBlockVariable member = pipeline->PushConstants.members[i];
+			if (strcmp(member.name, variable) == 0)
+			{
+				memcpy(pipeline->PushConstantData + member.offset, value, member.size);
+			}
+		}
+	}
+}
+
 void PipelineDestroy(Pipeline pipeline)
 {
 	vkDeviceWaitIdle(Graphics.Device);
 	vkDestroyPipelineLayout(Graphics.Device, pipeline->Layout, NULL);
 	vkDestroyPipeline(Graphics.Device, pipeline->Instance, NULL);
+	if (pipeline->UsesPushConstants) { free(pipeline->PushConstantData); }
+	spvReflectDestroyShaderModule(&pipeline->VSModule);
+	spvReflectDestroyShaderModule(&pipeline->FSModule);
 	free(pipeline);
 }

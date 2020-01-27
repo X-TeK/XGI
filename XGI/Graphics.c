@@ -579,24 +579,14 @@ void GraphicsClear(Color clearColor, float depth, int stencil)
 	GraphicsClearStencil(stencil);
 }
 
-void GraphicsBindPipeline(Pipeline pipeline, void * pushConstant)
+void GraphicsBindPipeline(Pipeline pipeline)
 {
 	Graphics.BoundPipeline = pipeline;
 	vkCmdBindPipeline(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Instance);
-	/*if (pipeline->PushConstantSize > 0)
+	if (pipeline->UsesPushConstants)
 	{
-		if (pushConstant == NULL)
-		{
-			pushConstant = calloc(pipeline->PushConstantSize, 1);
-			vkCmdPushConstants(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, pipeline->Layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, pipeline->PushConstantSize, pushConstant);
-			free(pushConstant);
-		}
-		else
-		{
-			vkCmdPushConstants(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, pipeline->Layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, pipeline->PushConstantSize, pushConstant);
-		}
-		
-	}*/
+		vkCmdPushConstants(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, pipeline->Layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, pipeline->PushConstantSize, pipeline->PushConstantData);
+	}
 }
 
 void GraphicsRenderVertexBuffer(VertexBuffer_T vertexBuffer, UniformBuffer_T uniformBuffer, FrameBuffer sampler)

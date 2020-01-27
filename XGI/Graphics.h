@@ -65,7 +65,7 @@ void GraphicsBegin(FrameBuffer frameBuffer);
 void GraphicsClearColor(Color clearColor);
 void GraphicsDepthStencil(float depth, int stencil);
 void GraphicsClear(Color clearColor, float depth, int stencil);
-void GraphicsBindPipeline(Pipeline pipeline, void * pushConstant);
+void GraphicsBindPipeline(Pipeline pipeline);
 void GraphicsRenderVertexBuffer(VertexBuffer_T vertexBuffer, UniformBuffer_T uniformBuffer, FrameBuffer sampler);
 void GraphicsEnd(void);
 void GraphicsCopyToSwapchain(FrameBuffer frameBuffer);
