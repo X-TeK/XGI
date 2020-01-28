@@ -4,14 +4,11 @@
 #include "VertexBuffer.h"
 #include "vk_mem_alloc.h"
 
-static int VertexLayoutCount = 0;
-
 VertexLayout VertexLayoutCreate(int attributeCount, VertexAttribute * attributes)
 {
 	VertexLayout layout = malloc(sizeof(struct VertexLayout));
 	*layout = (struct VertexLayout)
 	{
-		.BindingIndex = VertexLayoutCount,
 		.AttributeCount = attributeCount,
 		.Attributes = malloc(attributeCount * sizeof(VkVertexInputAttributeDescription)),
 	};
@@ -20,7 +17,7 @@ VertexLayout VertexLayoutCreate(int attributeCount, VertexAttribute * attributes
 	{
 		layout->Attributes[i] = (VkVertexInputAttributeDescription)
 		{
-			.binding = layout->BindingIndex,
+			.binding = 0,
 			.format = (VkFormat)attributes[i],
 			.location = i,
 			.offset = size,
@@ -36,12 +33,11 @@ VertexLayout VertexLayoutCreate(int attributeCount, VertexAttribute * attributes
 	}
 	layout->Binding = (VkVertexInputBindingDescription)
 	{
-		.binding = layout->BindingIndex,
+		.binding = 0,
 		.stride = size,
 		.inputRate = VK_VERTEX_INPUT_RATE_VERTEX,
 	};
 	layout->Size = size;
-	VertexLayoutCount++;
 	return layout;
 }
 

@@ -16,7 +16,6 @@ typedef enum VertexAttribute
 
 typedef struct VertexLayout
 {
-	int BindingIndex;
 	VkVertexInputBindingDescription Binding;
 	unsigned int AttributeCount;
 	VkVertexInputAttributeDescription * Attributes;
