@@ -6,6 +6,12 @@
 #include "spirv/spirv_reflect.h"
 #include "VertexBuffer.h"
 
+typedef enum PipelineUniformType
+{
+	PipelineVariableTypeSampler = SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+	PipelineVariableTypeUniform = SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+} PipelineUniformType;
+
 typedef struct Shader
 {
 	unsigned int VertexSPVSize;
@@ -29,12 +35,10 @@ typedef struct Pipeline
 	SpvReflectBlockVariable PushConstantInfo;
 	void * PushConstantData;
 	unsigned int PushConstantSize;
-	unsigned int VSDescriptorSetLayoutCount;
-	SpvReflectDescriptorSet * VSDescriptorSetLayoutInfos;
-	VkDescriptorSetLayout * VSDescriptorSetLayouts;
-	unsigned int FSDescriptorSetLayoutCount;
-	SpvReflectDescriptorSet * FSDescriptorSetLayoutInfos;
-	VkDescriptorSetLayout * FSDescriptorSetLayouts;
+	
+	unsigned int DescriptorSetLayoutCount;
+	SpvReflectDescriptorSet * DescriptorSetLayoutInfos;
+	VkDescriptorSetLayout * DescriptorSetLayouts;
 } * Pipeline;
 
 Pipeline PipelineCreate(Shader shader, VertexLayout vertexLayout);

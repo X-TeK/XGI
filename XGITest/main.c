@@ -35,8 +35,16 @@ int main(int argc, const char * argv[])
 	};
 	FrameBuffer framebuffer = FrameBufferCreate(frameConfig);
 	
-	VertexAttribute attributes[] = { VertexAttributeVector4, VertexAttributeByte4 };
-	VertexLayout vertexLayout = VertexLayoutCreate(2, attributes);
+	VertexAttribute attributes[] = { VertexAttributeVector2 };
+	VertexLayout vertexLayout = VertexLayoutCreate(1, attributes);
+	
+	VertexBuffer vertexBuffer = VertexBufferCreate(3, sizeof(Vector2));
+	Vector2 * vertices = VertexBufferMapVertices(vertexBuffer);
+	vertices[0] = (Vector2){ 0.0f, 0.0f };
+	vertices[1] = (Vector2){ 1.0f, 0.0f };
+	vertices[2] = (Vector2){ 0.0f, 1.0f };
+	VertexBufferUnmapVertices(vertexBuffer);
+	VertexBufferUploadStagingBuffer(vertexBuffer);
 	
 #include "Shaders/Default.vert.c"
 #include "Shaders/Default.frag.c"
@@ -48,8 +56,12 @@ int main(int argc, const char * argv[])
 		.FragmentSPV = SPV_DefaultFragmentShader,
 	};
 	Pipeline pipeline = PipelineCreate(shader, vertexLayout);
-	float t = 0.0f;
-	PipelineSetPushConstant(pipeline, "Time", &t);
+	Vector4 color = ColorToVector4(ColorWhite);
+	Vector2 dimensions = { Window.Width, Window.Height };
+	PipelineSetPushConstant(pipeline, "Dimensions", &dimensions);
+	PipelineSetPushConstant(pipeline, "Transform", &Matrix4x4Identity);
+	PipelineSetPushConstant(pipeline, "Color", &color);
+	
 	while (Window.Running)
 	{
 		EventHandlerPoll();
@@ -62,12 +74,14 @@ int main(int argc, const char * argv[])
 		GraphicsBegin(framebuffer);
 		GraphicsClear(ColorFromHex(0x204080ff), 1.0f, 0);
 		GraphicsBindPipeline(pipeline);
+		GraphicsRenderVertexBuffer(vertexBuffer);
 		GraphicsEnd();
 		GraphicsCopyToSwapchain(framebuffer);
 		SwapchainPresent();
 	}
 	GraphicsStopOperations();
 	
+	VertexBufferDestroy(vertexBuffer);
 	PipelineDestroy(pipeline);
 	FrameBufferDestroy(framebuffer);
 	VertexLayoutDestroy(vertexLayout);

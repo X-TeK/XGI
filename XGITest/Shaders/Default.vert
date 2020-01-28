@@ -1,21 +1,21 @@
 #version 450
 
-layout (location = 0) in vec4 PositionAttribute;
-layout (location = 1) in vec4 ColorAttribute;
+layout (location = 0) in vec2 PositionAttribute;
 
 layout (push_constant) uniform PushConstant
 {
-	float Time;
-	vec4 Dimensions;
+	vec2 Dimensions;
 	mat4 Transform;
 	vec4 Color;
 } Input;
 
-layout (location = 0) out vec4 VertexColor;
+layout (binding = 0) uniform UBO
+{
+	mat4 Transform;
+} UBOInput;
 
 void main()
 {
-	VertexColor = ColorAttribute;
 	float aspect = Input.Dimensions.x / Input.Dimensions.y;
 	gl_Position = Input.Transform * vec4(PositionAttribute.xy, 0.0, 1.0);
 	gl_Position.xy /= vec2(aspect, 1.0);

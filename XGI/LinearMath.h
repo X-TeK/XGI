@@ -13,9 +13,9 @@
 
 typedef float Scalar;
 
-typedef struct Vector4 { Scalar X, Y, Z, W; } Vector4; //! A 4 value scalar which is used for vector 2, 3 and 4 for alignment reasons
-typedef Vector4 Vector2;
-typedef Vector4 Vector3;
+typedef struct Vector4 { Scalar X, Y, Z, W; } Vector4;
+typedef struct Vector3 { Scalar X, Y, Z; } Vector3;
+typedef struct Vector2 { Scalar X, Y; } Vector2;
 
 extern Vector2 Vector2Zero; //! (0, 0)
 extern Vector2 Vector2One; //! (1, 1)
