@@ -4,7 +4,7 @@
 #include "Graphics.h"
 #include "Window.h"
 
-void XGIInitialize(struct WindowConfig windowFlags, struct GraphicsConfig graphicsFlags);
+void XGIInitialize(WindowConfigure windowFlags, GraphicsConfigure graphicsFlags);
 void XGIDeinitialize(void);
 
 #endif

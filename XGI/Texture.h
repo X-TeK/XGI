@@ -10,6 +10,28 @@ typedef enum TextureFormat
 	TextureFormatStencil,
 } TextureFormat;
 
+typedef enum TextureFilter
+{
+	TextureFilterLinear = VK_FILTER_LINEAR,
+	TextureFilterNearest = VK_FILTER_NEAREST,
+	TextureFilterCubic = VK_FILTER_CUBIC_IMG,
+} TextureFilter;
+
+typedef enum TextureAddressMode
+{
+	TextureAddressModeRepeat = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+	TextureAddressModeMirroredRepeat = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
+	TextureAddressModeClamp = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+} TextureAddressMode;
+
+typedef struct TextureConfigure
+{
+	unsigned int Width, Height;
+	TextureFormat Format;
+	TextureFilter Filter;
+	TextureAddressMode AddressMode;
+} TextureConfigure;
+
 typedef struct Texture
 {
 	unsigned int Width, Height;
@@ -22,7 +44,7 @@ typedef struct Texture
 	VkDescriptorSet * DescriptorSets;
 } * Texture;
 
-Texture TextureCreate(unsigned int width, unsigned int height, TextureFormat format);
+Texture TextureCreate(TextureConfigure config);
 void TextureDestroy(Texture texture);
 
 #endif

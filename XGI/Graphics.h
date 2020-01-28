@@ -9,12 +9,12 @@
 #include "UniformBuffer.h"
 #include "FrameBuffer.h"
 
-typedef struct GraphicsConfig
+typedef struct GraphicsConfigure
 {
 	bool VulkanValidation;
 	bool TargetIntegratedDevice;
 	int FrameResourceCount;
-} GraphicsConfig;
+} GraphicsConfigure;
 
 struct Graphics
 {
@@ -52,13 +52,13 @@ struct Graphics
 	int VertexCount;
 } extern Graphics;
 
-void GraphicsInitialize(GraphicsConfig config);
+void GraphicsInitialize(GraphicsConfigure config);
 void GraphicsBegin(FrameBuffer frameBuffer);
 void GraphicsClearColor(Color clearColor);
 void GraphicsDepthStencil(float depth, int stencil);
 void GraphicsClear(Color clearColor, float depth, int stencil);
 void GraphicsBindPipeline(Pipeline pipeline);
-void GraphicsRenderVertexBuffer(VertexBuffer vertexBuffer, UniformBuffer_T uniformBuffer, FrameBuffer sampler);
+void GraphicsRenderVertexBuffer(VertexBuffer vertexBuffer);
 void GraphicsEnd(void);
 void GraphicsCopyToSwapchain(FrameBuffer frameBuffer);
 void GraphicsStopOperations(void);

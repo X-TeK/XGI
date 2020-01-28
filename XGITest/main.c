@@ -9,7 +9,7 @@
 
 int main(int argc, const char * argv[])
 {
-	struct WindowConfig windowConfig =
+	WindowConfigure windowConfig =
 	{
 		.Width = 800,
 		.Height = 600,
@@ -18,14 +18,22 @@ int main(int argc, const char * argv[])
 		.Resizable = false,
 		.FullScreen = false,
 	};
-	struct GraphicsConfig graphicsConfig =
+	GraphicsConfigure graphicsConfig =
 	{
 		.VulkanValidation = true,
 		.FrameResourceCount = 3,
 	};
 	XGIInitialize(windowConfig, graphicsConfig);
 	
-	FrameBuffer framebuffer = FrameBufferCreate(Window.Width, Window.Height, false);
+	FrameBufferConfigure frameConfig =
+	{
+		.Width = Window.Width,
+		.Height = Window.Height,
+		.Filter = TextureFilterNearest,
+		.AddressMode = TextureAddressModeRepeat,
+		.UseStencil = false,
+	};
+	FrameBuffer framebuffer = FrameBufferCreate(frameConfig);
 	
 	VertexAttribute attributes[] = { VertexAttributeVector4, VertexAttributeByte4 };
 	VertexLayout vertexLayout = VertexLayoutCreate(2, attributes);

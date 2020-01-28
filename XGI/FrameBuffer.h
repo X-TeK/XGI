@@ -6,18 +6,27 @@
 #include "Texture.h"
 #include "Pipeline.h"
 
+typedef struct FrameBufferConfigure
+{
+	unsigned int Width, Height;
+	TextureFilter Filter;
+	TextureAddressMode AddressMode;
+	bool UseStencil;
+} FrameBufferConfigure;
+
 typedef struct FrameBuffer
 {
 	unsigned int Width, Height;
+	TextureFilter Filter;
+	TextureAddressMode AddressMode;
 	Texture ColorTexture;
 	Texture DepthTexture;
 	bool UseStencil;
 	Texture StencilTexture;
 	VkFramebuffer Instance;
-	VkDescriptorSet * DescriptorSets;
 } * FrameBuffer;
 
-FrameBuffer FrameBufferCreate(unsigned int width, unsigned int height, bool useStencil);
+FrameBuffer FrameBufferCreate(FrameBufferConfigure config);
 FrameBuffer FrameBufferResize(FrameBuffer frameBuffer, unsigned int width, unsigned int height);
 void FrameBufferDestroy(FrameBuffer frameBuffer);
 

@@ -4,18 +4,30 @@
 #include "Graphics.h"
 #include "Swapchain.h"
 
-FrameBuffer FrameBufferCreate(unsigned int width, unsigned int height, bool useStencil)
+FrameBuffer FrameBufferCreate(FrameBufferConfigure config)
 {
 	FrameBuffer frameBuffer = malloc(sizeof(struct FrameBuffer));
 	*frameBuffer = (struct FrameBuffer)
 	{
-		.Width = width,
-		.Height = height,
-		.ColorTexture = TextureCreate(width, height, TextureFormatColor),
-		.DepthTexture = TextureCreate(width, height, TextureFormatDepth),
-		.UseStencil = useStencil,
+		.Width = config.Width,
+		.Height = config.Height,
+		.UseStencil = config.UseStencil,
+		.Filter = config.Filter,
+		.AddressMode = config.AddressMode,
 	};
-	if (useStencil) { frameBuffer->StencilTexture = TextureCreate(width, height, TextureFormatStencil); }
+	TextureConfigure textureConfig =
+	{
+		.Width = config.Width,
+		.Height = config.Height,
+		.Format = TextureFormatColor,
+		.Filter = config.Filter,
+		.AddressMode = config.AddressMode,
+	};
+	frameBuffer->ColorTexture = TextureCreate(textureConfig);
+	textureConfig.Format = TextureFormatDepth;
+	frameBuffer->DepthTexture = TextureCreate(textureConfig);
+	textureConfig.Format = TextureFormatStencil;
+	if (config.UseStencil) { frameBuffer->StencilTexture = TextureCreate(textureConfig); }
 
 	VkImageView attachments[] = { frameBuffer->ColorTexture->ImageView, frameBuffer->DepthTexture->ImageView };
 	VkFramebufferCreateInfo createInfo =
@@ -24,8 +36,8 @@ FrameBuffer FrameBufferCreate(unsigned int width, unsigned int height, bool useS
 		.renderPass = Swapchain.RenderPass,
 		.attachmentCount = 2,
 		.pAttachments = attachments,
-		.width = width,
-		.height = height,
+		.width = config.Width,
+		.height = config.Height,
 		.layers = 1,
 	};
 	VkResult result = vkCreateFramebuffer(Graphics.Device, &createInfo, NULL, &frameBuffer->Instance);
@@ -34,7 +46,7 @@ FrameBuffer FrameBufferCreate(unsigned int width, unsigned int height, bool useS
 		printf("[Error] Failed to create frame buffer: %i", result);
 		exit(-1);
 	}
-	
+	/*
 	frameBuffer->DescriptorSets = malloc(Graphics.FrameResourceCount * sizeof(VkDescriptorSet));
 	for (int i = 0; i < Graphics.FrameResourceCount; i++)
 	{
@@ -81,7 +93,7 @@ FrameBuffer FrameBufferCreate(unsigned int width, unsigned int height, bool useS
 			}
 		};
 		vkUpdateDescriptorSets(Graphics.Device, 2, writeInfos, 0, NULL);
-	}
+	}*/
 	
 	return frameBuffer;
 }
@@ -89,15 +101,21 @@ FrameBuffer FrameBufferCreate(unsigned int width, unsigned int height, bool useS
 FrameBuffer FrameBufferResize(FrameBuffer frameBuffer, unsigned int width, unsigned int height)
 {
 	GraphicsStopOperations();
-	FrameBuffer resized = FrameBufferCreate(width, height, frameBuffer->UseStencil);
+	FrameBufferConfigure config =
+	{
+		.Width = width,
+		.Height = height,
+		.Filter = frameBuffer->Filter,
+		.UseStencil = frameBuffer->UseStencil,
+		.AddressMode = frameBuffer->AddressMode,
+	};
+	FrameBuffer resized = FrameBufferCreate(config);
 	FrameBufferDestroy(frameBuffer);
 	return resized;
 }
 
 void FrameBufferDestroy(FrameBuffer frameBuffer)
 {
-	vkFreeDescriptorSets(Graphics.Device, Graphics.DescriptorPool, Graphics.FrameResourceCount, frameBuffer->DescriptorSets);
-	free(frameBuffer->DescriptorSets);
 	TextureDestroy(frameBuffer->ColorTexture);
 	TextureDestroy(frameBuffer->DepthTexture);
 	if (frameBuffer->UseStencil) { TextureDestroy(frameBuffer->StencilTexture); }

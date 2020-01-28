@@ -424,7 +424,7 @@ static void CreateFrameResources()
 	Graphics.PreRenderSemaphores = ListCreate();
 }
 
-void GraphicsInitialize(GraphicsConfig config)
+void GraphicsInitialize(GraphicsConfigure config)
 {
 	printf("\n[Log] Initializing Graphics...\n");
 	Graphics.FrameResourceCount = config.FrameResourceCount;
@@ -540,8 +540,9 @@ void GraphicsBindPipeline(Pipeline pipeline)
 	}
 }
 
-void GraphicsRenderVertexBuffer(VertexBuffer vertexBuffer, UniformBuffer_T uniformBuffer, FrameBuffer sampler)
+void GraphicsRenderVertexBuffer(VertexBuffer vertexBuffer)
 {
+	/*
 	if (uniformBuffer != NULL && sampler == NULL)
 	{
 		vkCmdBindDescriptorSets(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Graphics.BoundPipeline->Layout, 0, 1, &uniformBuffer->DescriptorSets[Graphics.FrameIndex], 0, NULL);
@@ -554,7 +555,7 @@ void GraphicsRenderVertexBuffer(VertexBuffer vertexBuffer, UniformBuffer_T unifo
 	{
 		VkDescriptorSet _DescriptorSets[] = { uniformBuffer->DescriptorSets[Graphics.FrameIndex], sampler->DescriptorSets[Graphics.FrameIndex] };
 		vkCmdBindDescriptorSets(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Graphics.BoundPipeline->Layout, 0, 2, _DescriptorSets, 0, NULL);
-	}
+	}*/
 	
 	VkDeviceSize offset = 0;
 	vkCmdBindVertexBuffers(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 0, 1, &vertexBuffer->VertexBuffer, &offset);

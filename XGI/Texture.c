@@ -140,12 +140,12 @@ static void CreateSampler(Texture texture)
 	}
 }
 
-Texture TextureCreate(unsigned int width, unsigned int height, TextureFormat format)
+Texture TextureCreate(TextureConfigure config)
 {
 	Texture texture = malloc(sizeof(struct Texture));
-	*texture = (struct Texture){ .Width = width, .Height = height, .Format = format };
+	*texture = (struct Texture){ .Width = config.Width, .Height = config.Height, .Format = config.Format };
 	
-	if (format == TextureFormatColor)
+	if (config.Format == TextureFormatColor)
 	{
 		texture->ImageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
 		CreateImage(texture, Swapchain.ColorFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
@@ -153,7 +153,7 @@ Texture TextureCreate(unsigned int width, unsigned int height, TextureFormat for
 		CreateImageView(texture, Swapchain.ColorFormat);
 		CreateSampler(texture);
 	}
-	else if (format == TextureFormatDepth)
+	else if (config.Format == TextureFormatDepth)
 	{
 		texture->ImageAspect = VK_IMAGE_ASPECT_DEPTH_BIT;
 		CreateImage(texture, Swapchain.DepthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
@@ -161,7 +161,7 @@ Texture TextureCreate(unsigned int width, unsigned int height, TextureFormat for
 		CreateImageView(texture, Swapchain.DepthFormat);
 		CreateSampler(texture);
 	}
-	else
+	else if (config.Format == TextureFormatStencil)
 	{
 		texture->ImageAspect = VK_IMAGE_ASPECT_STENCIL_BIT;
 		CreateImage(texture, Swapchain.StencilFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);

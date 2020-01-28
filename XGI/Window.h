@@ -7,7 +7,7 @@
 #include "LinearMath.h"
 
 //! A structure of possible window flags for initialization
-struct WindowConfig
+typedef struct WindowConfigure
 {
 	int Width;
 	int Height;
@@ -24,7 +24,7 @@ struct WindowConfig
 	bool HighDPI;
 	bool MouseCapture;
 	bool AlwaysOnTop;
-};
+} WindowConfigure;
 
 struct Window
 {
@@ -39,7 +39,7 @@ struct Window
  Initializes the window system, must be called before GraphicsInitialize
  @param flags A structure filled with optional flags
  */
-void WindowInitialize(struct WindowConfig flags);
+void WindowInitialize(WindowConfigure flags);
 
 //! Exits the main loop
 void WindowExitLoop(void);

@@ -3,7 +3,7 @@
 
 struct Window Window = { 0 };
 
-void WindowInitialize(struct WindowConfig flags)
+void WindowInitialize(WindowConfigure flags)
 {
 	printf("\n[Log] Initializing window...\n");
 	Window.Title = flags.Title;

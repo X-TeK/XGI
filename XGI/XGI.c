@@ -2,7 +2,7 @@
 #include "EventHandler.h"
 #include "Swapchain.h"
 
-void XGIInitialize(struct WindowConfig windowFlags, struct GraphicsConfig graphicsFlags)
+void XGIInitialize(WindowConfigure windowFlags, GraphicsConfigure graphicsFlags)
 {
 	WindowInitialize(windowFlags);
 	EventHandlerInitialize();
