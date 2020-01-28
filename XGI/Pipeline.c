@@ -14,21 +14,14 @@ static void CreatePipelineLayout(Pipeline pipeline, struct Shader shader)
 	spvReflectCreateShaderModule(shader.VertexSPVSize, shader.VertexSPV, &pipeline->VSModule);
 	spvReflectCreateShaderModule(shader.FragmentSPVSize, shader.FragmentSPV, &pipeline->FSModule);
 	
-	spvReflectEnumerateDescriptorSets(&pipeline->FSModule, &pipeline->FSDescriptorCount, NULL);
-	pipeline->FSDescriptorSets = malloc(pipeline->FSDescriptorCount * sizeof(SpvReflectDescriptorSet));
-	spvReflectEnumerateDescriptorSets(&pipeline->FSModule, &pipeline->FSDescriptorCount, &pipeline->FSDescriptorSets);
-	spvReflectEnumerateDescriptorSets(&pipeline->VSModule, &pipeline->VSDescriptorCount, NULL);
-	pipeline->VSDescriptorSets = malloc(pipeline->VSDescriptorCount * sizeof(SpvReflectDescriptorSet));
-	spvReflectEnumerateDescriptorSets(&pipeline->VSModule, &pipeline->VSDescriptorCount, &pipeline->VSDescriptorSets);
-	
 	unsigned int pushConstantCount;
 	spvReflectEnumeratePushConstantBlocks(&pipeline->VSModule, &pushConstantCount, NULL);
 	SpvReflectBlockVariable * pushConstants = malloc(pushConstantCount * sizeof(SpvReflectBlockVariable));
 	spvReflectEnumeratePushConstantBlocks(&pipeline->VSModule, &pushConstantCount, &pushConstants);
 	if (pushConstantCount > 0)
 	{
-		pipeline->UsesPushConstants = true;
-		pipeline->PushConstants = pushConstants[0];
+		pipeline->UsesPushConstant = true;
+		pipeline->PushConstantInfo = pushConstants[0];
 		pipeline->PushConstantData = malloc(pushConstants[0].size);
 		pipeline->PushConstantSize = pushConstants[0].size;
 		pushConstantRange = (VkPushConstantRange)
@@ -39,23 +32,64 @@ static void CreatePipelineLayout(Pipeline pipeline, struct Shader shader)
 		};
 	}
 	
-	for (int i = 0; i < pipeline->VSDescriptorCount; i++)
+	spvReflectEnumerateDescriptorSets(&pipeline->VSModule, &pipeline->VSDescriptorSetLayoutCount, NULL);
+	pipeline->VSDescriptorSetLayoutInfos = malloc(pipeline->VSDescriptorSetLayoutCount * sizeof(SpvReflectDescriptorSet));
+	pipeline->VSDescriptorSetLayouts = malloc(pipeline->VSDescriptorSetLayoutCount * sizeof(VkDescriptorSetLayout));
+	spvReflectEnumerateDescriptorSets(&pipeline->VSModule, &pipeline->VSDescriptorSetLayoutCount, &pipeline->VSDescriptorSetLayoutInfos);
+	for (int i = 0; i < pipeline->VSDescriptorSetLayoutCount; i++)
 	{
-		SpvReflectDescriptorSet set = pipeline->VSDescriptorSets[i];
+		SpvReflectDescriptorSet set = pipeline->VSDescriptorSetLayoutInfos[i];
+		VkDescriptorSetLayoutBinding * layoutBindings = malloc(set.binding_count * sizeof(VkDescriptorSetLayoutBinding));
 		for (int j = 0; j < set.binding_count; j++)
 		{
 			SpvReflectDescriptorBinding * binding = set.bindings[j];
 			printf("set:%i binding:%i %s\n", binding->set, binding->binding, binding->name);
+			layoutBindings[j] = (VkDescriptorSetLayoutBinding)
+			{
+				.binding = j,
+				.descriptorCount = binding->count,
+				.descriptorType = (VkDescriptorType)binding->descriptor_type,
+				.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+			};
 		}
+		VkDescriptorSetLayoutCreateInfo layoutInfo =
+		{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+			.bindingCount = set.binding_count,
+			.pBindings = layoutBindings,
+		};
+		vkCreateDescriptorSetLayout(Graphics.Device, &layoutInfo, NULL, pipeline->VSDescriptorSetLayouts + i);
+		free(layoutBindings);
 	}
-	for (int i = 0; i < pipeline->FSDescriptorCount; i++)
+	
+	spvReflectEnumerateDescriptorSets(&pipeline->FSModule, &pipeline->FSDescriptorSetLayoutCount, NULL);
+	pipeline->FSDescriptorSetLayoutInfos = malloc(pipeline->FSDescriptorSetLayoutCount * sizeof(SpvReflectDescriptorSet));
+	pipeline->FSDescriptorSetLayouts = malloc(pipeline->FSDescriptorSetLayoutCount * sizeof(VkDescriptorSetLayout));
+	spvReflectEnumerateDescriptorSets(&pipeline->FSModule, &pipeline->FSDescriptorSetLayoutCount, &pipeline->FSDescriptorSetLayoutInfos);
+	for (int i = 0; i < pipeline->FSDescriptorSetLayoutCount; i++)
 	{
-		SpvReflectDescriptorSet set = pipeline->FSDescriptorSets[i];
+		SpvReflectDescriptorSet set = pipeline->FSDescriptorSetLayoutInfos[i];
+		VkDescriptorSetLayoutBinding * layoutBindings = malloc(set.binding_count * sizeof(VkDescriptorSetLayoutBinding));
 		for (int j = 0; j < set.binding_count; j++)
 		{
 			SpvReflectDescriptorBinding * binding = set.bindings[j];
 			printf("set:%i binding:%i %s\n", binding->set, binding->binding, binding->name);
+			layoutBindings[j] = (VkDescriptorSetLayoutBinding)
+			{
+				.binding = j,
+				.descriptorCount = binding->count,
+				.descriptorType = (VkDescriptorType)binding->descriptor_type,
+				.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+			};
 		}
+		VkDescriptorSetLayoutCreateInfo layoutInfo =
+		{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+			.bindingCount = set.binding_count,
+			.pBindings = layoutBindings,
+		};
+		vkCreateDescriptorSetLayout(Graphics.Device, &layoutInfo, NULL, pipeline->FSDescriptorSetLayouts + i);
+		free(layoutBindings);
 	}
 	
 	VkDescriptorSetLayout layouts[] = { Graphics.DescriptorSetLayout0, Graphics.DescriptorSetLayout1 };
@@ -125,7 +159,6 @@ Pipeline PipelineCreate(struct Shader shader, VertexLayout vertexLayout)
 	
 	VkPipelineShaderStageCreateInfo shaderStages[2] = { vsInfo, fsInfo };
 	
-	printf("%i\n", vertexLayout->AttributeCount);
 	VkPipelineVertexInputStateCreateInfo vertexInput =
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -248,11 +281,11 @@ Pipeline PipelineCreate(struct Shader shader, VertexLayout vertexLayout)
 
 void PipelineSetPushConstant(Pipeline pipeline, const char * variable, void * value)
 {
-	if (pipeline->UsesPushConstants)
+	if (pipeline->UsesPushConstant)
 	{
-		for (int i = 0; i < pipeline->PushConstants.member_count; i++)
+		for (int i = 0; i < pipeline->PushConstantInfo.member_count; i++)
 		{
-			SpvReflectBlockVariable member = pipeline->PushConstants.members[i];
+			SpvReflectBlockVariable member = pipeline->PushConstantInfo.members[i];
 			if (strcmp(member.name, variable) == 0)
 			{
 				memcpy(pipeline->PushConstantData + member.offset, value, member.size);
@@ -266,7 +299,17 @@ void PipelineDestroy(Pipeline pipeline)
 	vkDeviceWaitIdle(Graphics.Device);
 	vkDestroyPipelineLayout(Graphics.Device, pipeline->Layout, NULL);
 	vkDestroyPipeline(Graphics.Device, pipeline->Instance, NULL);
-	if (pipeline->UsesPushConstants) { free(pipeline->PushConstantData); }
+	if (pipeline->UsesPushConstant) { free(pipeline->PushConstantData); }
+	for (int i = 0; i < pipeline->VSDescriptorSetLayoutCount; i++)
+	{
+		vkDestroyDescriptorSetLayout(Graphics.Device, pipeline->VSDescriptorSetLayouts[i], NULL);
+	}
+	if (pipeline->VSDescriptorSetLayoutCount > 0) { free(pipeline->VSDescriptorSetLayouts); }
+	for (int i = 0; i < pipeline->FSDescriptorSetLayoutCount; i++)
+	{
+		vkDestroyDescriptorSetLayout(Graphics.Device, pipeline->FSDescriptorSetLayouts[i], NULL);
+	}
+	if (pipeline->FSDescriptorSetLayoutCount > 0) { free(pipeline->FSDescriptorSetLayouts); }
 	spvReflectDestroyShaderModule(&pipeline->VSModule);
 	spvReflectDestroyShaderModule(&pipeline->FSModule);
 	free(pipeline);

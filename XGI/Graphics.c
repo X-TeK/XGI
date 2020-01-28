@@ -534,7 +534,7 @@ void GraphicsBindPipeline(Pipeline pipeline)
 {
 	Graphics.BoundPipeline = pipeline;
 	vkCmdBindPipeline(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Instance);
-	if (pipeline->UsesPushConstants)
+	if (pipeline->UsesPushConstant)
 	{
 		vkCmdPushConstants(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, pipeline->Layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, pipeline->PushConstantSize, pipeline->PushConstantData);
 	}

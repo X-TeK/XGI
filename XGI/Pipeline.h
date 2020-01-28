@@ -23,19 +23,18 @@ typedef struct Pipeline
 	VkPipeline Instance;
 	VkPipelineLayout Layout;
 	VertexLayout VertexLayout;
-	
 	SpvReflectShaderModule VSModule;
 	SpvReflectShaderModule FSModule;
-	
-	bool UsesPushConstants;
-	SpvReflectBlockVariable PushConstants;
+	bool UsesPushConstant;
+	SpvReflectBlockVariable PushConstantInfo;
 	void * PushConstantData;
 	unsigned int PushConstantSize;
-	
-	unsigned int VSDescriptorCount;
-	SpvReflectDescriptorSet * VSDescriptorSets;
-	unsigned int FSDescriptorCount;
-	SpvReflectDescriptorSet * FSDescriptorSets;
+	unsigned int VSDescriptorSetLayoutCount;
+	SpvReflectDescriptorSet * VSDescriptorSetLayoutInfos;
+	VkDescriptorSetLayout * VSDescriptorSetLayouts;
+	unsigned int FSDescriptorSetLayoutCount;
+	SpvReflectDescriptorSet * FSDescriptorSetLayoutInfos;
+	VkDescriptorSetLayout * FSDescriptorSetLayouts;
 } * Pipeline;
 
 Pipeline PipelineCreate(Shader shader, VertexLayout vertexLayout);
