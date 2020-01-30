@@ -41,7 +41,7 @@ typedef struct VertexBuffer
 VertexBuffer VertexBufferCreate(int vertexCount, int vertexSize);
 void * VertexBufferMapVertices(VertexBuffer vertexBuffer);
 void VertexBufferUnmapVertices(VertexBuffer vertexBuffer);
-void VertexBufferUploadStagingBuffer(VertexBuffer vertexBuffer);
+void VertexBufferUpload(VertexBuffer vertexBuffer);
 void VertexBufferQueueDestroy(VertexBuffer vertexBuffer);
 void VertexBufferDestroy(VertexBuffer vertexBuffer);
 

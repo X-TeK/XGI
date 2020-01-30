@@ -1,5 +1,7 @@
 #version 450
 
+layout (location = 0) in vec4 VertexColor;
+
 layout (push_constant) uniform PushConstant
 {
 	vec2 Dimensions;
@@ -13,5 +15,5 @@ layout (location = 0) out vec4 FragColor;
 
 void main()
 {
-	FragColor = Input.Color;
+	FragColor = VertexColor * Input.Color;
 }

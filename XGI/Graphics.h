@@ -35,7 +35,7 @@ struct Graphics
 	
 	List PreRenderSemaphores;
 	int FrameResourceCount;
-	struct
+	struct GraphicsFrameResource
 	{
 		VkCommandBuffer CommandBuffer;
 		VkSemaphore ImageAvailable;

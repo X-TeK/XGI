@@ -9,110 +9,138 @@
 
 static void CreatePipelineLayout(Pipeline pipeline, struct Shader shader)
 {
+	pipeline->StageCount = 2;
+	pipeline->Stages = malloc(pipeline->StageCount * sizeof(struct PipelineStage));
+	
+	pipeline->Stages[0].Stage = ShaderStageVertex;
+	pipeline->Stages[1].Stage = ShaderStageFragment;
+	
+	spvReflectCreateShaderModule(shader.VertexSPVSize, shader.VertexSPV, &pipeline->Stages[0].Module);
+	spvReflectCreateShaderModule(shader.FragmentSPVSize, shader.FragmentSPV, &pipeline->Stages[1].Module);
+	
 	VkPushConstantRange pushConstantRange;
-	
-	spvReflectCreateShaderModule(shader.VertexSPVSize, shader.VertexSPV, &pipeline->VSModule);
-	spvReflectCreateShaderModule(shader.FragmentSPVSize, shader.FragmentSPV, &pipeline->FSModule);
-	
-	unsigned int pushConstantCount;
-	spvReflectEnumeratePushConstantBlocks(&pipeline->VSModule, &pushConstantCount, NULL);
-	SpvReflectBlockVariable * pushConstants = malloc(pushConstantCount * sizeof(SpvReflectBlockVariable));
-	spvReflectEnumeratePushConstantBlocks(&pipeline->VSModule, &pushConstantCount, &pushConstants);
-	if (pushConstantCount > 0)
+	for (int i = 0; i < pipeline->StageCount; i++)
 	{
-		pipeline->UsesPushConstant = true;
-		pipeline->PushConstantInfo = pushConstants[0];
-		pipeline->PushConstantData = malloc(pushConstants[0].size);
-		pipeline->PushConstantSize = pushConstants[0].size;
-		pushConstantRange = (VkPushConstantRange)
+		unsigned int pushConstantCount;
+		spvReflectEnumeratePushConstantBlocks(&pipeline->Stages[i].Module, &pushConstantCount, NULL);
+		SpvReflectBlockVariable * pushConstants = malloc(pushConstantCount * sizeof(SpvReflectBlockVariable));
+		spvReflectEnumeratePushConstantBlocks(&pipeline->Stages[i].Module, &pushConstantCount, &pushConstants);
+		if (pushConstantCount > 0)
 		{
-			.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-			.offset = pushConstants[0].offset,
-			.size = pushConstants[0].size,
-		};
-	}
-	
-	unsigned int vsSetCount;
-	spvReflectEnumerateDescriptorSets(&pipeline->VSModule, &vsSetCount, NULL);
-	SpvReflectDescriptorSet * vsSets = malloc(vsSetCount * sizeof(SpvReflectDescriptorSet));
-	spvReflectEnumerateDescriptorSets(&pipeline->VSModule, &vsSetCount, &vsSets);
-	unsigned int fsSetCount;
-	spvReflectEnumerateDescriptorSets(&pipeline->FSModule, &fsSetCount, NULL);
-	SpvReflectDescriptorSet * fsSets = malloc(fsSetCount * sizeof(SpvReflectDescriptorSet));
-	spvReflectEnumerateDescriptorSets(&pipeline->FSModule, &fsSetCount, &fsSets);
-	
-	pipeline->DescriptorSetLayoutCount = vsSetCount + fsSetCount;
-	pipeline->DescriptorSetLayoutInfos = malloc(pipeline->DescriptorSetLayoutCount * sizeof(SpvReflectDescriptorSet));
-	memcpy(pipeline->DescriptorSetLayoutInfos, vsSets, vsSetCount * sizeof(SpvReflectDescriptorSet));
-	memcpy(pipeline->DescriptorSetLayoutInfos + vsSetCount, fsSets, fsSetCount * sizeof(SpvReflectDescriptorSet));
-	pipeline->DescriptorSetLayouts = malloc(pipeline->DescriptorSetLayoutCount * sizeof(VkDescriptorSetLayout));
-	
-	for (int i = 0; i < vsSetCount; i++)
-	{
-		SpvReflectDescriptorSet set = vsSets[i];
-		VkDescriptorSetLayoutBinding * layoutBindings = malloc(set.binding_count * sizeof(VkDescriptorSetLayoutBinding));
-		for (int j = 0; j < set.binding_count; j++)
-		{
-			SpvReflectDescriptorBinding * binding = set.bindings[j];
-			printf("set:%i binding:%i %s\n", binding->set, binding->binding, binding->name);
-			layoutBindings[j] = (VkDescriptorSetLayoutBinding)
+			pipeline->UsesPushConstant = true;
+			pipeline->PushConstantInfo = pushConstants[0];
+			pipeline->PushConstantData = malloc(pushConstants[0].size);
+			pipeline->PushConstantSize = pushConstants[0].size;
+			pushConstantRange = (VkPushConstantRange)
 			{
-				.binding = j,
-				.descriptorCount = binding->count,
-				.descriptorType = (VkDescriptorType)binding->descriptor_type,
-				.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+				.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+				.offset = pushConstants[0].offset,
+				.size = pushConstants[0].size,
 			};
+			break;
 		}
-		VkDescriptorSetLayoutCreateInfo layoutInfo =
-		{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-			.bindingCount = set.binding_count,
-			.pBindings = layoutBindings,
-		};
-		vkCreateDescriptorSetLayout(Graphics.Device, &layoutInfo, NULL, pipeline->DescriptorSetLayouts + i);
-		free(layoutBindings);
 	}
 	
-	for (int i = 0; i < fsSetCount; i++)
+	int samplerCount = 0;
+	int uboCount = 0;
+	for (int i = 0; i < pipeline->StageCount; i++)
 	{
-		SpvReflectDescriptorSet set = fsSets[i];
-		VkDescriptorSetLayoutBinding * layoutBindings = malloc(set.binding_count * sizeof(VkDescriptorSetLayoutBinding));
-		for (int j = 0; j < set.binding_count; j++)
+		struct PipelineStage * stage = pipeline->Stages + i;
+		spvReflectEnumerateDescriptorSets(&stage->Module, &stage->DescriptorSetLayoutCount, NULL);
+		stage->DescriptorSetLayoutInfos = malloc(stage->DescriptorSetLayoutCount * sizeof(SpvReflectDescriptorSet));
+		spvReflectEnumerateDescriptorSets(&stage->Module, &stage->DescriptorSetLayoutCount, &stage->DescriptorSetLayoutInfos);
+		stage->DescriptorSetLayouts = malloc(stage->DescriptorSetLayoutCount * sizeof(VkDescriptorSetLayout));
+		
+		for (int j = 0; j < stage->DescriptorSetLayoutCount; j++)
 		{
-			SpvReflectDescriptorBinding * binding = set.bindings[j];
-			printf("set:%i binding:%i %s\n", binding->set, binding->binding, binding->name);
-			layoutBindings[j] = (VkDescriptorSetLayoutBinding)
+			SpvReflectDescriptorSet set = stage->DescriptorSetLayoutInfos[j];
+			VkDescriptorSetLayoutBinding * layoutBindings = malloc(set.binding_count * sizeof(VkDescriptorSetLayoutBinding));
+			for (int k = 0; k < set.binding_count; k++)
 			{
-				.binding = j,
-				.descriptorCount = binding->count,
-				.descriptorType = (VkDescriptorType)binding->descriptor_type,
-				.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+				SpvReflectDescriptorBinding * binding = set.bindings[k];
+				printf("set:%i binding:%i %s\n", binding->set, binding->binding, binding->name);
+				layoutBindings[k] = (VkDescriptorSetLayoutBinding)
+				{
+					.binding = k,
+					.descriptorCount = binding->count,
+					.descriptorType = (VkDescriptorType)binding->descriptor_type,
+					.stageFlags = stage->Stage,
+				};
+				if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) { samplerCount++; }
+				if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) { uboCount++; }
+			}
+			VkDescriptorSetLayoutCreateInfo layoutInfo =
+			{
+				.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+				.bindingCount = set.binding_count,
+				.pBindings = layoutBindings,
 			};
+			vkCreateDescriptorSetLayout(Graphics.Device, &layoutInfo, NULL, stage->DescriptorSetLayouts + j);
+			free(layoutBindings);
 		}
-		VkDescriptorSetLayoutCreateInfo layoutInfo =
-		{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-			.bindingCount = set.binding_count,
-			.pBindings = layoutBindings,
-		};
-		vkCreateDescriptorSetLayout(Graphics.Device, &layoutInfo, NULL, pipeline->DescriptorSetLayouts + vsSetCount + i);
-		free(layoutBindings);
 	}
-
+	
+	int totalLayoutsCount = 0;
+	for (int i = 0; i < pipeline->StageCount; i++) { totalLayoutsCount += pipeline->Stages[i].DescriptorSetLayoutCount; }
+	VkDescriptorSetLayout * totalLayouts = malloc(totalLayoutsCount * sizeof(VkDescriptorSetLayout));
+	
+	for (int i = 0, c = 0; i < pipeline->StageCount; i++)
+	{
+		for (int j = 0; j < pipeline->Stages[i].DescriptorSetLayoutCount; j++, c++)
+		{
+			totalLayouts[c] = pipeline->Stages[i].DescriptorSetLayouts[j];
+		}
+	}
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-		.setLayoutCount = pipeline->DescriptorSetLayoutCount,
-		.pSetLayouts = pipeline->DescriptorSetLayouts,
-		.pushConstantRangeCount = pushConstantCount,
+		.setLayoutCount = totalLayoutsCount,
+		.pSetLayouts = totalLayouts,
+		.pushConstantRangeCount = pipeline->UsesPushConstant ? 1 : 0,
 		.pPushConstantRanges = &pushConstantRange,
 	};
+	vkCreatePipelineLayout(Graphics.Device, &pipelineLayoutCreateInfo, NULL, &pipeline->Layout);
+	free(totalLayouts);
 	
-	VkResult result = vkCreatePipelineLayout(Graphics.Device, &pipelineLayoutCreateInfo, NULL, &pipeline->Layout);
-	if (result != VK_SUCCESS)
+	VkDescriptorPoolSize poolSizes[] =
 	{
-		printf("[Error] Unable to create pipeline layout: %i\n", result);
-		exit(-1);
+		{
+			.descriptorCount = uboCount * Graphics.FrameResourceCount,
+			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		},
+		{
+			.descriptorCount = samplerCount * Graphics.FrameResourceCount,
+			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		}
+	};
+	VkDescriptorPoolCreateInfo poolInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+		.maxSets = (uboCount + samplerCount) * Graphics.FrameResourceCount,
+		.poolSizeCount = 2,
+		.pPoolSizes = poolSizes,
+	};
+	vkCreateDescriptorPool(Graphics.Device, &poolInfo, NULL, &pipeline->DescriptorPool);
+	
+	for (int i = 0; i < pipeline->StageCount; i++)
+	{
+		struct PipelineStage * stage = pipeline->Stages + i;
+		stage->DescriptorSetCount = stage->DescriptorSetLayoutCount * Graphics.FrameResourceCount;
+		stage->DescriptorSets = malloc(stage->DescriptorSetCount * sizeof(VkDescriptorSet));
+		for (int j = 0; j < stage->DescriptorSetLayoutCount; j++)
+		{
+			for (int k = 0; k < Graphics.FrameResourceCount; k++)
+			{
+				VkDescriptorSetAllocateInfo setInfo =
+				{
+					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+					.descriptorPool = Graphics.DescriptorPool,
+					.descriptorSetCount = 1,
+					.pSetLayouts = stage->DescriptorSetLayouts + j,
+				};
+				vkAllocateDescriptorSets(Graphics.Device, &setInfo, stage->DescriptorSets + j * Graphics.FrameResourceCount + k);
+			}
+		}
 	}
 }
 
@@ -129,11 +157,7 @@ Pipeline PipelineCreate(struct Shader shader, VertexLayout vertexLayout)
 	};
 	VkShaderModule vsModule;
 	VkResult result = vkCreateShaderModule(Graphics.Device, &moduleInfo, NULL, &vsModule);
-	if (result != VK_SUCCESS)
-	{
-		printf("[Error] Unable to create vertex shader: %i\n", result);
-		exit(-1);
-	}
+	
 	VkPipelineShaderStageCreateInfo vsInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -150,11 +174,7 @@ Pipeline PipelineCreate(struct Shader shader, VertexLayout vertexLayout)
 	};
 	VkShaderModule fsModule;
 	result = vkCreateShaderModule(Graphics.Device, &moduleInfo, NULL, &fsModule);
-	if (result != VK_SUCCESS)
-	{
-		printf("[Error] Unable to create fragment shader: %i\n", result);
-		exit(-1);
-	}
+	
 	VkPipelineShaderStageCreateInfo fsInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -303,12 +323,21 @@ void PipelineSetPushConstant(Pipeline pipeline, const char * variable, void * va
 void PipelineDestroy(Pipeline pipeline)
 {
 	vkDeviceWaitIdle(Graphics.Device);
+	for (int i = 0; i < pipeline->StageCount; i++)
+	{
+		if (pipeline->Stages[i].DescriptorSetCount > 0) { free(pipeline->Stages[i].DescriptorSets); }
+	}
+	vkDestroyDescriptorPool(Graphics.Device, pipeline->DescriptorPool, NULL);
 	vkDestroyPipelineLayout(Graphics.Device, pipeline->Layout, NULL);
-	vkDestroyPipeline(Graphics.Device, pipeline->Instance, NULL);
+	for (int i = 0; i < pipeline->StageCount; i++)
+	{
+		for (int j = 0; j < pipeline->Stages[i].DescriptorSetLayoutCount; j++) { vkDestroyDescriptorSetLayout(Graphics.Device, pipeline->Stages[i].DescriptorSetLayouts[j], NULL); }
+		if (pipeline->Stages[i].DescriptorSetLayoutCount > 0) { free(pipeline->Stages[i].DescriptorSetLayouts); }
+	}
 	if (pipeline->UsesPushConstant) { free(pipeline->PushConstantData); }
-	for (int i = 0; i < pipeline->DescriptorSetLayoutCount; i++) { vkDestroyDescriptorSetLayout(Graphics.Device, pipeline->DescriptorSetLayouts[i], NULL); }
-	if (pipeline->DescriptorSetLayoutCount > 0) { free(pipeline->DescriptorSetLayouts); free(pipeline->DescriptorSetLayoutInfos); }
-	spvReflectDestroyShaderModule(&pipeline->VSModule);
-	spvReflectDestroyShaderModule(&pipeline->FSModule);
+	spvReflectDestroyShaderModule(&pipeline->Stages[0].Module);
+	spvReflectDestroyShaderModule(&pipeline->Stages[1].Module);
+	free(pipeline->Stages);
+	vkDestroyPipeline(Graphics.Device, pipeline->Instance, NULL);
 	free(pipeline);
 }

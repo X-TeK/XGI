@@ -12,6 +12,12 @@ typedef enum PipelineUniformType
 	PipelineVariableTypeUniform = SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 } PipelineUniformType;
 
+typedef enum ShaderStage
+{
+	ShaderStageVertex = VK_SHADER_STAGE_VERTEX_BIT,
+	ShaderStageFragment = VK_SHADER_STAGE_FRAGMENT_BIT,
+} ShaderStage;
+
 typedef struct Shader
 {
 	unsigned int VertexSPVSize;
@@ -29,20 +35,28 @@ typedef struct Pipeline
 	VkPipeline Instance;
 	VkPipelineLayout Layout;
 	VertexLayout VertexLayout;
-	SpvReflectShaderModule VSModule;
-	SpvReflectShaderModule FSModule;
+	int StageCount;
+	struct PipelineStage
+	{
+		ShaderStage Stage;
+		SpvReflectShaderModule Module;
+		unsigned int DescriptorSetLayoutCount;
+		SpvReflectDescriptorSet * DescriptorSetLayoutInfos;
+		VkDescriptorSetLayout * DescriptorSetLayouts;
+		unsigned int DescriptorSetCount;
+		VkDescriptorSet * DescriptorSets;
+	} * Stages;
 	bool UsesPushConstant;
 	SpvReflectBlockVariable PushConstantInfo;
 	void * PushConstantData;
 	unsigned int PushConstantSize;
-	
-	unsigned int DescriptorSetLayoutCount;
-	SpvReflectDescriptorSet * DescriptorSetLayoutInfos;
-	VkDescriptorSetLayout * DescriptorSetLayouts;
+	VkDescriptorPool DescriptorPool;
 } * Pipeline;
 
 Pipeline PipelineCreate(Shader shader, VertexLayout vertexLayout);
 void PipelineSetPushConstant(Pipeline pipeline, const char * variableName, void * value);
+// PipelineSetUniform(Pipeline pipeline, ShaderStage stage, const char * binding, const char * variable, void * value);
+// PipelineSetSampler(PIpeline pipeline, ShaderStage stage, const char * binding, Texture texture);
 void PipelineDestroy(Pipeline pipeline);
 
 #endif

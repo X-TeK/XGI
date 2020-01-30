@@ -119,7 +119,7 @@ void VertexBufferUnmapVertices(VertexBuffer vertexBuffer)
 	vmaUnmapMemory(Graphics.Allocator, vertexBuffer->StagingAllocation);
 }
 
-void VertexBufferUploadStagingBuffer(VertexBuffer vertexBuffer)
+void VertexBufferUpload(VertexBuffer vertexBuffer)
 {
 	vkWaitForFences(Graphics.Device, 1, &vertexBuffer->Fence, VK_TRUE, UINT64_MAX);
 	vkResetFences(Graphics.Device, 1, &vertexBuffer->Fence);

@@ -7,6 +7,12 @@
 #include <XGI/Swapchain.h>
 #include <XGI/XGI.h>
 
+struct Vertex
+{
+	Vector2 Position;
+	Color Color;
+};
+
 int main(int argc, const char * argv[])
 {
 	WindowConfigure windowConfig =
@@ -35,16 +41,16 @@ int main(int argc, const char * argv[])
 	};
 	FrameBuffer framebuffer = FrameBufferCreate(frameConfig);
 	
-	VertexAttribute attributes[] = { VertexAttributeVector2 };
-	VertexLayout vertexLayout = VertexLayoutCreate(1, attributes);
+	VertexAttribute attributes[] = { VertexAttributeVector2, VertexAttributeByte4 };
+	VertexLayout vertexLayout = VertexLayoutCreate(2, attributes);
 	
-	VertexBuffer vertexBuffer = VertexBufferCreate(3, sizeof(Vector2));
-	Vector2 * vertices = VertexBufferMapVertices(vertexBuffer);
-	vertices[0] = (Vector2){ 0.0f, 0.0f };
-	vertices[1] = (Vector2){ 1.0f, 0.0f };
-	vertices[2] = (Vector2){ 0.0f, 1.0f };
+	VertexBuffer vertexBuffer = VertexBufferCreate(3, sizeof(struct Vertex));
+	struct Vertex * vertices = VertexBufferMapVertices(vertexBuffer);
+	vertices[0] = (struct Vertex){ { 0.0f, 0.0f }, ColorRed };
+	vertices[1] = (struct Vertex){ { 1.0f, 0.0f }, ColorGreen };
+	vertices[2] = (struct Vertex){ { 0.0f, 1.0f }, ColorBlue };
 	VertexBufferUnmapVertices(vertexBuffer);
-	VertexBufferUploadStagingBuffer(vertexBuffer);
+	VertexBufferUpload(vertexBuffer);
 	
 #include "Shaders/Default.vert.c"
 #include "Shaders/Default.frag.c"
@@ -72,7 +78,7 @@ int main(int argc, const char * argv[])
 		}
 		SwapchainAquireNextImage();
 		GraphicsBegin(framebuffer);
-		GraphicsClear(ColorFromHex(0x204080ff), 1.0f, 0);
+		GraphicsClearColor(ColorFromHex(0x204080ff));
 		GraphicsBindPipeline(pipeline);
 		GraphicsRenderVertexBuffer(vertexBuffer);
 		GraphicsEnd();
