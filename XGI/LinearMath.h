@@ -87,10 +87,35 @@ static inline Scalar Vector3Angle(Vector3 v1, Vector3 v2) { return (Scalar)acos(
 static inline Scalar Vector3Distance(Vector3 v1, Vector3 v2) { return Vector3Length(Vector3Subtract(v2, v1)); }
 //! Normalizes a vector
 static inline Vector3 Vector3Normalize(Vector3 v) { return Vector3DivideScalar(v, Vector3Length(v)); }
+//! Linear interpolate between two vectors: v1 * t + v2 * (1.0 - t)
 static inline Vector3 Vector3Lerp(Vector3 v1, Vector3 v2, Scalar t) { return Vector3Add(Vector3MultiplyScalar(v1, t), Vector3MultiplyScalar(v2, 1.0 - t)); }
 
-//! Linear interpolate between two vectors: v1 * t + v2 * (1.0 - t)
-Vector3 Vector3Lerp(Vector3 v1, Vector3 v2, Scalar t);
+//! Adds two vectors (x + x, y + y, z + z, w + w)
+static inline Vector4 Vector4Add(Vector4 v1, Vector4 v2) { return (Vector4) { v1.X + v2.X, v1.Y + v2.Y, v1.Z + v2.Z, v1.W + v2.W }; }
+//! Subtracts two vectors (x - x, y - y, z - z, w - w)
+static inline Vector4 Vector4Subtract(Vector4 v1, Vector4 v2) { return (Vector4) { v1.X - v2.X, v1.Y - v2.Y, v1.Z - v2.Z, v1.W - v2.W }; }
+//! Multiplies two vectors (x * x, y * y, z * z, w * w)
+static inline Vector4 Vector4Multiply(Vector4 v1, Vector4 v2) { return (Vector4) { v1.X * v2.X, v1.Y * v2.Y, v1.Z * v2.Z, v1.W * v2.W }; }
+//! Divides two vectors (x / x, y / y, z / z, w * w)
+static inline Vector4 Vector4Divide(Vector4 v1, Vector4 v2) { return (Vector4) { v1.X / v2.X, v1.Y / v2.Y, v1.Z / v2.Z, v1.W / v2.W }; }
+//! Adds a scalar to a vector (x + s, y + s, z + s, w + s)
+static inline Vector4 Vector4AddScalar(Vector4 v, Scalar s) { return (Vector4) { v.X + s, v.Y + s, v.Z + s, v.W + s }; }
+//! Subtracts a scalar from a vector (x - s, y - s, z - s, w - s)
+static inline Vector4 Vector4SubtractScalar(Vector4 v, Scalar s) { return (Vector4) { v.X - s, v.Y - s, v.Z - s, v.W - s }; }
+//! Multiplies a vector by a scalar (x * s, y * s, z * s, w * s)
+static inline Vector4 Vector4MultiplyScalar(Vector4 v, Scalar s) { return (Vector4) { v.X * s, v.Y * s, v.Z * s, v.W * s }; }
+//! Divides a vector by a scalar (x / s, y / s, z / s, w / s)
+static inline Vector4 Vector4DivideScalar(Vector4 v, Scalar s) { return (Vector4) { v.X / s, v.Y / s, v.Z / s, v.W / s }; }
+//! Negates a vector (-x, -y, -z, -w)
+static inline Vector4 Vector4Negate(Vector4 v) { return (Vector4) { -v.X, -v.Y, -v.Z, -v.W }; }
+//! Dot product of two vectors
+static inline Scalar Vector4Dot(Vector4 v1, Vector4 v2) { return v1.X * v2.X + v1.Y * v2.Y + v1.Z * v2.Z + v1.W * v2.W; }
+//! Length of a vector (distance to zero)
+static inline Scalar Vector4Length(Vector4 v) { return (Scalar)sqrt(Vector4Dot(v, v)); }
+//! Distance between two vectors
+static inline Scalar Vector4Distance(Vector4 v1, Vector4 v2) { return Vector4Length(Vector4Subtract(v2, v1)); }
+//! Normalizes a vector
+static inline Vector4 Vector4Normalize(Vector4 v) { return Vector4DivideScalar(v, Vector4Length(v)); }
 
 typedef struct Matrix4x4
 {
@@ -98,7 +123,7 @@ typedef struct Matrix4x4
 	Scalar M01, M11, M21, M31;
 	Scalar M02, M12, M22, M32;
 	Scalar M03, M13, M23, M33;
-} Matrix4x4; //! 4x4 matrix, each row is 0n, each column is n0
+} Matrix4x4; //! 4x4 matrix, each row is .M0n, each column is .Mn0
 
 extern Matrix4x4 Matrix4x4Identity; //! Identitiy matrix
 /*!
@@ -302,10 +327,10 @@ static inline Color ColorFromVector4(Vector4 rgba)
 {
 	return (Color)
 	{
-		(uint8_t)(rgba.X * 256.0),
-		(uint8_t)(rgba.Y * 256.0),
-		(uint8_t)(rgba.Z * 256.0),
-		(uint8_t)(rgba.W * 256.0),
+		(unsigned char)(rgba.X * 256.0),
+		(unsigned char)(rgba.Y * 256.0),
+		(unsigned char)(rgba.Z * 256.0),
+		(unsigned char)(rgba.W * 256.0),
 	};
 }
 //! Converts to a vector4 floating point color
