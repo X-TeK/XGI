@@ -28,9 +28,6 @@ struct Graphics
 	unsigned int PresentQueueIndex;
 	VkCommandPool CommandPool;
 	VmaAllocator Allocator;
-	
-	VkDescriptorSetLayout DescriptorSetLayout0;
-	VkDescriptorSetLayout DescriptorSetLayout1;
 	VkDescriptorPool DescriptorPool;
 	
 	List PreRenderSemaphores;
@@ -42,6 +39,7 @@ struct Graphics
 		VkSemaphore RenderFinished;
 		VkFence FrameReady;
 		List DestroyVertexBufferQueue;
+		List UpdateDescriptorQueue;
 	} * FrameResources;
 	int FrameIndex;
 	

@@ -19,7 +19,7 @@ int main(int argc, const char * argv[])
 	{
 		.Width = 800,
 		.Height = 600,
-		.Title = "XGI Test",
+		.Title = "XGI Example",
 		.HighDPI = true,
 		.Resizable = false,
 		.FullScreen = false,
@@ -40,6 +40,7 @@ int main(int argc, const char * argv[])
 		.UseStencil = false,
 	};
 	FrameBuffer framebuffer = FrameBufferCreate(frameConfig);
+	FrameBuffer framebuffer2 = FrameBufferCreate(frameConfig);
 	
 	VertexAttribute attributes[] = { VertexAttributeVector2, VertexAttributeByte4 };
 	VertexLayout vertexLayout = VertexLayoutCreate(2, attributes);
@@ -63,10 +64,14 @@ int main(int argc, const char * argv[])
 	};
 	Pipeline pipeline = PipelineCreate(shader, vertexLayout);
 	Vector4 color = ColorToVector4(ColorWhite);
-	Vector2 dimensions = { Window.Width, Window.Height };
-	PipelineSetPushConstant(pipeline, "Dimensions", &dimensions);
 	PipelineSetPushConstant(pipeline, "Transform", &Matrix4x4Identity);
 	PipelineSetPushConstant(pipeline, "Color", &color);
+	
+	UniformBuffer uniform = UniformBufferCreate(pipeline, 0);
+	Vector2 dimensions = { Window.Width, Window.Height };
+	UniformBufferSetVariable(uniform, "Dimensions", &dimensions);
+	PipelineSetUniform(pipeline, 0, uniform);
+	PipelineSetSampler(pipeline, 1, framebuffer2->ColorTexture);
 	
 	while (Window.Running)
 	{
@@ -77,19 +82,27 @@ int main(int argc, const char * argv[])
 			framebuffer = FrameBufferResize(framebuffer, Window.Width, Window.Height);
 		}
 		SwapchainAquireNextImage();
+		
+		GraphicsBegin(framebuffer2);
+		GraphicsClearColor(ColorRed);
+		GraphicsEnd();
+		
 		GraphicsBegin(framebuffer);
 		GraphicsClearColor(ColorFromHex(0x204080ff));
 		GraphicsBindPipeline(pipeline);
 		GraphicsRenderVertexBuffer(vertexBuffer);
 		GraphicsEnd();
+		
 		GraphicsCopyToSwapchain(framebuffer);
 		SwapchainPresent();
 	}
 	GraphicsStopOperations();
 	
+	UniformBufferDestroy(uniform);
 	VertexBufferDestroy(vertexBuffer);
 	PipelineDestroy(pipeline);
 	FrameBufferDestroy(framebuffer);
+	FrameBufferDestroy(framebuffer2);
 	VertexLayoutDestroy(vertexLayout);
 	
 	XGIDeinitialize();

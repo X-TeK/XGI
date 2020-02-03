@@ -3,15 +3,32 @@
 #include "UniformBuffer.h"
 #include "Graphics.h"
 
-static UniformBuffer_T Create(uniform_t uniform)
+UniformBuffer UniformBufferCreate(Pipeline pipeline, int binding)
 {
-	UniformBuffer_T uniformBuffer = malloc(sizeof(struct UniformBuffer));
+	UniformBuffer uniformBuffer = malloc(sizeof(struct UniformBuffer));
 	*uniformBuffer = (struct UniformBuffer){ 0 };
 	
+	bool foundBinding = false;
+	for (int i = 0; i < pipeline->StageCount; i++)
+	{
+		for (int j = 0; j < pipeline->Stages[i].DescriptorInfo.binding_count; j++)
+		{
+			SpvReflectDescriptorBinding * bindingInfo = pipeline->Stages[i].DescriptorInfo.bindings[j];
+			if (bindingInfo->binding == binding && bindingInfo->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+			{
+				//memcpy(&uniformBuffer->Info, &binding->block, sizeof(binding->block));
+				uniformBuffer->Info = bindingInfo->block;
+				foundBinding = true;
+			}
+		}
+	}
+	if (!foundBinding) { abort(); }
+	
+	uniformBuffer->Size = uniformBuffer->Info.size;
 	VkBufferCreateInfo bufferInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.size = sizeof(struct uniform),
+		.size = uniformBuffer->Info.size,
 		.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 	};
 	VmaAllocationCreateInfo allocationInfo =
@@ -20,60 +37,28 @@ static UniformBuffer_T Create(uniform_t uniform)
 	};
 	VmaAllocationInfo info;
 	vmaCreateBuffer(Graphics.Allocator, &bufferInfo, &allocationInfo, &uniformBuffer->Buffer, &uniformBuffer->Allocation, &info);
-	UniformBuffer.Update(uniformBuffer, uniform);
-	
-	uniformBuffer->DescriptorSets = malloc(Graphics.FrameResourceCount * sizeof(VkDescriptorSet));
-	for (int i = 0; i < Graphics.FrameResourceCount; i++)
-	{
-		VkDescriptorSetAllocateInfo setInfo =
-		{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-			.descriptorPool = Graphics.DescriptorPool,
-			.descriptorSetCount = 1,
-			.pSetLayouts = &Graphics.DescriptorSetLayout0,
-		};
-		vkAllocateDescriptorSets(Graphics.Device, &setInfo, uniformBuffer->DescriptorSets + i);
-		
-		VkDescriptorBufferInfo bufferInfo =
-		{
-			.buffer = uniformBuffer->Buffer,
-			.offset = 0,
-			.range = VK_WHOLE_SIZE,
-		};
-		VkWriteDescriptorSet writeInfo =
-		{
-			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-			.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			.descriptorCount = 1,
-			.dstArrayElement = 0,
-			.dstBinding = 0,
-			.dstSet = uniformBuffer->DescriptorSets[i],
-			.pBufferInfo = &bufferInfo,
-		};
-		vkUpdateDescriptorSets(Graphics.Device, 1, &writeInfo, 0, NULL);
-	}
 	
 	return uniformBuffer;
 }
 
-static void Update(UniformBuffer_T uniformBuffer, uniform_t uniform)
+void UniformBufferSetVariable(UniformBuffer uniformBuffer, const char * variable, void * value)
 {
-	void * _Data;
-	vmaMapMemory(Graphics.Allocator, uniformBuffer->Allocation, &_Data);
-	*((uniform_t *)_Data) = uniform;
+	void * data;
+	vmaMapMemory(Graphics.Allocator, uniformBuffer->Allocation, &data);
+	for (int i = 0; i < uniformBuffer->Info.member_count; i++)
+	{
+		if (strcmp(uniformBuffer->Info.members[i].name, variable) == 0)
+		{
+			unsigned int offset = uniformBuffer->Info.members[i].offset;
+			unsigned int size = uniformBuffer->Info.members[i].size;
+			memcpy(data + offset, value, size);
+		}
+	}
 	vmaUnmapMemory(Graphics.Allocator, uniformBuffer->Allocation);
 }
 
-static void Destroy(UniformBuffer_T uniformBuffer)
+void UniformBufferDestroy(UniformBuffer uniformBuffer)
 {
-	vkFreeDescriptorSets(Graphics.Device, Graphics.DescriptorPool, Graphics.FrameResourceCount, uniformBuffer->DescriptorSets);
-	free(uniformBuffer->DescriptorSets);
 	vmaDestroyBuffer(Graphics.Allocator, uniformBuffer->Buffer, uniformBuffer->Allocation);
+	free(uniformBuffer);
 }
-
-struct UniformBufferInterface UniformBuffer =
-{
-	.Create = Create,
-	.Update = Update,
-	.Destroy = Destroy,
-};

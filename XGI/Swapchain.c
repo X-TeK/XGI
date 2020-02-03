@@ -243,12 +243,21 @@ void SwapchainAquireNextImage()
 	unsigned int i = Graphics.FrameIndex;
 	vkWaitForFences(Graphics.Device, 1, &Graphics.FrameResources[i].FrameReady, VK_TRUE, UINT64_MAX);
 	vkResetFences(Graphics.Device, 1, &Graphics.FrameResources[i].FrameReady);
+	
 	for (int j = 0; j < Graphics.FrameResources[i].DestroyVertexBufferQueue->Count; j++)
 	{
 		VertexBuffer vertexBuffer = ListIndex(Graphics.FrameResources[i].DestroyVertexBufferQueue, j);
 		VertexBufferDestroy(vertexBuffer);
 	}
 	ListClear(Graphics.FrameResources[i].DestroyVertexBufferQueue);
+	for (int j = 0; j < Graphics.FrameResources[i].UpdateDescriptorQueue->Count; j++)
+	{
+		VkWriteDescriptorSet * writeInfo = ListIndex(Graphics.FrameResources[i].UpdateDescriptorQueue, j);
+		vkUpdateDescriptorSets(Graphics.Device, 1, writeInfo, 0, NULL);
+		free((void *)writeInfo->pBufferInfo);
+		free(writeInfo);
+	}
+	ListClear(Graphics.FrameResources[i].UpdateDescriptorQueue);
 	
 	vkAcquireNextImageKHR(Graphics.Device, Swapchain.Instance, UINT64_MAX, Graphics.FrameResources[i].ImageAvailable, VK_NULL_HANDLE, &Swapchain.CurrentImageIndex);
 	

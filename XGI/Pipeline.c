@@ -7,18 +7,21 @@
 #include "UniformBuffer.h"
 #include "spirv/spirv_reflect.h"
 
-static void CreatePipelineLayout(Pipeline pipeline, struct Shader shader)
+static void CreateReflectModules(Pipeline pipeline, struct Shader shader)
 {
 	pipeline->StageCount = 2;
 	pipeline->Stages = malloc(pipeline->StageCount * sizeof(struct PipelineStage));
 	
-	pipeline->Stages[0].Stage = ShaderStageVertex;
-	pipeline->Stages[1].Stage = ShaderStageFragment;
+	pipeline->Stages[0].ShaderType = ShaderTypeVertex;
+	pipeline->Stages[1].ShaderType = ShaderTypeFragment;
 	
 	spvReflectCreateShaderModule(shader.VertexSPVSize, shader.VertexSPV, &pipeline->Stages[0].Module);
 	spvReflectCreateShaderModule(shader.FragmentSPVSize, shader.FragmentSPV, &pipeline->Stages[1].Module);
-	
-	VkPushConstantRange pushConstantRange;
+}
+
+static VkPushConstantRange GetPushConstantRange(Pipeline pipeline)
+{
+	VkPushConstantRange pushConstantRange = { 0 };
 	for (int i = 0; i < pipeline->StageCount; i++)
 	{
 		unsigned int pushConstantCount;
@@ -31,117 +34,117 @@ static void CreatePipelineLayout(Pipeline pipeline, struct Shader shader)
 			pipeline->PushConstantInfo = pushConstants[0];
 			pipeline->PushConstantData = malloc(pushConstants[0].size);
 			pipeline->PushConstantSize = pushConstants[0].size;
-			pushConstantRange = (VkPushConstantRange)
+			return (VkPushConstantRange)
 			{
 				.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 				.offset = pushConstants[0].offset,
 				.size = pushConstants[0].size,
 			};
-			break;
 		}
 	}
-	
-	int samplerCount = 0;
-	int uboCount = 0;
+	return pushConstantRange;
+}
+
+static void CreateDescriptorLayout(Pipeline pipeline, int * uboCount, int * samplerCount)
+{
+	unsigned int bindingCount = 0;
 	for (int i = 0; i < pipeline->StageCount; i++)
 	{
 		struct PipelineStage * stage = pipeline->Stages + i;
-		spvReflectEnumerateDescriptorSets(&stage->Module, &stage->DescriptorSetLayoutCount, NULL);
-		stage->DescriptorSetLayoutInfos = malloc(stage->DescriptorSetLayoutCount * sizeof(SpvReflectDescriptorSet));
-		spvReflectEnumerateDescriptorSets(&stage->Module, &stage->DescriptorSetLayoutCount, &stage->DescriptorSetLayoutInfos);
-		stage->DescriptorSetLayouts = malloc(stage->DescriptorSetLayoutCount * sizeof(VkDescriptorSetLayout));
+		unsigned int setCount;
+		spvReflectEnumerateDescriptorSets(&stage->Module, &setCount, NULL);
+		SpvReflectDescriptorSet * sets = malloc(setCount * sizeof(SpvReflectDescriptorSet));
+		spvReflectEnumerateDescriptorSets(&stage->Module, &setCount, &sets);
 		
-		for (int j = 0; j < stage->DescriptorSetLayoutCount; j++)
+		if (setCount > 0)
 		{
-			SpvReflectDescriptorSet set = stage->DescriptorSetLayoutInfos[j];
-			VkDescriptorSetLayoutBinding * layoutBindings = malloc(set.binding_count * sizeof(VkDescriptorSetLayoutBinding));
-			for (int k = 0; k < set.binding_count; k++)
-			{
-				SpvReflectDescriptorBinding * binding = set.bindings[k];
-				printf("set:%i binding:%i %s\n", binding->set, binding->binding, binding->name);
-				layoutBindings[k] = (VkDescriptorSetLayoutBinding)
-				{
-					.binding = k,
-					.descriptorCount = binding->count,
-					.descriptorType = (VkDescriptorType)binding->descriptor_type,
-					.stageFlags = stage->Stage,
-				};
-				if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) { samplerCount++; }
-				if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) { uboCount++; }
-			}
-			VkDescriptorSetLayoutCreateInfo layoutInfo =
-			{
-				.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-				.bindingCount = set.binding_count,
-				.pBindings = layoutBindings,
-			};
-			vkCreateDescriptorSetLayout(Graphics.Device, &layoutInfo, NULL, stage->DescriptorSetLayouts + j);
-			free(layoutBindings);
+			pipeline->UsesDescriptors = true;
+			stage->DescriptorInfo = sets[0];
+			bindingCount += stage->DescriptorInfo.binding_count;
+			printf("%i\n", bindingCount);
 		}
 	}
 	
-	int totalLayoutsCount = 0;
-	for (int i = 0; i < pipeline->StageCount; i++) { totalLayoutsCount += pipeline->Stages[i].DescriptorSetLayoutCount; }
-	VkDescriptorSetLayout * totalLayouts = malloc(totalLayoutsCount * sizeof(VkDescriptorSetLayout));
-	
+	VkDescriptorSetLayoutBinding * layoutBindings = malloc(bindingCount * sizeof(VkDescriptorSetLayoutBinding));
 	for (int i = 0, c = 0; i < pipeline->StageCount; i++)
 	{
-		for (int j = 0; j < pipeline->Stages[i].DescriptorSetLayoutCount; j++, c++)
+		struct PipelineStage * stage = pipeline->Stages + i;
+		unsigned int setCount;
+		spvReflectEnumerateDescriptorSets(&stage->Module, &setCount, NULL);
+		SpvReflectDescriptorSet * sets = malloc(setCount * sizeof(SpvReflectDescriptorSet));
+		spvReflectEnumerateDescriptorSets(&stage->Module, &setCount, &sets);
+		
+		if (setCount > 0)
 		{
-			totalLayouts[c] = pipeline->Stages[i].DescriptorSetLayouts[j];
+			for (int j = 0; j < stage->DescriptorInfo.binding_count; j++, c++)
+			{
+				SpvReflectDescriptorBinding * binding = stage->DescriptorInfo.bindings[j];
+				printf("set:%i binding:%i %s\n", binding->set, binding->binding, binding->name);
+				layoutBindings[c] = (VkDescriptorSetLayoutBinding)
+				{
+					.binding = binding->binding,
+					.descriptorCount = binding->count,
+					.descriptorType = (VkDescriptorType)binding->descriptor_type,
+					.stageFlags = stage->ShaderType,
+				};
+				if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) { (*samplerCount)++; }
+				if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) { (*uboCount)++; }
+			}
 		}
 	}
+	
+	VkDescriptorSetLayoutCreateInfo layoutInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.bindingCount = bindingCount,
+		.pBindings = layoutBindings,
+	};
+	vkCreateDescriptorSetLayout(Graphics.Device, &layoutInfo, NULL, &pipeline->DescriptorLayout);
+	free(layoutBindings);
+}
+
+static void CreateDescriptorSets(Pipeline pipeline)
+{
+	if (pipeline->UsesDescriptors)
+	{
+		pipeline->DescriptorSet = malloc(Graphics.FrameResourceCount * sizeof(VkDescriptorSet));
+		for (int i = 0; i < Graphics.FrameResourceCount; i++)
+		{
+			VkDescriptorSetAllocateInfo allocateInfo =
+			{
+				.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+				.descriptorPool = Graphics.DescriptorPool,
+				.descriptorSetCount = 1,
+				.pSetLayouts = &pipeline->DescriptorLayout,
+			};
+			vkAllocateDescriptorSets(Graphics.Device, &allocateInfo, pipeline->DescriptorSet + i);
+		}
+	}
+}
+
+static void CreatePipelineLayout(Pipeline pipeline, VkPushConstantRange pushConstantRange)
+{
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-		.setLayoutCount = totalLayoutsCount,
-		.pSetLayouts = totalLayouts,
+		.setLayoutCount = pipeline->UsesDescriptors ? 1 : 0,
+		.pSetLayouts = &pipeline->DescriptorLayout,
 		.pushConstantRangeCount = pipeline->UsesPushConstant ? 1 : 0,
 		.pPushConstantRanges = &pushConstantRange,
 	};
 	vkCreatePipelineLayout(Graphics.Device, &pipelineLayoutCreateInfo, NULL, &pipeline->Layout);
-	free(totalLayouts);
-	
-	VkDescriptorPoolSize poolSizes[] =
-	{
-		{
-			.descriptorCount = uboCount * Graphics.FrameResourceCount,
-			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-		},
-		{
-			.descriptorCount = samplerCount * Graphics.FrameResourceCount,
-			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-		}
-	};
-	VkDescriptorPoolCreateInfo poolInfo =
-	{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-		.maxSets = (uboCount + samplerCount) * Graphics.FrameResourceCount,
-		.poolSizeCount = 2,
-		.pPoolSizes = poolSizes,
-	};
-	vkCreateDescriptorPool(Graphics.Device, &poolInfo, NULL, &pipeline->DescriptorPool);
-	
-	for (int i = 0; i < pipeline->StageCount; i++)
-	{
-		struct PipelineStage * stage = pipeline->Stages + i;
-		stage->DescriptorSetCount = stage->DescriptorSetLayoutCount * Graphics.FrameResourceCount;
-		stage->DescriptorSets = malloc(stage->DescriptorSetCount * sizeof(VkDescriptorSet));
-		for (int j = 0; j < stage->DescriptorSetLayoutCount; j++)
-		{
-			for (int k = 0; k < Graphics.FrameResourceCount; k++)
-			{
-				VkDescriptorSetAllocateInfo setInfo =
-				{
-					.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-					.descriptorPool = Graphics.DescriptorPool,
-					.descriptorSetCount = 1,
-					.pSetLayouts = stage->DescriptorSetLayouts + j,
-				};
-				vkAllocateDescriptorSets(Graphics.Device, &setInfo, stage->DescriptorSets + j * Graphics.FrameResourceCount + k);
-			}
-		}
-	}
+}
+
+static void CreateLayout(Pipeline pipeline, struct Shader shader)
+{
+	CreateReflectModules(pipeline, shader);
+	VkPushConstantRange pushConstantRange = GetPushConstantRange(pipeline);
+	int samplerCount = 0;
+	int uboCount = 0;
+	CreateDescriptorLayout(pipeline, &uboCount, &samplerCount);
+	CreatePipelineLayout(pipeline, pushConstantRange);
+	CreateDescriptorSets(pipeline);
+	//PipelineSetUniform(pipeline, ShaderStageVertex, 0, 0, "Transform", &Matrix4x4Identity, 0);
 }
 
 Pipeline PipelineCreate(struct Shader shader, VertexLayout vertexLayout)
@@ -273,7 +276,7 @@ Pipeline PipelineCreate(struct Shader shader, VertexLayout vertexLayout)
 		.depthCompareOp = VK_COMPARE_OP_LESS,
 	};
 	
-	CreatePipelineLayout(pipeline, shader);
+	CreateLayout(pipeline, shader);
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -320,20 +323,71 @@ void PipelineSetPushConstant(Pipeline pipeline, const char * variable, void * va
 	}
 }
 
+void PipelineSetUniform(Pipeline pipeline, int binding, struct UniformBuffer * uniform)
+{
+	if (pipeline->UsesDescriptors)
+	{
+		for (int i = 0; i < Graphics.FrameResourceCount; i++)
+		{
+			VkDescriptorBufferInfo * bufferInfo = malloc(sizeof(VkDescriptorBufferInfo));
+			*bufferInfo = (VkDescriptorBufferInfo)
+			{
+				.buffer = uniform->Buffer,
+				.offset = 0,
+				.range = uniform->Size,
+			};
+			
+			VkWriteDescriptorSet * writeInfo = malloc(sizeof(VkWriteDescriptorSet));
+			*writeInfo = (VkWriteDescriptorSet)
+			{
+				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+				.descriptorCount = 1,
+				.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+				.dstArrayElement = 0,
+				.dstBinding = binding,
+				.dstSet = pipeline->DescriptorSet[i],
+				.pBufferInfo = bufferInfo,
+			};
+			ListPush(Graphics.FrameResources[i].UpdateDescriptorQueue, writeInfo);
+		}
+	}
+}
+
+void PipelineSetSampler(Pipeline pipeline, int binding, Texture texture)
+{
+	if (pipeline->UsesDescriptors)
+	{
+		for (int i = 0; i < Graphics.FrameResourceCount; i++)
+		{
+			VkDescriptorImageInfo * imageInfo = malloc(sizeof(VkDescriptorImageInfo));
+			*imageInfo = (VkDescriptorImageInfo)
+			{
+				.imageLayout = VK_IMAGE_LAYOUT_GENERAL,
+				.sampler = texture->Sampler,
+				.imageView = texture->ImageView,
+			};
+			VkWriteDescriptorSet * writeInfo = malloc(sizeof(VkWriteDescriptorSet));
+			*writeInfo = (VkWriteDescriptorSet)
+			{
+				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+				.descriptorCount = 1,
+				.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+				.dstArrayElement = 0,
+				.dstBinding = binding,
+				.dstSet = pipeline->DescriptorSet[i],
+				.pImageInfo = imageInfo,
+			};
+			ListPush(Graphics.FrameResources[i].UpdateDescriptorQueue, writeInfo);
+		}
+	}
+}
+
 void PipelineDestroy(Pipeline pipeline)
 {
 	vkDeviceWaitIdle(Graphics.Device);
-	for (int i = 0; i < pipeline->StageCount; i++)
-	{
-		if (pipeline->Stages[i].DescriptorSetCount > 0) { free(pipeline->Stages[i].DescriptorSets); }
-	}
-	vkDestroyDescriptorPool(Graphics.Device, pipeline->DescriptorPool, NULL);
 	vkDestroyPipelineLayout(Graphics.Device, pipeline->Layout, NULL);
-	for (int i = 0; i < pipeline->StageCount; i++)
-	{
-		for (int j = 0; j < pipeline->Stages[i].DescriptorSetLayoutCount; j++) { vkDestroyDescriptorSetLayout(Graphics.Device, pipeline->Stages[i].DescriptorSetLayouts[j], NULL); }
-		if (pipeline->Stages[i].DescriptorSetLayoutCount > 0) { free(pipeline->Stages[i].DescriptorSetLayouts); }
-	}
+	free(pipeline->DescriptorSet);
+	vkDestroyDescriptorSetLayout(Graphics.Device, pipeline->DescriptorLayout, NULL);
 	if (pipeline->UsesPushConstant) { free(pipeline->PushConstantData); }
 	spvReflectDestroyShaderModule(&pipeline->Stages[0].Module);
 	spvReflectDestroyShaderModule(&pipeline->Stages[1].Module);

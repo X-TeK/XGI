@@ -307,59 +307,6 @@ static void CreateAllocator()
 	vmaCreateAllocator(&allocatorInfo, &Graphics.Allocator);
 }
 
-static void CreateDescriptorLayouts()
-{
-	VkDescriptorSetLayoutBinding layout0Bindings[] =
-	{
-		{
-			.binding = 0,
-			.descriptorCount = 1,
-			.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-		},
-	};
-	VkDescriptorSetLayoutCreateInfo layout0Info =
-	{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-		.bindingCount = 1,
-		.pBindings = layout0Bindings,
-	};
-	VkResult result = vkCreateDescriptorSetLayout(Graphics.Device, &layout0Info, NULL, &Graphics.DescriptorSetLayout0);
-	if (result != VK_SUCCESS)
-	{
-		printf("[Error] failed to create descriptor set layout: %i\n", result);
-		exit(-1);
-	}
-	
-	VkDescriptorSetLayoutBinding layout1Bindings[] =
-	{
-		{
-			.binding = 0,
-			.descriptorCount = 1,
-			.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-		},
-		{
-			.binding = 1,
-			.descriptorCount = 1,
-			.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-		},
-	};
-	VkDescriptorSetLayoutCreateInfo layout1Info =
-	{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-		.bindingCount = 2,
-		.pBindings = layout1Bindings,
-	};
-	result = vkCreateDescriptorSetLayout(Graphics.Device, &layout1Info, NULL, &Graphics.DescriptorSetLayout1);
-	if (result != VK_SUCCESS)
-	{
-		printf("[Error] failed to create descriptor set layout: %i\n", result);
-		exit(-1);
-	}
-}
-
 static void CreateDescriptorPool()
 {
 	VkDescriptorPoolSize poolSizes[] =
@@ -419,6 +366,7 @@ static void CreateFrameResources()
 		vkCreateFence(Graphics.Device, &fenceInfo, NULL, &Graphics.FrameResources[i].FrameReady);
 		
 		Graphics.FrameResources[i].DestroyVertexBufferQueue = ListCreate();
+		Graphics.FrameResources[i].UpdateDescriptorQueue = ListCreate();
 	}
 	Graphics.FrameIndex = 0;
 	Graphics.PreRenderSemaphores = ListCreate();
@@ -435,7 +383,6 @@ void GraphicsInitialize(GraphicsConfigure config)
 	CreateLogicalDevice();
 	CreateCommandPool();
 	CreateAllocator();
-	CreateDescriptorLayouts();
 	CreateDescriptorPool();
 	CreateFrameResources();
 	printf("\n[Log] Successfully initialized vulkan\n");
@@ -538,25 +485,14 @@ void GraphicsBindPipeline(Pipeline pipeline)
 	{
 		vkCmdPushConstants(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, pipeline->Layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, pipeline->PushConstantSize, pipeline->PushConstantData);
 	}
+	if (pipeline->UsesDescriptors)
+	{
+		vkCmdBindDescriptorSets(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout, 0, 1, &pipeline->DescriptorSet[Graphics.FrameIndex], 0, NULL);
+	}
 }
 
 void GraphicsRenderVertexBuffer(VertexBuffer vertexBuffer)
-{
-	/*
-	if (uniformBuffer != NULL && sampler == NULL)
-	{
-		vkCmdBindDescriptorSets(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Graphics.BoundPipeline->Layout, 0, 1, &uniformBuffer->DescriptorSets[Graphics.FrameIndex], 0, NULL);
-	}
-	if (uniformBuffer == NULL && sampler != NULL)
-	{
-		vkCmdBindDescriptorSets(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Graphics.BoundPipeline->Layout, 1, 1, &sampler->DescriptorSets[Graphics.FrameIndex], 0, NULL);
-	}
-	if (uniformBuffer != NULL && sampler != NULL)
-	{
-		VkDescriptorSet _DescriptorSets[] = { uniformBuffer->DescriptorSets[Graphics.FrameIndex], sampler->DescriptorSets[Graphics.FrameIndex] };
-		vkCmdBindDescriptorSets(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Graphics.BoundPipeline->Layout, 0, 2, _DescriptorSets, 0, NULL);
-	}*/
-	
+{	
 	VkDeviceSize offset = 0;
 	vkCmdBindVertexBuffers(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 0, 1, &vertexBuffer->VertexBuffer, &offset);
 	vkCmdDraw(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, vertexBuffer->VertexCount, 1, 0, 0);
@@ -640,14 +576,13 @@ void GraphicsDeinitialize()
 			VertexBufferDestroy(vertexBuffer);
 		}
 		ListDestroy(Graphics.FrameResources[i].DestroyVertexBufferQueue);
+		ListDestroy(Graphics.FrameResources[i].UpdateDescriptorQueue);
 		vkDestroyFence(Graphics.Device, Graphics.FrameResources[i].FrameReady, NULL);
 		vkDestroySemaphore(Graphics.Device, Graphics.FrameResources[i].RenderFinished, NULL);
 		vkDestroySemaphore(Graphics.Device, Graphics.FrameResources[i].ImageAvailable, NULL);
 		vkFreeCommandBuffers(Graphics.Device, Graphics.CommandPool, 1, &Graphics.FrameResources[i].CommandBuffer);
 	}
 	free(Graphics.FrameResources);
-	vkDestroyDescriptorSetLayout(Graphics.Device, Graphics.DescriptorSetLayout0, NULL);
-	vkDestroyDescriptorSetLayout(Graphics.Device, Graphics.DescriptorSetLayout1, NULL);
 	vkDestroyDescriptorPool(Graphics.Device, Graphics.DescriptorPool, NULL);
 	vmaDestroyAllocator(Graphics.Allocator);
 	vkDestroyCommandPool(Graphics.Device, Graphics.CommandPool, NULL);

@@ -1,31 +1,24 @@
-#ifndef Uniforms_h
-#define Uniforms_h
+#ifndef Uniform_h
+#define Uniform_h
 
 #include <vulkan/vulkan.h>
 #include "vk_mem_alloc.h"
 #include "FrameBuffer.h"
 #include "LinearMath.h"
+#include "Pipeline.h"
 
-typedef struct uniform
-{
-	Matrix4x4 Transform;
-	Matrix4x4 Camera;
-	Vector4 Dimensions;
-	Vector4 Time;
-} uniform_t;
+struct Pipeline;
 
 typedef struct UniformBuffer
 {
 	VkBuffer Buffer;
 	VmaAllocation Allocation;
-	VkDescriptorSet * DescriptorSets;
-} * UniformBuffer_T;
+	SpvReflectBlockVariable Info;
+	unsigned int Size;
+} * UniformBuffer;
 
-struct UniformBufferInterface
-{
-	UniformBuffer_T (*Create)(uniform_t uniform);
-	void (*Update)(UniformBuffer_T uniformBuffer, uniform_t uniform);
-	void (*Destroy)(UniformBuffer_T uniformBuffer);
-} extern UniformBuffer;
+UniformBuffer UniformBufferCreate(struct Pipeline * pipeline, int binding);
+void UniformBufferSetVariable(UniformBuffer uniformBuffer, const char * variable, void * value);
+void UniformBufferDestroy(UniformBuffer uniformBuffer);
 
 #endif
