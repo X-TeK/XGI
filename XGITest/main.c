@@ -5,6 +5,7 @@
 #include <XGI/LinearMath.h>
 #include <XGI/Graphics.h>
 #include <XGI/Swapchain.h>
+#include <XGI/File.h>
 #include <XGI/XGI.h>
 
 struct Vertex
@@ -52,15 +53,23 @@ int main(int argc, const char * argv[])
 	vertices[2] = (struct Vertex){ { 0.0f, 1.0f }, ColorBlue };
 	VertexBufferUnmapVertices(vertexBuffer);
 	VertexBufferUpload(vertexBuffer);
-	
-#include "Shaders/Default.vert.c"
-#include "Shaders/Default.frag.c"
+
+	File vs = FileOpen("Shaders/Default.vert.spv", FileModeReadBinary);
+	unsigned long vsSize = FileSize(vs);
+	void * vsData = malloc(vs->Size);
+	FileRead(vs, 0, vs->Size, vsData);
+	FileClose(vs);
+	File fs = FileOpen("Shaders/Default.frag.spv", FileModeReadBinary);
+	unsigned long fsSize = FileSize(fs);
+	void * fsData = malloc(fs->Size);
+	FileRead(fs, 0, fs->Size, fsData);
+	FileClose(fs);
 	Shader shader =
 	{
-		.VertexSPVSize = sizeof(SPV_DefaultVertexShader),
-		.VertexSPV = SPV_DefaultVertexShader,
-		.FragmentSPVSize = sizeof(SPV_DefaultFragmentShader),
-		.FragmentSPV = SPV_DefaultFragmentShader,
+		.VertexSPVSize = vsSize,
+		.VertexSPV = vsData,
+		.FragmentSPVSize = fsSize,
+		.FragmentSPV = fsData,
 	};
 	Pipeline pipeline = PipelineCreate(shader, vertexLayout);
 	Vector4 color = ColorToVector4(ColorWhite);

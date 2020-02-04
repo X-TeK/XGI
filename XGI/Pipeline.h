@@ -24,9 +24,9 @@ typedef enum ShaderType
 
 typedef struct Shader
 {
-	unsigned int VertexSPVSize;
+	unsigned long VertexSPVSize;
 	unsigned int * VertexSPV;
-	unsigned int FragmentSPVSize;
+	unsigned long FragmentSPVSize;
 	unsigned int * FragmentSPV;
 	bool WireFrame;
 	bool FaceCull;

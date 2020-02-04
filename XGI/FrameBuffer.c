@@ -46,54 +46,6 @@ FrameBuffer FrameBufferCreate(FrameBufferConfigure config)
 		printf("[Error] Failed to create frame buffer: %i", result);
 		exit(-1);
 	}
-	/*
-	frameBuffer->DescriptorSets = malloc(Graphics.FrameResourceCount * sizeof(VkDescriptorSet));
-	for (int i = 0; i < Graphics.FrameResourceCount; i++)
-	{
-		VkDescriptorSetAllocateInfo setInfo =
-		{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-			.descriptorPool = Graphics.DescriptorPool,
-			.descriptorSetCount = 1,
-			.pSetLayouts = &Graphics.DescriptorSetLayout1,
-		};
-		vkAllocateDescriptorSets(Graphics.Device, &setInfo, frameBuffer->DescriptorSets + i);
-		
-		VkDescriptorImageInfo colorInfo =
-		{
-			.imageLayout = VK_IMAGE_LAYOUT_GENERAL,
-			.imageView = frameBuffer->ColorTexture->ImageView,
-			.sampler = frameBuffer->ColorTexture->Sampler,
-		};
-		VkDescriptorImageInfo depthInfo =
-		{
-			.imageLayout = VK_IMAGE_LAYOUT_GENERAL,
-			.imageView = frameBuffer->DepthTexture->ImageView,
-			.sampler = frameBuffer->DepthTexture->Sampler,
-		};
-		VkWriteDescriptorSet writeInfos[] =
-		{
-			{
-				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-				.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				.descriptorCount = 1,
-				.dstArrayElement = 0,
-				.dstBinding = 0,
-				.dstSet = frameBuffer->DescriptorSets[i],
-				.pImageInfo = &colorInfo,
-			},
-			{
-				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-				.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				.descriptorCount = 1,
-				.dstArrayElement = 0,
-				.dstBinding = 1,
-				.dstSet = frameBuffer->DescriptorSets[i],
-				.pImageInfo = &depthInfo,
-			}
-		};
-		vkUpdateDescriptorSets(Graphics.Device, 2, writeInfos, 0, NULL);
-	}*/
 	
 	return frameBuffer;
 }
