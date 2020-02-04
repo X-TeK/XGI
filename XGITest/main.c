@@ -56,13 +56,13 @@ int main(int argc, const char * argv[])
 
 	File vs = FileOpen("Shaders/Default.vert.spv", FileModeReadBinary);
 	unsigned long vsSize = FileSize(vs);
-	void * vsData = malloc(vs->Size);
-	FileRead(vs, 0, vs->Size, vsData);
+	void * vsData = malloc(vsSize);
+	FileRead(vs, 0, vsSize, vsData);
 	FileClose(vs);
 	File fs = FileOpen("Shaders/Default.frag.spv", FileModeReadBinary);
 	unsigned long fsSize = FileSize(fs);
-	void * fsData = malloc(fs->Size);
-	FileRead(fs, 0, fs->Size, fsData);
+	void * fsData = malloc(fsSize);
+	FileRead(fs, 0, fsSize, fsData);
 	FileClose(fs);
 	Shader shader =
 	{
@@ -72,6 +72,8 @@ int main(int argc, const char * argv[])
 		.FragmentSPV = fsData,
 	};
 	Pipeline pipeline = PipelineCreate(shader, vertexLayout);
+	free(vsData);
+	free(fsData);
 	Vector4 color = ColorToVector4(ColorWhite);
 	PipelineSetPushConstant(pipeline, "Transform", &Matrix4x4Identity);
 	PipelineSetPushConstant(pipeline, "Color", &color);

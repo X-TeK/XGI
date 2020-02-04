@@ -1,17 +1,32 @@
 #include <stdlib.h>
 #include "Random.h"
 
-static void Seed(int seed) { srand(seed); }
+void RandomSetSeed(int seed)
+{
+	srand(seed);
+}
 
-static int Int() { return rand(); }
+int RandomInteger()
+{
+	return rand();
+}
 
-static Scalar Float() { return (Scalar)rand() / (Scalar)RAND_MAX; }
+int RandomIntegerRange(int min, int max)
+{
+	return RandomInteger() % (max - min) + min;
+}
 
-static Scalar FloatRange(Scalar min, Scalar max) { return (max - min) * Random.Scalar() + min; }
+Scalar RandomScalar()
+{
+	return (Scalar)rand() / (Scalar)RAND_MAX;
+}
 
-static int IntRange(int min, int max) { return Random.Int() % (max - min) + min; }
+Scalar RandomScalarRange(Scalar min, Scalar max)
+{
+	return RandomScalar() * (max - min) + min;
+}
 
-int _SimplexHash[256] =
+int SimplexHash[256] =
 {
 	0x97,0xA0,0x89,0x5B,0x5A,0x0F,0x83,0x0D,0xC9,0x5F,0x60,0x35,0xC2,0xE8,0x07,0xE1,
 	0x8C,0x24,0x67,0x1E,0x45,0x8E,0x08,0x63,0x25,0xF0,0x15,0x0A,0x17,0xBE,0x06,0x94,
@@ -28,12 +43,60 @@ int _SimplexHash[256] =
 	0xDA,0xF6,0x61,0xE4,0xFB,0x22,0xF2,0xC1,0xEE,0xD2,0x90,0x0C,0xBF,0xB3,0xA2,0xF1,
 	0x51,0x33,0x91,0xEB,0xF9,0x0E,0xEF,0x6B,0x31,0xC0,0xD6,0x1F,0xB5,0xC7,0x6A,0x9D,
 	0xB8,0x54,0xCC,0xB0,0x73,0x79,0x32,0x2D,0x7F,0x04,0x96,0xFE,0x8A,0xEC,0xCD,0x5D,
-	0xDE,0x72,0x43,0x1D,0x18,0x48,0xF3,0x8D,0x80,0xC3,0x4E,0x42,0xD7,0x3D,0x9C,0xB4
+	0xDE,0x72,0x43,0x1D,0x18,0x48,0xF3,0x8D,0x80,0xC3,0x4E,0x42,0xD7,0x3D,0x9C,0xB4,
 };
 
-static int P(int i) { return _SimplexHash[i % 256]; }
+static int Hash(int i) { return SimplexHash[i % 256]; }
+
 static Scalar Fade(Scalar t) { return t * t * t * (t * (t * 6.0 - 15.0) + 10.0); }
-static Scalar Grad(int hash, Scalar x, Scalar y, Scalar z)
+
+static Scalar Lerp(Scalar a, Scalar b, Scalar t) { return a + (b - a) * t; }
+
+static Scalar Grad1(int hash, Scalar x)
+{
+	int h = hash & 0x0F;
+	Scalar grad = 1.0 + (h & 7);
+	if ((h & 8) != 0) { grad = -grad; }
+	return (grad * x);
+}
+
+Scalar RandomSimplex(Scalar x)
+{
+	x += 5000.0;
+	int xi = (int)x & 255;
+	Scalar xf = x - (int)x;
+	Scalar u = Fade(xf);
+	int a = Hash(xi);
+	int b = Hash(xi + 1);
+	return Lerp(Grad1(a, xf), Grad1(b, xf - 1.0), u);
+}
+
+static Scalar Grad2(int hash, Scalar x, Scalar y)
+{
+	int h = hash & 0x3F;
+	Scalar u = h < 4 ? x : y;
+	Scalar v = h < 4 ? y : x;
+	return ((h & 1) ? -u : u) + ((h & 2) ? -2.0f * v : 2.0f * v);
+}
+
+Scalar RandomSimplex2(Vector2 xy)
+{
+	Scalar x = xy.X + 5000.0, y = xy.Y + 5000.0;
+	int xi = (int)x & 255, yi = (int)y & 255;
+	Scalar xf = x - (int)x, yf = y - (int)y;
+	Scalar u = Fade(xf), v = Fade(yf);
+	int aa, ab, ba, bb;
+	aa = Hash(Hash(xi) + yi);
+	ab = Hash(Hash(xi) + yi + 1);
+	ba = Hash(Hash(xi + 1) + yi);
+	bb = Hash(Hash(xi + 1) + yi + 1);
+	Scalar x1, x2;
+	x1 = Lerp(Grad2(aa, xf, yf), Grad2(ba, xf - 1, yf), u);
+	x2 = Lerp(Grad2(ab, xf, yf - 1), Grad2(bb, xf - 1, yf - 1), u);
+	return Lerp(x1, x2, v);
+}
+
+static Scalar Grad3(int hash, Scalar x, Scalar y, Scalar z)
 {
 	int h = hash & 15;
 	Scalar u = h < 8 ? x : y;
@@ -43,38 +106,28 @@ static Scalar Grad(int hash, Scalar x, Scalar y, Scalar z)
 	else { v = z; }
 	return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
 }
-static Scalar Lerp(Scalar a, Scalar b, Scalar t) { return a + (b - a) * t; }
-static Scalar Simplex3(Vector3 xyz)
+
+Scalar RandomSimplex3(Vector3 xyz)
 {
 	Scalar x = xyz.X + 5000.0, y = xyz.Y + 5000.0, z = xyz.Z + 5000.0;
 	int xi = (int)x & 255; int yi = (int)y & 255; int zi = (int)z & 255;
-	double xf = x - (int)x; double yf = y - (int)y; double zf = z - (int)z;
-	double u = Fade(xf); double v = Fade(yf); double w = Fade(zf);
+	Scalar xf = x - (int)x; Scalar yf = y - (int)y; Scalar zf = z - (int)z;
+	Scalar u = Fade(xf); Scalar v = Fade(yf); Scalar w = Fade(zf);
 	int aaa, aba, aab, abb, baa, bba, bab, bbb;
-	aaa = P(P(P(xi) + yi) + zi);
-	aba = P(P(P(xi) + yi + 1) + zi);
-	aab = P(P(P(xi) + yi) + zi + 1);
-	abb = P(P(P(xi) + yi + 1) + zi + 1);
-	baa = P(P(P(xi + 1) + yi) + zi);
-	bba = P(P(P(xi + 1) + yi + 1) + zi);
-	bab = P(P(P(xi + 1) + yi) + zi + 1);
-	bbb = P(P(P(xi + 1) + yi + 1) + zi + 1);
-	double x1, x2, y1, y2;
-	x1 = Lerp(Grad(aaa, xf, yf, zf), Grad(baa, xf - 1, yf, zf), u);
-	x2 = Lerp(Grad(aba, xf, yf - 1, zf), Grad(bba, xf - 1, yf - 1, zf), u);
+	aaa = Hash(Hash(Hash(xi) + yi) + zi);
+	aba = Hash(Hash(Hash(xi) + yi + 1) + zi);
+	aab = Hash(Hash(Hash(xi) + yi) + zi + 1);
+	abb = Hash(Hash(Hash(xi) + yi + 1) + zi + 1);
+	baa = Hash(Hash(Hash(xi + 1) + yi) + zi);
+	bba = Hash(Hash(Hash(xi + 1) + yi + 1) + zi);
+	bab = Hash(Hash(Hash(xi + 1) + yi) + zi + 1);
+	bbb = Hash(Hash(Hash(xi + 1) + yi + 1) + zi + 1);
+	Scalar x1, x2, y1, y2;
+	x1 = Lerp(Grad3(aaa, xf, yf, zf), Grad3(baa, xf - 1, yf, zf), u);
+	x2 = Lerp(Grad3(aba, xf, yf - 1, zf), Grad3(bba, xf - 1, yf - 1, zf), u);
 	y1 = Lerp(x1, x2, v);
-	x1 = Lerp(Grad(aab, xf, yf, zf - 1), Grad(bab, xf - 1, yf, zf - 1), u);
-	x2 = Lerp(Grad(abb, xf, yf - 1, zf - 1), Grad(bbb, xf - 1, yf - 1, zf - 1), u);
+	x1 = Lerp(Grad3(aab, xf, yf, zf - 1), Grad3(bab, xf - 1, yf, zf - 1), u);
+	x2 = Lerp(Grad3(abb, xf, yf - 1, zf - 1), Grad3(bbb, xf - 1, yf - 1, zf - 1), u);
 	y2 = Lerp(x1, x2, v);
 	return Lerp(y1, y2, w);
 }
-
-struct RandomInterface Random =
-{
-	.Seed = Seed,
-	.Int = Int,
-	.Scalar = Float,
-	.ScalarRange = FloatRange,
-	.IntRange = IntRange,
-	.Simplex3 = Simplex3,
-};

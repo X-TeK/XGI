@@ -3,14 +3,13 @@
 
 #include "LinearMath.h"
 
-struct RandomInterface
-{
-	void (*Seed)(int);
-	int (*Int)(void);
-	Scalar (*Scalar)(void);
-	Scalar (*ScalarRange)(Scalar a, Scalar b);
-	int (*IntRange)(int a, int b);
-	Scalar (*Simplex3)(Vector3 xyz);
-} extern Random;
+void RandomSetSeed(int seed);
+int RandomInteger(void);
+int RandomIntegerRange(int min, int max);
+Scalar RandomScalar(void);
+Scalar RandomScalarRange(Scalar min, Scalar max);
+Scalar RandomSimplex(Scalar x);
+Scalar RandomSimplex2(Vector2 xy);
+Scalar RandomSimplex3(Vector3 xyz);
 
 #endif
