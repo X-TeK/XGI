@@ -8,11 +8,9 @@ layout (push_constant) uniform PushConstant
 	vec4 Color;
 } Input;
 
-layout (binding = 1) uniform sampler2D Texture;
-
 layout (location = 0) out vec4 FragColor;
 
 void main()
 {
-	FragColor = VertexColor * Input.Color * texture(Texture, vec2(0.0));
+	FragColor = VertexColor * Input.Color;
 }

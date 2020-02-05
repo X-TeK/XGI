@@ -5,6 +5,35 @@
 #include <SDL2/SDL.h>
 #include "List.h"
 
+typedef enum EventType
+{
+	EventTypeNone,
+	EventTypeQuit,
+	EventTypeWindowShown,
+	EventTypeWindowHidden,
+	EventTypeWindowExposed,
+	EventTypeWindowMoved,
+	EventTypeWindowResized,
+	EventTypeWindowMinimized,
+	EventTypeWindowMaximized,
+	EventTypeWindowRestored,
+	EventTypeWindowEnter,
+	EventTypeWindowLeave,
+	EventTypeWindowFocusGained,
+	EventTypeWindowFocusLost,
+	EventTypeWindowClose,
+	EventTypeKeyDown,
+	EventTypeKeyUp,
+	EventTypeTextEditing,
+	EventTypeTextInput,
+	EventTypeKeyMapChanged,
+	EventTypeMouseMotion,
+	EventTypeMouseButtonDown,
+	EventTypeMouseButtonUp,
+	EventTypeMouseWheelMotion,
+	EventTypeCount,
+} EventType;
+
 typedef enum Key
 {
 	KeyUnknown = SDL_SCANCODE_UNKNOWN,
@@ -39,68 +68,69 @@ typedef enum Key
 	KeyNumLockClear = SDL_SCANCODE_NUMLOCKCLEAR,
 	
 	KeyScancodeCount = SDL_NUM_SCANCODES
-} Key; //! Enum for the scancodes of each key
+} Key;
 
-//! Initialzes the event handler
+typedef enum MouseButton
+{
+	MouseButtonLeft = SDL_BUTTON_LEFT,
+	MouseButtonMiddle = SDL_BUTTON_MIDDLE,
+	MouseButtonRight = SDL_BUTTON_RIGHT,
+	MouseButtonX1 = SDL_BUTTON_X1,
+	MouseButtonX2 = SDL_BUTTON_X2,
+} MouseButton;
+
 void EventHandlerInitialize(void);
 
-/*! Processes the incoming events, this must only be called once per a frame */
+void EventHandlerSetCallback(EventType event, void (*callback)(void));
+
 void EventHandlerPoll(void);
 
-/*!
- Returns true on the exact frame that the specified key is pressed on
- @param key The key to detect
- @return True if the specified key was pressed on the frame that EventHandlerPoll was called on, false on any other frame
- */
-bool EventHandlerOnKeyPressed(Key key);
+void EventHandlerCallbackQuit(void);
 
-//! Returns true when any key is pressed
-bool EventHandlerOnAnyKeyPressed(void);
+void EventHandlerCallbackWindowShown(void);
 
-/*!
- Returns true on the exact frame that the specified key is released on
- @param key The key to detect
- @return True if the specified key was released on the frame that EventHandlerPoll was called on, false on any other frame
- */
-bool EventHandlerOnKeyReleased(Key key);
+void EventHandlerCallbackWindowHidden(void);
 
-//! Returns true when any key is released
-bool EventHandlerOnAnyKeyReleased(void);
+void EventHandlerCallbackWindowExposed(void);
 
-/*!
- Returns true if the specified key is currently pressed
- @param key The key to detect
- @return True if the specified key was pressed but not yet released, false otherwise
- */
-bool EventHandlerIsKeyDown(Key key);
+void EventHandlerCallbackWindowMoved(int x, int y);
 
-bool EventHandlerOnWindowShown(void);
+void EventHandlerCallbackWindowResized(int width, int height);
 
-bool EventHandlerOnWindowHidden(void);
+void EventHandlerCallbackWindowMinimized(void);
 
-bool EventHandlerOnWindowExposed(void);
+void EventHandlerCallbackWindowMaximized(void);
 
-bool EventHandlerOnWindowMoved(void);
+void EventHandlerCallbackWindowRestored(void);
 
-bool EventHandlerOnWindowResized(void);
+void EventHandlerCallbackWindowEnter(void);
 
-bool EventHandlerOnWindowMinimized(void);
+void EventHandlerCallbackWindowLeave(void);
 
-bool EventHandlerOnWindowMaximized(void);
+void EventHandlerCallbackWindowFocusGained(void);
 
-bool EventHandlerOnWindowRestored(void);
+void EventHandlerCallbackWindowFocusLost(void);
 
-bool EventHandlerOnWindowEnter(void);
+void EventHandlerCallbackWindowClose(void);
 
-bool EventHandlerOnWindowLeave(void);
+void EventHandlerCallbackKeyDown(Key key);
 
-bool EventHandlerOnWindowFocusGained(void);
+void EventHandlerCallbackKeyUp(Key key);
 
-bool EventHandlerOnWindowFocusLost(void);
+void EventHandlerCallbackTextEditing(char * text, int start, int length);
 
-bool EventHandlerOnWindowClose(void);
+void EventHandlerCallbackTextInput(char * text);
 
-/*! Cleans up EventHandler, should be called at the end of the program */
+void EventHandlerCallbackKeyMapChanged(void);
+
+void EventHandlerCallbackMouseMotion(int mouse, int x, int y, int dx, int dy);
+
+void EventHandlerCallbackMouseButtonDown(int mouse, MouseButton button, int x, int y);
+
+void EventHandlerCallbackMouseButtonUp(int mouse, MouseButton button, int x, int y);
+
+void EventHandlerCallbackMouseWheelMotion(int mouse, int dx, int dy);
+
 void EventHandlerDeinitialize(void);
 
 #endif

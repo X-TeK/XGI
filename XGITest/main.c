@@ -8,29 +8,25 @@
 #include <XGI/File.h>
 #include <XGI/XGI.h>
 
+FrameBuffer frameBuffer;
+VertexLayout vertexLayout;
+VertexBuffer vertexBuffer;
+Pipeline pipeline;
+UniformBuffer uniform;
+int frame;
+
 struct Vertex
 {
 	Vector2 Position;
 	Color Color;
 };
 
-int main(int argc, const char * argv[])
+static void OnKeyPressed(Key key);
+static void OnWindowResized(int width, int height);
+
+static void Initialize()
 {
-	WindowConfigure windowConfig =
-	{
-		.Width = 800,
-		.Height = 600,
-		.Title = "XGI Example",
-		.HighDPI = true,
-		.Resizable = false,
-		.FullScreen = false,
-	};
-	GraphicsConfigure graphicsConfig =
-	{
-		.VulkanValidation = true,
-		.FrameResourceCount = 3,
-	};
-	XGIInitialize(windowConfig, graphicsConfig);
+	frame = 0;
 	
 	FrameBufferConfigure frameConfig =
 	{
@@ -40,13 +36,12 @@ int main(int argc, const char * argv[])
 		.AddressMode = TextureAddressModeRepeat,
 		.UseStencil = false,
 	};
-	FrameBuffer framebuffer = FrameBufferCreate(frameConfig);
-	FrameBuffer framebuffer2 = FrameBufferCreate(frameConfig);
+	frameBuffer = FrameBufferCreate(frameConfig);
 	
 	VertexAttribute attributes[] = { VertexAttributeVector2, VertexAttributeByte4 };
-	VertexLayout vertexLayout = VertexLayoutCreate(2, attributes);
+	vertexLayout = VertexLayoutCreate(2, attributes);
 	
-	VertexBuffer vertexBuffer = VertexBufferCreate(3, sizeof(struct Vertex));
+	vertexBuffer = VertexBufferCreate(3, sizeof(struct Vertex));
 	struct Vertex * vertices = VertexBufferMapVertices(vertexBuffer);
 	vertices[0] = (struct Vertex){ { 0.0f, 0.0f }, ColorRed };
 	vertices[1] = (struct Vertex){ { 1.0f, 0.0f }, ColorGreen };
@@ -71,51 +66,88 @@ int main(int argc, const char * argv[])
 		.FragmentSPVSize = fsSize,
 		.FragmentSPV = fsData,
 	};
-	Pipeline pipeline = PipelineCreate(shader, vertexLayout);
+	pipeline = PipelineCreate(shader, vertexLayout);
 	free(vsData);
 	free(fsData);
 	Vector4 color = ColorToVector4(ColorWhite);
 	PipelineSetPushConstant(pipeline, "Transform", &Matrix4x4Identity);
 	PipelineSetPushConstant(pipeline, "Color", &color);
 	
-	UniformBuffer uniform = UniformBufferCreate(pipeline, 0);
+	uniform = UniformBufferCreate(pipeline, 0);
 	Vector2 dimensions = { Window.Width, Window.Height };
 	UniformBufferSetVariable(uniform, "Dimensions", &dimensions);
 	PipelineSetUniform(pipeline, 0, uniform);
-	PipelineSetSampler(pipeline, 1, framebuffer2->ColorTexture);
 	
-	while (Window.Running)
-	{
-		EventHandlerPoll();
-		if (EventHandlerOnKeyPressed(KeyEscape)) { WindowExitLoop(); }
-		if (EventHandlerOnWindowResized())
-		{
-			framebuffer = FrameBufferResize(framebuffer, Window.Width, Window.Height);
-		}
-		SwapchainAquireNextImage();
-		
-		GraphicsBegin(framebuffer2);
-		GraphicsClearColor(ColorRed);
-		GraphicsEnd();
-		
-		GraphicsBegin(framebuffer);
-		GraphicsClearColor(ColorFromHex(0x204080ff));
-		GraphicsBindPipeline(pipeline);
-		GraphicsRenderVertexBuffer(vertexBuffer);
-		GraphicsEnd();
-		
-		GraphicsCopyToSwapchain(framebuffer);
-		SwapchainPresent();
-	}
-	GraphicsStopOperations();
-	
+	EventHandlerSetCallback(EventTypeKeyDown, (void (*)(void))OnKeyPressed);
+	EventHandlerSetCallback(EventTypeWindowResized, (void (*)(void))OnWindowResized);
+}
+
+static void Update()
+{
+	frame++;
+	Matrix4x4 transform = Matrix4x4FromAxisAngle(Vector3Forward, frame / 60.0);
+	PipelineSetPushConstant(pipeline, "Transform", &transform);
+}
+
+static void Render()
+{
+	GraphicsBegin(frameBuffer);
+	GraphicsClearColor(ColorFromHex(0x204080ff));
+	GraphicsBindPipeline(pipeline);
+	GraphicsRenderVertexBuffer(vertexBuffer);
+	GraphicsEnd();
+	GraphicsCopyToSwapchain(frameBuffer);
+}
+
+static void OnKeyPressed(Key key)
+{
+	if (key == KeyEscape) { WindowExitLoop(); }
+}
+
+static void OnWindowResized(int width, int height)
+{
+	frameBuffer = FrameBufferResize(frameBuffer, width, height);
+	Vector2 dimensions = { width, height };
+	UniformBufferSetVariable(uniform, "Dimensions", &dimensions);
+}
+
+static void Deinitialize()
+{
 	UniformBufferDestroy(uniform);
 	VertexBufferDestroy(vertexBuffer);
 	PipelineDestroy(pipeline);
-	FrameBufferDestroy(framebuffer);
-	FrameBufferDestroy(framebuffer2);
+	FrameBufferDestroy(frameBuffer);
 	VertexLayoutDestroy(vertexLayout);
-	
+}
+
+int main(int argc, const char * argv[])
+{
+	WindowConfigure windowConfig =
+	{
+		.Width = 800,
+		.Height = 600,
+		.Title = "XGI Example",
+		.HighDPI = true,
+		.Resizable = false,
+		.FullScreen = false,
+	};
+	GraphicsConfigure graphicsConfig =
+	{
+		.VulkanValidation = true,
+		.FrameResourceCount = 3,
+	};
+	XGIInitialize(windowConfig, graphicsConfig);
+	Initialize();
+	while (Window.Running)
+	{
+		EventHandlerPoll();
+		Update();
+		SwapchainAquireNextImage();
+		Render();
+		SwapchainPresent();
+	}
+	GraphicsStopOperations();
+	Deinitialize();
 	XGIDeinitialize();
 	return 0;
 }
