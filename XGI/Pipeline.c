@@ -282,6 +282,18 @@ Pipeline PipelineCreate(PipelineConfigure config)
 		.depthCompareOp = VK_COMPARE_OP_LESS,
 	};
 	
+	VkDynamicState dynamicStates[] =
+	{
+		VK_DYNAMIC_STATE_VIEWPORT,
+		VK_DYNAMIC_STATE_SCISSOR,
+	};
+	VkPipelineDynamicStateCreateInfo dynamicState =
+	{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+		.dynamicStateCount = 2,
+		.pDynamicStates = dynamicStates,
+	};
+	
 	CreateLayout(pipeline, config);
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo =
 	{
@@ -295,7 +307,7 @@ Pipeline PipelineCreate(PipelineConfigure config)
 		.pMultisampleState = &multisampleState,
 		.pDepthStencilState = &depthStencilState,
 		.pColorBlendState = &colorBlendState,
-		.pDynamicState = NULL,
+		.pDynamicState = &dynamicState,
 		.layout = pipeline->Layout,
 		.renderPass = Swapchain.RenderPass,
 		.subpass = 0,

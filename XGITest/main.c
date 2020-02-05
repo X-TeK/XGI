@@ -133,7 +133,7 @@ int main(int argc, const char * argv[])
 		.Height = 600,
 		.Title = "XGI Example",
 		.HighDPI = true,
-		.Resizable = false,
+		.Resizable = true,
 		.FullScreen = false,
 	};
 	GraphicsConfigure graphicsConfig =

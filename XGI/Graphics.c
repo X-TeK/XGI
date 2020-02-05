@@ -481,6 +481,23 @@ void GraphicsBindPipeline(Pipeline pipeline)
 {
 	Graphics.BoundPipeline = pipeline;
 	vkCmdBindPipeline(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Instance);
+	VkViewport viewport =
+	{
+		.x = 0.0f,
+		.y = 0.0f,
+		.width = Swapchain.Extent.width,
+		.height = Swapchain.Extent.height,
+		.minDepth = 0.0f,
+		.maxDepth = 1.0f,
+	};
+	VkRect2D scissor =
+	{
+		.offset = { 0, 0 },
+		.extent = Swapchain.Extent,
+	};
+	vkCmdSetViewport(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 0, 1, &viewport);
+	vkCmdSetScissor(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 0, 1, &scissor);
+	
 	if (pipeline->UsesPushConstant)
 	{
 		vkCmdPushConstants(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, pipeline->Layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, pipeline->PushConstantSize, pipeline->PushConstantData);
