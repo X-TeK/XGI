@@ -22,17 +22,24 @@ typedef enum ShaderType
 	ShaderTypeFragment = VK_SHADER_STAGE_FRAGMENT_BIT,
 } ShaderType;
 
-typedef struct Shader
+typedef struct PipelineConfigure
 {
-	unsigned long VertexSPVSize;
-	unsigned int * VertexSPV;
-	unsigned long FragmentSPVSize;
-	unsigned int * FragmentSPV;
+	VertexLayout VertexLayout;
+	int ShaderCount;
+	struct
+	{
+		ShaderType Type;
+		bool LoadFromFile;
+		const char * File;
+		bool Precompiled;
+		unsigned long DataSize;
+		void * Data;
+	} Shaders[5];
 	bool WireFrame;
 	bool FaceCull;
 	bool AlphaBlend;
 	bool DepthTest;
-} Shader;
+} PipelineConfigure;
 
 typedef struct Pipeline
 {
@@ -58,7 +65,7 @@ typedef struct Pipeline
 	unsigned int PushConstantSize;
 } * Pipeline;
 
-Pipeline PipelineCreate(Shader shader, VertexLayout vertexLayout);
+Pipeline PipelineCreate(PipelineConfigure config);
 void PipelineSetPushConstant(Pipeline pipeline, const char * variableName, void * value);
 void PipelineSetUniform(Pipeline pipeline, int binding, struct UniformBuffer * uniform);
 void PipelineSetSampler(Pipeline pipeline, int binding, Texture texture);

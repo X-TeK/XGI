@@ -49,26 +49,31 @@ static void Initialize()
 	VertexBufferUnmapVertices(vertexBuffer);
 	VertexBufferUpload(vertexBuffer);
 
-	File vs = FileOpen("Shaders/Default.vert.spv", FileModeReadBinary);
-	unsigned long vsSize = FileSize(vs);
-	void * vsData = malloc(vsSize);
-	FileRead(vs, 0, vsSize, vsData);
-	FileClose(vs);
-	File fs = FileOpen("Shaders/Default.frag.spv", FileModeReadBinary);
-	unsigned long fsSize = FileSize(fs);
-	void * fsData = malloc(fsSize);
-	FileRead(fs, 0, fsSize, fsData);
-	FileClose(fs);
-	Shader shader =
+	PipelineConfigure pipelineConfig =
 	{
-		.VertexSPVSize = vsSize,
-		.VertexSPV = vsData,
-		.FragmentSPVSize = fsSize,
-		.FragmentSPV = fsData,
+		.VertexLayout = vertexLayout,
+		.ShaderCount = 2,
+		.Shaders =
+		{
+			{
+				.Type = ShaderTypeVertex,
+				.LoadFromFile = true,
+				.File = "Shaders/Default.vert.spv",
+				.Precompiled = true,
+			},
+			{
+				.Type = ShaderTypeFragment,
+				.LoadFromFile = true,
+				.File = "Shaders/Default.frag.spv",
+				.Precompiled = true,
+			}
+		},
+		.WireFrame = false,
+		.FaceCull = false,
+		.AlphaBlend = false,
+		.DepthTest = false,
 	};
-	pipeline = PipelineCreate(shader, vertexLayout);
-	free(vsData);
-	free(fsData);
+	pipeline = PipelineCreate(pipelineConfig);
 	Vector4 color = ColorToVector4(ColorWhite);
 	PipelineSetPushConstant(pipeline, "Transform", &Matrix4x4Identity);
 	PipelineSetPushConstant(pipeline, "Color", &color);

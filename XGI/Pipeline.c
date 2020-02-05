@@ -6,17 +6,18 @@
 #include "Swapchain.h"
 #include "UniformBuffer.h"
 #include "spirv/spirv_reflect.h"
+#include "File.h"
 
-static void CreateReflectModules(Pipeline pipeline, struct Shader shader)
+static void CreateReflectModules(Pipeline pipeline, PipelineConfigure config)
 {
-	pipeline->StageCount = 2;
+	pipeline->StageCount = config.ShaderCount;
 	pipeline->Stages = malloc(pipeline->StageCount * sizeof(struct PipelineStage));
 	
-	pipeline->Stages[0].ShaderType = ShaderTypeVertex;
-	pipeline->Stages[1].ShaderType = ShaderTypeFragment;
-	
-	spvReflectCreateShaderModule(shader.VertexSPVSize, shader.VertexSPV, &pipeline->Stages[0].Module);
-	spvReflectCreateShaderModule(shader.FragmentSPVSize, shader.FragmentSPV, &pipeline->Stages[1].Module);
+	for (int i = 0; i < pipeline->StageCount; i++)
+	{
+		pipeline->Stages[i].ShaderType = config.Shaders[i].Type;
+		spvReflectCreateShaderModule(config.Shaders[i].DataSize, config.Shaders[i].Data, &pipeline->Stages[i].Module);
+	}
 }
 
 static VkPushConstantRange GetPushConstantRange(Pipeline pipeline)
@@ -137,9 +138,9 @@ static void CreatePipelineLayout(Pipeline pipeline, VkPushConstantRange pushCons
 	vkCreatePipelineLayout(Graphics.Device, &pipelineLayoutCreateInfo, NULL, &pipeline->Layout);
 }
 
-static void CreateLayout(Pipeline pipeline, struct Shader shader)
+static void CreateLayout(Pipeline pipeline, PipelineConfigure config)
 {
-	CreateReflectModules(pipeline, shader);
+	CreateReflectModules(pipeline, config);
 	VkPushConstantRange pushConstantRange = GetPushConstantRange(pipeline);
 	int samplerCount = 0;
 	int uboCount = 0;
@@ -149,54 +150,57 @@ static void CreateLayout(Pipeline pipeline, struct Shader shader)
 	//PipelineSetUniform(pipeline, ShaderStageVertex, 0, 0, "Transform", &Matrix4x4Identity, 0);
 }
 
-Pipeline PipelineCreate(struct Shader shader, VertexLayout vertexLayout)
+Pipeline PipelineCreate(PipelineConfigure config)
 {
 	Pipeline pipeline = malloc(sizeof(struct Pipeline));
-	*pipeline = (struct Pipeline){ .VertexLayout = vertexLayout };
+	*pipeline = (struct Pipeline){ .VertexLayout = config.VertexLayout };
 	
-	VkShaderModuleCreateInfo moduleInfo =
+	VkPipelineShaderStageCreateInfo shaderInfos[5];
+	VkShaderModule modules[5];
+	for (int i = 0; i < config.ShaderCount; i++)
 	{
-		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-		.codeSize = shader.VertexSPVSize,
-		.pCode = shader.VertexSPV,
-	};
-	VkShaderModule vsModule;
-	VkResult result = vkCreateShaderModule(Graphics.Device, &moduleInfo, NULL, &vsModule);
-	
-	VkPipelineShaderStageCreateInfo vsInfo =
-	{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-		.stage = VK_SHADER_STAGE_VERTEX_BIT,
-		.module = vsModule,
-		.pName = "main",
-	};
-	
-	moduleInfo = (VkShaderModuleCreateInfo)
-	{
-		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-		.codeSize = shader.FragmentSPVSize,
-		.pCode = shader.FragmentSPV,
-	};
-	VkShaderModule fsModule;
-	result = vkCreateShaderModule(Graphics.Device, &moduleInfo, NULL, &fsModule);
-	
-	VkPipelineShaderStageCreateInfo fsInfo =
-	{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-		.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-		.module = fsModule,
-		.pName = "main",
-	};
-	
-	VkPipelineShaderStageCreateInfo shaderStages[2] = { vsInfo, fsInfo };
+		unsigned long size = 0;
+		void * data = NULL;
+		if (config.Shaders[i].LoadFromFile && config.Shaders[i].Precompiled)
+		{
+			File spv = FileOpen(config.Shaders[i].File, FileModeReadBinary);
+			size = FileSize(spv);
+			data = malloc(size);
+			FileRead(spv, 0, size, data);
+			FileClose(spv);
+			config.Shaders[i].Data = data;
+			config.Shaders[i].DataSize = size;
+		}
+		if (!config.Shaders[i].LoadFromFile && config.Shaders[i].Precompiled)
+		{
+			size = config.Shaders[i].DataSize;
+			data = config.Shaders[i].Data;
+		}
+		
+		VkShaderModuleCreateInfo moduleInfo =
+		{
+			.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+			.codeSize = size,
+			.pCode = data,
+		};
+		vkCreateShaderModule(Graphics.Device, &moduleInfo, NULL, modules + i);
+		
+		shaderInfos[i] = (VkPipelineShaderStageCreateInfo)
+		{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+			.stage = (VkShaderStageFlagBits)config.Shaders[i].Type,
+			.module = modules[i],
+			.pName = "main",
+		};
+	}
 	
 	VkPipelineVertexInputStateCreateInfo vertexInput =
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 		.vertexBindingDescriptionCount = 1,
-		.pVertexBindingDescriptions = &vertexLayout->Binding,
-		.vertexAttributeDescriptionCount = vertexLayout->AttributeCount,
-		.pVertexAttributeDescriptions = vertexLayout->Attributes,
+		.pVertexBindingDescriptions = &config.VertexLayout->Binding,
+		.vertexAttributeDescriptionCount = config.VertexLayout->AttributeCount,
+		.pVertexAttributeDescriptions = config.VertexLayout->Attributes,
 	};
 	
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly =
@@ -236,9 +240,9 @@ Pipeline PipelineCreate(struct Shader shader, VertexLayout vertexLayout)
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
 		.depthClampEnable = VK_FALSE,
 		.rasterizerDiscardEnable = VK_FALSE,
-		.polygonMode = shader.WireFrame ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL,
+		.polygonMode = config.WireFrame ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL,
 		.lineWidth = 1.0f,
-		.cullMode = shader.FaceCull ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE,
+		.cullMode = config.FaceCull ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE,
 		.frontFace = VK_FRONT_FACE_CLOCKWISE,
 		.depthBiasEnable = VK_FALSE,
 	};
@@ -253,7 +257,7 @@ Pipeline PipelineCreate(struct Shader shader, VertexLayout vertexLayout)
 	VkPipelineColorBlendAttachmentState colorBlendAttachmentState =
 	{
 		.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-		.blendEnable = shader.AlphaBlend ? VK_TRUE : VK_FALSE,
+		.blendEnable = config.AlphaBlend ? VK_TRUE : VK_FALSE,
 		.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
 		.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
 		.colorBlendOp = VK_BLEND_OP_ADD,
@@ -273,17 +277,17 @@ Pipeline PipelineCreate(struct Shader shader, VertexLayout vertexLayout)
 	VkPipelineDepthStencilStateCreateInfo depthStencilState =
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-		.depthTestEnable = shader.DepthTest ? VK_TRUE : VK_FALSE,
+		.depthTestEnable = config.DepthTest ? VK_TRUE : VK_FALSE,
 		.depthWriteEnable = VK_TRUE,
 		.depthCompareOp = VK_COMPARE_OP_LESS,
 	};
 	
-	CreateLayout(pipeline, shader);
+	CreateLayout(pipeline, config);
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-		.stageCount = 2,
-		.pStages = shaderStages,
+		.stageCount = config.ShaderCount,
+		.pStages = shaderInfos,
 		.pVertexInputState = &vertexInput,
 		.pInputAssemblyState = &inputAssembly,
 		.pViewportState = &viewportState,
@@ -298,15 +302,17 @@ Pipeline PipelineCreate(struct Shader shader, VertexLayout vertexLayout)
 		.basePipelineHandle = VK_NULL_HANDLE,
 		.basePipelineIndex = -1,
 	};
-	result = vkCreateGraphicsPipelines(Graphics.Device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, NULL, &pipeline->Instance);
+	VkResult result = vkCreateGraphicsPipelines(Graphics.Device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, NULL, &pipeline->Instance);
 	if (result != VK_SUCCESS)
 	{
 		printf("[Error] Unable to create graphics pipeline: %i\n", result);
 		exit(-1);
 	}
 	
-	vkDestroyShaderModule(Graphics.Device, vsModule, NULL);
-	vkDestroyShaderModule(Graphics.Device, fsModule, NULL);
+	for (int i = 0; i < config.ShaderCount; i++)
+	{
+		vkDestroyShaderModule(Graphics.Device, modules[i], NULL);
+	}
 	return pipeline;
 }
 

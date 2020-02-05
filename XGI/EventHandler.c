@@ -131,7 +131,7 @@ void EventHandlerCallbackWindowResized(int width, int height)
 {
 	SwapchainDestroy();
 	SwapchainCreate(width, height);
-	if (Callbacks[EventTypeWindowResized] != NULL) { ((void (*)(int, int))Callbacks[EventTypeWindowResized])(width, height); }
+	if (Callbacks[EventTypeWindowResized] != NULL) { ((void (*)(int, int))Callbacks[EventTypeWindowResized])(Window.Width, Window.Height); }
 }
 
 void EventHandlerCallbackWindowMinimized()
