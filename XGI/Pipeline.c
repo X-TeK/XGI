@@ -56,10 +56,12 @@ static void CreateDescriptorLayout(Pipeline pipeline, int * uboCount, int * samp
 		SpvReflectDescriptorSet * sets = malloc(setCount * sizeof(SpvReflectDescriptorSet));
 		spvReflectEnumerateDescriptorSets(&stage->Module, &setCount, &sets);
 		
+		stage->BindingCount = 0;
 		if (setCount > 0)
 		{
 			pipeline->UsesDescriptors = true;
 			stage->DescriptorInfo = sets[0];
+			stage->BindingCount = stage->DescriptorInfo.binding_count;
 			bindingCount += stage->DescriptorInfo.binding_count;
 			printf("%i\n", bindingCount);
 		}

@@ -11,7 +11,7 @@ UniformBuffer UniformBufferCreate(Pipeline pipeline, int binding)
 	bool foundBinding = false;
 	for (int i = 0; i < pipeline->StageCount; i++)
 	{
-		for (int j = 0; j < pipeline->Stages[i].DescriptorInfo.binding_count; j++)
+		for (int j = 0; j < pipeline->Stages[i].BindingCount; j++)
 		{
 			SpvReflectDescriptorBinding * bindingInfo = pipeline->Stages[i].DescriptorInfo.bindings[j];
 			if (bindingInfo->binding == binding && bindingInfo->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER)

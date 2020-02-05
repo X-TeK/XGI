@@ -44,6 +44,7 @@ typedef struct Pipeline
 	{
 		ShaderType ShaderType;
 		SpvReflectShaderModule Module;
+		int BindingCount;
 		SpvReflectDescriptorSet DescriptorInfo;
 	} * Stages;
 	
