@@ -110,9 +110,7 @@ Vector2 WindowGetPosition()
 
 Vector2 WindowGetSize()
 {
-	int w, h;
-	SDL_GetWindowSize(Window.Handle, &w, &h);
-	return (Vector2){ w, h };
+	return (Vector2){ Window.Width, Window.Height };
 }
 
 const char * WindowGetTitle() { return SDL_GetWindowTitle(Window.Handle); }

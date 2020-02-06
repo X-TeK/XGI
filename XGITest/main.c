@@ -81,7 +81,7 @@ static void Initialize()
 	uniform = UniformBufferCreate(pipeline, 0);
 	Vector2 dimensions = { Window.Width, Window.Height };
 	UniformBufferSetVariable(uniform, "Dimensions", &dimensions);
-	PipelineSetUniform(pipeline, 0, uniform);
+	PipelineSetUniform(pipeline, 0, 0, uniform);
 	
 	EventHandlerSetCallback(EventTypeKeyDown, (void (*)(void))OnKeyPressed);
 	EventHandlerSetCallback(EventTypeWindowResized, (void (*)(void))OnWindowResized);

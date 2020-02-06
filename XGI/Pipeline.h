@@ -67,8 +67,8 @@ typedef struct Pipeline
 
 Pipeline PipelineCreate(PipelineConfigure config);
 void PipelineSetPushConstant(Pipeline pipeline, const char * variableName, void * value);
-void PipelineSetUniform(Pipeline pipeline, int binding, struct UniformBuffer * uniform);
-void PipelineSetSampler(Pipeline pipeline, int binding, Texture texture);
+void PipelineSetUniform(Pipeline pipeline, int binding, int arrayIndex, struct UniformBuffer * uniform);
+void PipelineSetSampler(Pipeline pipeline, int binding, int arrayIndex, Texture texture);
 void PipelineDestroy(Pipeline pipeline);
 
 #endif

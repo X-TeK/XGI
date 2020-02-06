@@ -8,6 +8,8 @@ layout (push_constant) uniform PushConstant
 	vec4 Color;
 } Input;
 
+layout (binding = 1) uniform sampler2D Textures[2];
+
 layout (location = 0) out vec4 FragColor;
 
 void main()

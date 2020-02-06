@@ -64,7 +64,6 @@ static void CreateDescriptorLayout(Pipeline pipeline, int * uboCount, int * samp
 			stage->DescriptorInfo = sets[0];
 			stage->BindingCount = stage->DescriptorInfo.binding_count;
 			bindingCount += stage->DescriptorInfo.binding_count;
-			printf("%i\n", bindingCount);
 		}
 	}
 	
@@ -82,7 +81,7 @@ static void CreateDescriptorLayout(Pipeline pipeline, int * uboCount, int * samp
 			for (int j = 0; j < stage->DescriptorInfo.binding_count; j++, c++)
 			{
 				SpvReflectDescriptorBinding * binding = stage->DescriptorInfo.bindings[j];
-				printf("set:%i binding:%i %s\n", binding->set, binding->binding, binding->name);
+				printf("%s set:%i binding:%i count:%i\n", binding->name, binding->set, binding->binding, binding->count);
 				layoutBindings[c] = (VkDescriptorSetLayoutBinding)
 				{
 					.binding = binding->binding,
@@ -147,7 +146,6 @@ static void CreateLayout(Pipeline pipeline, PipelineConfigure config)
 	CreateDescriptorLayout(pipeline, &uboCount, &samplerCount);
 	CreatePipelineLayout(pipeline, pushConstantRange);
 	CreateDescriptorSets(pipeline);
-	//PipelineSetUniform(pipeline, ShaderStageVertex, 0, 0, "Transform", &Matrix4x4Identity, 0);
 }
 
 Pipeline PipelineCreate(PipelineConfigure config)
@@ -343,7 +341,7 @@ void PipelineSetPushConstant(Pipeline pipeline, const char * variable, void * va
 	}
 }
 
-void PipelineSetUniform(Pipeline pipeline, int binding, struct UniformBuffer * uniform)
+void PipelineSetUniform(Pipeline pipeline, int binding, int arrayIndex, struct UniformBuffer * uniform)
 {
 	if (pipeline->UsesDescriptors)
 	{
@@ -363,7 +361,7 @@ void PipelineSetUniform(Pipeline pipeline, int binding, struct UniformBuffer * u
 				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 				.descriptorCount = 1,
 				.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-				.dstArrayElement = 0,
+				.dstArrayElement = arrayIndex,
 				.dstBinding = binding,
 				.dstSet = pipeline->DescriptorSet[i],
 				.pBufferInfo = bufferInfo,
@@ -373,7 +371,7 @@ void PipelineSetUniform(Pipeline pipeline, int binding, struct UniformBuffer * u
 	}
 }
 
-void PipelineSetSampler(Pipeline pipeline, int binding, Texture texture)
+void PipelineSetSampler(Pipeline pipeline, int binding, int arrayIndex, Texture texture)
 {
 	if (pipeline->UsesDescriptors)
 	{
@@ -392,7 +390,7 @@ void PipelineSetSampler(Pipeline pipeline, int binding, Texture texture)
 				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 				.descriptorCount = 1,
 				.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				.dstArrayElement = 0,
+				.dstArrayElement = arrayIndex,
 				.dstBinding = binding,
 				.dstSet = pipeline->DescriptorSet[i],
 				.pImageInfo = imageInfo,
