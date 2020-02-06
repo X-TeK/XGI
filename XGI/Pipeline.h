@@ -51,6 +51,7 @@ typedef struct Pipeline
 	
 	bool UsesDescriptors;
 	VkDescriptorSetLayout DescriptorLayout;
+	VkDescriptorPool DescriptorPool;
 	VkDescriptorSet * DescriptorSet;
 	
 	bool UsesPushConstant;

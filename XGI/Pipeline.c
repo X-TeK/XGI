@@ -89,8 +89,8 @@ static void CreateDescriptorLayout(Pipeline pipeline, int * uboCount, int * samp
 					.descriptorType = (VkDescriptorType)binding->descriptor_type,
 					.stageFlags = stage->ShaderType,
 				};
-				if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) { (*samplerCount)++; }
-				if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) { (*uboCount)++; }
+				if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) { (*samplerCount) += binding->count; }
+				if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) { (*uboCount) += binding->count; }
 			}
 		}
 	}
@@ -105,6 +105,32 @@ static void CreateDescriptorLayout(Pipeline pipeline, int * uboCount, int * samp
 	free(layoutBindings);
 }
 
+static void CreateDescriptorPool(Pipeline pipeline, int uboCount, int samplerCount)
+{
+	if (pipeline->UsesDescriptors)
+	{
+		VkDescriptorPoolSize poolSizes[] =
+		{
+			{
+				.descriptorCount = uboCount * Graphics.FrameResourceCount,
+				.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			},
+			{
+				.descriptorCount = samplerCount * Graphics.FrameResourceCount,
+				.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			}
+		};
+		VkDescriptorPoolCreateInfo poolInfo =
+		{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+			.maxSets = Graphics.FrameResourceCount,
+			.poolSizeCount = 2,
+			.pPoolSizes = poolSizes,
+		};
+		vkCreateDescriptorPool(Graphics.Device, &poolInfo, NULL, &pipeline->DescriptorPool);
+	}
+}
+
 static void CreateDescriptorSets(Pipeline pipeline)
 {
 	if (pipeline->UsesDescriptors)
@@ -115,7 +141,7 @@ static void CreateDescriptorSets(Pipeline pipeline)
 			VkDescriptorSetAllocateInfo allocateInfo =
 			{
 				.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-				.descriptorPool = Graphics.DescriptorPool,
+				.descriptorPool = pipeline->DescriptorPool,
 				.descriptorSetCount = 1,
 				.pSetLayouts = &pipeline->DescriptorLayout,
 			};
@@ -144,6 +170,7 @@ static void CreateLayout(Pipeline pipeline, PipelineConfigure config)
 	int samplerCount = 0;
 	int uboCount = 0;
 	CreateDescriptorLayout(pipeline, &uboCount, &samplerCount);
+	CreateDescriptorPool(pipeline, uboCount, samplerCount);
 	CreatePipelineLayout(pipeline, pushConstantRange);
 	CreateDescriptorSets(pipeline);
 }
@@ -409,8 +436,12 @@ void PipelineDestroy(Pipeline pipeline)
 {
 	vkDeviceWaitIdle(Graphics.Device);
 	vkDestroyPipelineLayout(Graphics.Device, pipeline->Layout, NULL);
-	free(pipeline->DescriptorSet);
-	vkDestroyDescriptorSetLayout(Graphics.Device, pipeline->DescriptorLayout, NULL);
+	if (pipeline->UsesDescriptors)
+	{
+		free(pipeline->DescriptorSet);
+		vkDestroyDescriptorSetLayout(Graphics.Device, pipeline->DescriptorLayout, NULL);
+		vkDestroyDescriptorPool(Graphics.Device, pipeline->DescriptorPool, NULL);
+	}
 	if (pipeline->UsesPushConstant) { free(pipeline->PushConstantData); }
 	spvReflectDestroyShaderModule(&pipeline->Stages[0].Module);
 	spvReflectDestroyShaderModule(&pipeline->Stages[1].Module);

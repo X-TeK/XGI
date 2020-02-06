@@ -307,36 +307,6 @@ static void CreateAllocator()
 	vmaCreateAllocator(&allocatorInfo, &Graphics.Allocator);
 }
 
-static void CreateDescriptorPool()
-{
-	VkDescriptorPoolSize poolSizes[] =
-	{
-		{
-			.descriptorCount = 128 * Graphics.FrameResourceCount,
-			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-		},
-		{
-			.descriptorCount = 16 * Graphics.FrameResourceCount,
-			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-		}
-	};
-	VkDescriptorPoolCreateInfo poolInfo =
-	{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-		.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
-		.maxSets = 128 * Graphics.FrameResourceCount,
-		.poolSizeCount = 2,
-		.pPoolSizes = poolSizes,
-	};
-	VkResult result = vkCreateDescriptorPool(Graphics.Device, &poolInfo, NULL, &Graphics.DescriptorPool);
-	if (result != VK_SUCCESS)
-	{
-		printf("[Error] failed to create descriptor pool: %i\n", result);
-		exit(-1);
-	}
-	
-}
-
 static void CreateFrameResources()
 {
 	Graphics.FrameResources = malloc(Graphics.FrameResourceCount * sizeof(*Graphics.FrameResources));
@@ -387,7 +357,6 @@ void GraphicsInitialize(GraphicsConfigure config)
 	CreateLogicalDevice();
 	CreateCommandPool();
 	CreateAllocator();
-	CreateDescriptorPool();
 	CreateFrameResources();
 	printf("\n[Log] Successfully initialized vulkan\n");
 }
@@ -629,7 +598,6 @@ void GraphicsDeinitialize()
 		vkFreeCommandBuffers(Graphics.Device, Graphics.CommandPool, 1, &Graphics.FrameResources[i].CommandBuffer);
 	}
 	free(Graphics.FrameResources);
-	vkDestroyDescriptorPool(Graphics.Device, Graphics.DescriptorPool, NULL);
 	vmaDestroyAllocator(Graphics.Allocator);
 	vkDestroyCommandPool(Graphics.Device, Graphics.CommandPool, NULL);
 	vkDestroyDevice(Graphics.Device, NULL);

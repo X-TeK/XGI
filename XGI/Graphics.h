@@ -28,7 +28,6 @@ struct Graphics
 	unsigned int PresentQueueIndex;
 	VkCommandPool CommandPool;
 	VmaAllocator Allocator;
-	VkDescriptorPool DescriptorPool;
 	
 	List PreRenderSemaphores;
 	int FrameResourceCount;
