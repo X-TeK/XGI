@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "File.h"
 
 File FileOpen(const char * path, FileMode mode)
@@ -42,6 +43,13 @@ void FileWrite(File file, unsigned long offset, unsigned long size, void * data)
 	SDL_RWseek(file->RW, offset, RW_SEEK_SET);
 	SDL_RWwrite(file->RW, data, size, 1);
 	SDL_RWseek(file->RW, 0, RW_SEEK_SET);
+}
+
+bool FileExists(const char * path)
+{
+	SDL_RWops * file = SDL_RWFromFile(path, "r");
+	if (file == NULL) { return false; }
+	else { SDL_RWclose(file); return true; }
 }
 
 void FileClose(File file)

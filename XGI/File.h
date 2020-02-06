@@ -23,6 +23,7 @@ File FileOpen(const char * filePath, FileMode mode);
 unsigned long FileSize(File file);
 void FileRead(File file, unsigned long offset, unsigned long size, void * data);
 void FileWrite(File file, unsigned long offset, unsigned long size, void * data);
+bool FileExists(const char * path);
 void FileClose(File file);
 
 #endif
