@@ -62,6 +62,11 @@ FrameBuffer FrameBufferResize(FrameBuffer frameBuffer, unsigned int width, unsig
 	return resized;
 }
 
+void FrameBufferQueueDestroy(FrameBuffer frameBuffer)
+{
+	ListPush(Graphics.FrameResources[Graphics.FrameIndex].DestroyFrameBufferQueue, frameBuffer);
+}
+
 void FrameBufferDestroy(FrameBuffer frameBuffer)
 {
 	TextureDestroy(frameBuffer->ColorTexture);

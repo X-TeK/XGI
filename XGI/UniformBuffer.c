@@ -57,6 +57,11 @@ void UniformBufferSetVariable(UniformBuffer uniformBuffer, const char * variable
 	vmaUnmapMemory(Graphics.Allocator, uniformBuffer->Allocation);
 }
 
+void UniformBufferQueueDestroy(UniformBuffer uniformBuffer)
+{
+	ListPush(Graphics.FrameResources[Graphics.FrameIndex].DestroyUniformBufferQueue, uniformBuffer);
+}
+
 void UniformBufferDestroy(UniformBuffer uniformBuffer)
 {
 	vmaDestroyBuffer(Graphics.Allocator, uniformBuffer->Buffer, uniformBuffer->Allocation);

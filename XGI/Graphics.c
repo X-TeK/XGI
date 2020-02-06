@@ -366,6 +366,10 @@ static void CreateFrameResources()
 		vkCreateFence(Graphics.Device, &fenceInfo, NULL, &Graphics.FrameResources[i].FrameReady);
 		
 		Graphics.FrameResources[i].DestroyVertexBufferQueue = ListCreate();
+		Graphics.FrameResources[i].DestroyTextureQueue = ListCreate();
+		Graphics.FrameResources[i].DestroyPipelineQueue = ListCreate();
+		Graphics.FrameResources[i].DestroyFrameBufferQueue = ListCreate();
+		Graphics.FrameResources[i].DestroyUniformBufferQueue = ListCreate();
 		Graphics.FrameResources[i].UpdateDescriptorQueue = ListCreate();
 	}
 	Graphics.FrameIndex = 0;
@@ -593,6 +597,31 @@ void GraphicsDeinitialize()
 			VertexBufferDestroy(vertexBuffer);
 		}
 		ListDestroy(Graphics.FrameResources[i].DestroyVertexBufferQueue);
+		for (int j = 0; j < Graphics.FrameResources[i].DestroyUniformBufferQueue->Count; j++)
+		{
+			UniformBuffer uniformBuffer = ListIndex(Graphics.FrameResources[i].DestroyUniformBufferQueue, j);
+			UniformBufferDestroy(uniformBuffer);
+		}
+		ListDestroy(Graphics.FrameResources[i].DestroyUniformBufferQueue);
+		for (int j = 0; j < Graphics.FrameResources[i].DestroyFrameBufferQueue->Count; j++)
+		{
+			FrameBuffer frameBuffer = ListIndex(Graphics.FrameResources[i].DestroyFrameBufferQueue, j);
+			FrameBufferDestroy(frameBuffer);
+		}
+		ListDestroy(Graphics.FrameResources[i].DestroyFrameBufferQueue);
+		for (int j = 0; j < Graphics.FrameResources[i].DestroyPipelineQueue->Count; j++)
+		{
+			Pipeline pipeline = ListIndex(Graphics.FrameResources[i].DestroyPipelineQueue, j);
+			PipelineDestroy(pipeline);
+		}
+		ListDestroy(Graphics.FrameResources[i].DestroyPipelineQueue);
+		for (int j = 0; j < Graphics.FrameResources[i].DestroyTextureQueue->Count; j++)
+		{
+			Texture texture = ListIndex(Graphics.FrameResources[i].DestroyTextureQueue, j);
+			TextureDestroy(texture);
+		}
+		ListDestroy(Graphics.FrameResources[i].DestroyTextureQueue);
+		
 		ListDestroy(Graphics.FrameResources[i].UpdateDescriptorQueue);
 		vkDestroyFence(Graphics.Device, Graphics.FrameResources[i].FrameReady, NULL);
 		vkDestroySemaphore(Graphics.Device, Graphics.FrameResources[i].RenderFinished, NULL);

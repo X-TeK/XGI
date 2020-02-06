@@ -39,6 +39,10 @@ struct Graphics
 		VkSemaphore RenderFinished;
 		VkFence FrameReady;
 		List DestroyVertexBufferQueue;
+		List DestroyUniformBufferQueue;
+		List DestroyFrameBufferQueue;
+		List DestroyPipelineQueue;
+		List DestroyTextureQueue;
 		List UpdateDescriptorQueue;
 	} * FrameResources;
 	int FrameIndex;

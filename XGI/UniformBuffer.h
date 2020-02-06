@@ -19,6 +19,7 @@ typedef struct UniformBuffer
 
 UniformBuffer UniformBufferCreate(struct Pipeline * pipeline, int binding);
 void UniformBufferSetVariable(UniformBuffer uniformBuffer, const char * variable, void * value);
+void UniformBufferQueueDestroy(UniformBuffer uniformBuffer);
 void UniformBufferDestroy(UniformBuffer uniformBuffer);
 
 #endif

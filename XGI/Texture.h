@@ -42,6 +42,7 @@ typedef struct Texture
 } * Texture;
 
 Texture TextureCreate(TextureConfigure config);
+void TextureQueueDestroy(Texture texture);
 void TextureDestroy(Texture texture);
 
 #endif

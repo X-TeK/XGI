@@ -159,6 +159,11 @@ Texture TextureCreate(TextureConfigure config)
 	return texture;
 }
 
+void TextureQueueDestroy(Texture texture)
+{
+	ListPush(Graphics.FrameResources[Graphics.FrameIndex].DestroyTextureQueue, texture);
+}
+
 void TextureDestroy(Texture texture)
 {
 	vkDestroySampler(Graphics.Device, texture->Sampler, NULL);

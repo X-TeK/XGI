@@ -400,6 +400,11 @@ void PipelineSetSampler(Pipeline pipeline, int binding, int arrayIndex, Texture 
 	}
 }
 
+void PipelineQueueDestroy(Pipeline pipeline)
+{
+	ListPush(Graphics.FrameResources[Graphics.FrameIndex].DestroyPipelineQueue, pipeline);
+}
+
 void PipelineDestroy(Pipeline pipeline)
 {
 	vkDeviceWaitIdle(Graphics.Device);

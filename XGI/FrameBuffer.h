@@ -26,6 +26,7 @@ typedef struct FrameBuffer
 
 FrameBuffer FrameBufferCreate(FrameBufferConfigure config);
 FrameBuffer FrameBufferResize(FrameBuffer frameBuffer, unsigned int width, unsigned int height);
+void FrameBufferQueueDestroy(FrameBuffer frameBuffer);
 void FrameBufferDestroy(FrameBuffer frameBuffer);
 
 #endif
