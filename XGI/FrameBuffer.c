@@ -11,7 +11,6 @@ FrameBuffer FrameBufferCreate(FrameBufferConfigure config)
 	{
 		.Width = config.Width,
 		.Height = config.Height,
-		.UseStencil = config.UseStencil,
 		.Filter = config.Filter,
 		.AddressMode = config.AddressMode,
 	};
@@ -26,8 +25,6 @@ FrameBuffer FrameBufferCreate(FrameBufferConfigure config)
 	frameBuffer->ColorTexture = TextureCreate(textureConfig);
 	textureConfig.Format = TextureFormatDepth;
 	frameBuffer->DepthTexture = TextureCreate(textureConfig);
-	textureConfig.Format = TextureFormatStencil;
-	if (config.UseStencil) { frameBuffer->StencilTexture = TextureCreate(textureConfig); }
 
 	VkImageView attachments[] = { frameBuffer->ColorTexture->ImageView, frameBuffer->DepthTexture->ImageView };
 	VkFramebufferCreateInfo createInfo =
@@ -58,7 +55,6 @@ FrameBuffer FrameBufferResize(FrameBuffer frameBuffer, unsigned int width, unsig
 		.Width = width,
 		.Height = height,
 		.Filter = frameBuffer->Filter,
-		.UseStencil = frameBuffer->UseStencil,
 		.AddressMode = frameBuffer->AddressMode,
 	};
 	FrameBuffer resized = FrameBufferCreate(config);
@@ -70,7 +66,6 @@ void FrameBufferDestroy(FrameBuffer frameBuffer)
 {
 	TextureDestroy(frameBuffer->ColorTexture);
 	TextureDestroy(frameBuffer->DepthTexture);
-	if (frameBuffer->UseStencil) { TextureDestroy(frameBuffer->StencilTexture); }
 	vkDestroyFramebuffer(Graphics.Device, frameBuffer->Instance, NULL);
 	free(frameBuffer);
 }

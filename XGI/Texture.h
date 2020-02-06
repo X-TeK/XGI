@@ -7,7 +7,6 @@ typedef enum TextureFormat
 {
 	TextureFormatColor,
 	TextureFormatDepth,
-	TextureFormatStencil,
 } TextureFormat;
 
 typedef enum TextureFilter
@@ -36,12 +35,10 @@ typedef struct Texture
 {
 	unsigned int Width, Height;
 	TextureFormat Format;
-	VkImageAspectFlags ImageAspect;
 	VkImage Image;
 	VmaAllocation Allocation;
 	VkImageView ImageView;
 	VkSampler Sampler;
-	VkDescriptorSet * DescriptorSets;
 } * Texture;
 
 Texture TextureCreate(TextureConfigure config);

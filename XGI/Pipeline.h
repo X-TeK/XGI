@@ -10,12 +10,6 @@
 
 struct UniformBuffer;
 
-typedef enum PipelineUniformType
-{
-	PipelineVariableTypeSampler = SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-	PipelineVariableTypeUniform = SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-} PipelineUniformType;
-
 typedef enum ShaderType
 {
 	ShaderTypeVertex = VK_SHADER_STAGE_VERTEX_BIT,

@@ -21,8 +21,6 @@ typedef struct FrameBuffer
 	TextureAddressMode AddressMode;
 	Texture ColorTexture;
 	Texture DepthTexture;
-	bool UseStencil;
-	Texture StencilTexture;
 	VkFramebuffer Instance;
 } * FrameBuffer;
 

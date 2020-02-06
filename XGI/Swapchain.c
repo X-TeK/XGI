@@ -102,7 +102,6 @@ static void CreateSwapchain(int width, int height)
 	Swapchain.Extent = extent;
 	Swapchain.ColorFormat = surfaceFormat.format;
 	Swapchain.DepthFormat = VK_FORMAT_D32_SFLOAT;
-	Swapchain.StencilFormat = VK_FORMAT_S8_UINT;
 	Window.Width = Swapchain.Extent.width;
 	Window.Height = Swapchain.Extent.height;
 }

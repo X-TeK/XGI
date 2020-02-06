@@ -10,7 +10,6 @@ struct Swapchain
 	VkExtent2D Extent;
 	VkFormat ColorFormat;
 	VkFormat DepthFormat;
-	VkFormat StencilFormat;
 	VkRenderPass RenderPass;
 	unsigned int ImageCount;
 	VkImage * Images;

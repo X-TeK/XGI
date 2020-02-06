@@ -5,8 +5,10 @@
 #include "Graphics.h"
 #include "Swapchain.h"
 
-static void CreateImage(Texture texture, VkFormat format, VkImageUsageFlags usage)
+static void CreateImage(Texture texture)
 {
+	VkFormat format = texture->Format == TextureFormatDepth ? Swapchain.DepthFormat : Swapchain.ColorFormat;
+	VkImageUsageFlags usage = texture->Format == TextureFormatDepth ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	VkImageCreateInfo imageInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -31,6 +33,7 @@ static void CreateImage(Texture texture, VkFormat format, VkImageUsageFlags usag
 		.usage = VMA_MEMORY_USAGE_GPU_ONLY,
 	};
 	VkResult result = vmaCreateImage(Graphics.Allocator, &imageInfo, &allocationInfo, &texture->Image, &texture->Allocation, NULL);
+
 	if (result != VK_SUCCESS)
 	{
 		printf("[Error] Unable to create image: %i", result);
@@ -38,7 +41,7 @@ static void CreateImage(Texture texture, VkFormat format, VkImageUsageFlags usag
 	}
 }
 
-static void TransitionImageLayout(Texture texture, VkImageLayout layout)
+static void TransitionImageLayout(Texture texture)
 {
 	VkCommandBuffer commandBuffer;
 	VkCommandBufferAllocateInfo commandAllocateInfo =
@@ -54,19 +57,20 @@ static void TransitionImageLayout(Texture texture, VkImageLayout layout)
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
 	};
-	
 	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+	
+	VkImageAspectFlags imageAspect = texture->Format == TextureFormatColor ? VK_IMAGE_ASPECT_COLOR_BIT : VK_IMAGE_ASPECT_DEPTH_BIT;
 	VkImageMemoryBarrier barrier =
 	{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
 		.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-		.newLayout = layout,
+		.newLayout = VK_IMAGE_LAYOUT_GENERAL,
 		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
 		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
 		.image = texture->Image,
 		.subresourceRange =
 		{
-			.aspectMask = texture->ImageAspect,
+			.aspectMask = imageAspect,
 			.baseMipLevel = 0,
 			.levelCount = 1,
 			.baseArrayLayer = 0,
@@ -91,8 +95,10 @@ static void TransitionImageLayout(Texture texture, VkImageLayout layout)
 	vkFreeCommandBuffers(Graphics.Device, Graphics.CommandPool, 1, &commandBuffer);
 }
 
-static void CreateImageView(Texture texture, VkFormat format)
+static void CreateImageView(Texture texture)
 {
+	VkImageAspectFlags imageAspect = texture->Format == TextureFormatColor ? VK_IMAGE_ASPECT_COLOR_BIT : VK_IMAGE_ASPECT_DEPTH_BIT;
+	VkFormat format = texture->Format == TextureFormatDepth ? Swapchain.DepthFormat : Swapchain.ColorFormat;
 	VkImageViewCreateInfo createInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -101,7 +107,7 @@ static void CreateImageView(Texture texture, VkFormat format)
 		.format = format,
 		.subresourceRange =
 		{
-			.aspectMask = texture->ImageAspect,
+			.aspectMask = imageAspect,
 			.baseMipLevel = 0,
 			.levelCount = 1,
 			.baseArrayLayer = 0,
@@ -116,17 +122,17 @@ static void CreateImageView(Texture texture, VkFormat format)
 	}
 }
 
-static void CreateSampler(Texture texture)
+static void CreateSampler(Texture texture, TextureConfigure config)
 {
 	VkSamplerCreateInfo samplerInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-		.magFilter = VK_FILTER_LINEAR,
-		.minFilter = VK_FILTER_LINEAR,
+		.magFilter = (VkFilter)config.Filter,
+		.minFilter = (VkFilter)config.Filter,
 		.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
-		.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
-		.addressModeV = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
-		.addressModeW = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
+		.addressModeU = (VkSamplerAddressMode)config.AddressMode,
+		.addressModeV = (VkSamplerAddressMode)config.AddressMode,
+		.addressModeW = (VkSamplerAddressMode)config.AddressMode,
 		.anisotropyEnable = VK_FALSE,
 		.compareEnable = VK_FALSE,
 		.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
@@ -145,30 +151,10 @@ Texture TextureCreate(TextureConfigure config)
 	Texture texture = malloc(sizeof(struct Texture));
 	*texture = (struct Texture){ .Width = config.Width, .Height = config.Height, .Format = config.Format };
 	
-	if (config.Format == TextureFormatColor)
-	{
-		texture->ImageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
-		CreateImage(texture, Swapchain.ColorFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
-		TransitionImageLayout(texture, VK_IMAGE_LAYOUT_GENERAL);
-		CreateImageView(texture, Swapchain.ColorFormat);
-		CreateSampler(texture);
-	}
-	else if (config.Format == TextureFormatDepth)
-	{
-		texture->ImageAspect = VK_IMAGE_ASPECT_DEPTH_BIT;
-		CreateImage(texture, Swapchain.DepthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
-		TransitionImageLayout(texture, VK_IMAGE_LAYOUT_GENERAL);
-		CreateImageView(texture, Swapchain.DepthFormat);
-		CreateSampler(texture);
-	}
-	else if (config.Format == TextureFormatStencil)
-	{
-		texture->ImageAspect = VK_IMAGE_ASPECT_STENCIL_BIT;
-		CreateImage(texture, Swapchain.StencilFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
-		TransitionImageLayout(texture, VK_IMAGE_LAYOUT_GENERAL);
-		CreateImageView(texture, Swapchain.StencilFormat);
-		CreateSampler(texture);
-	}
+	CreateImage(texture);
+	TransitionImageLayout(texture);
+	CreateImageView(texture);
+	CreateSampler(texture, config);
 	
 	return texture;
 }
