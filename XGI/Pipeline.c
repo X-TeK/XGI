@@ -8,6 +8,31 @@
 #include "spirv/spirv_reflect.h"
 #include "File.h"
 
+PipelineShader PipelineShaderFromData(ShaderType type, unsigned long dataSize, void * data, bool Precompiled)
+{
+	return (PipelineShader)
+	{
+		.Type = type,
+		.DataSize = dataSize,
+		.Data = data,
+	};
+}
+
+PipelineShader PipelineShaderFromFile(ShaderType type, const char * file, bool Precompiled)
+{
+	File spv = FileOpen(file, FileModeReadBinary);
+	unsigned long size = FileSize(spv);
+	void * data = malloc(size);
+	FileRead(spv, 0, size, data);
+	FileClose(spv);
+	return (PipelineShader)
+	{
+		.Type = type,
+		.DataSize = size,
+		.Data = data,
+	};
+}
+
 static void CreateReflectModules(Pipeline pipeline, PipelineConfigure config)
 {
 	pipeline->StageCount = config.ShaderCount;
@@ -184,29 +209,11 @@ Pipeline PipelineCreate(PipelineConfigure config)
 	VkShaderModule modules[5];
 	for (int i = 0; i < config.ShaderCount; i++)
 	{
-		unsigned long size = 0;
-		void * data = NULL;
-		if (config.Shaders[i].LoadFromFile && config.Shaders[i].Precompiled)
-		{
-			File spv = FileOpen(config.Shaders[i].File, FileModeReadBinary);
-			size = FileSize(spv);
-			data = malloc(size);
-			FileRead(spv, 0, size, data);
-			FileClose(spv);
-			config.Shaders[i].Data = data;
-			config.Shaders[i].DataSize = size;
-		}
-		if (!config.Shaders[i].LoadFromFile && config.Shaders[i].Precompiled)
-		{
-			size = config.Shaders[i].DataSize;
-			data = config.Shaders[i].Data;
-		}
-		
 		VkShaderModuleCreateInfo moduleInfo =
 		{
 			.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-			.codeSize = size,
-			.pCode = data,
+			.codeSize = config.Shaders[i].DataSize,
+			.pCode = config.Shaders[i].Data,
 		};
 		vkCreateShaderModule(Graphics.Device, &moduleInfo, NULL, modules + i);
 		
@@ -231,7 +238,7 @@ Pipeline PipelineCreate(PipelineConfigure config)
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly =
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+		.topology = (VkPrimitiveTopology)config.Primitive,
 		.primitiveRestartEnable = VK_FALSE,
 	};
 	
@@ -265,10 +272,10 @@ Pipeline PipelineCreate(PipelineConfigure config)
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
 		.depthClampEnable = VK_FALSE,
 		.rasterizerDiscardEnable = VK_FALSE,
-		.polygonMode = config.WireFrame ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL,
-		.lineWidth = 1.0f,
-		.cullMode = config.FaceCull ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE,
-		.frontFace = VK_FRONT_FACE_CLOCKWISE,
+		.polygonMode = (VkPolygonMode)config.PolygonMode,
+		.lineWidth = config.LineWidth,
+		.cullMode = (VkCullModeFlagBits)config.CullMode,
+		.frontFace = config.CullClockwise ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE,
 		.depthBiasEnable = VK_FALSE,
 	};
 	
@@ -303,8 +310,10 @@ Pipeline PipelineCreate(PipelineConfigure config)
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
 		.depthTestEnable = config.DepthTest ? VK_TRUE : VK_FALSE,
-		.depthWriteEnable = VK_TRUE,
-		.depthCompareOp = VK_COMPARE_OP_LESS,
+		.depthWriteEnable = config.DepthWrite ? VK_TRUE : VK_FALSE,
+		.depthCompareOp = (VkCompareOp)config.DepthCompare,
+		.depthBoundsTestEnable = VK_FALSE,
+		.stencilTestEnable = VK_FALSE,
 	};
 	
 	VkDynamicState dynamicStates[] =

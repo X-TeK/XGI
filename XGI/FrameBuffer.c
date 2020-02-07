@@ -13,6 +13,7 @@ FrameBuffer FrameBufferCreate(FrameBufferConfigure config)
 		.Height = config.Height,
 		.Filter = config.Filter,
 		.AddressMode = config.AddressMode,
+		.UseStencil = true,
 	};
 	TextureConfigure textureConfig =
 	{
@@ -23,7 +24,7 @@ FrameBuffer FrameBufferCreate(FrameBufferConfigure config)
 		.AddressMode = config.AddressMode,
 	};
 	frameBuffer->ColorTexture = TextureCreate(textureConfig);
-	textureConfig.Format = TextureFormatDepth;
+	textureConfig.Format = config.UseStencil ? TextureFormatDepthStencil : TextureFormatDepth;
 	frameBuffer->DepthTexture = TextureCreate(textureConfig);
 
 	VkImageView attachments[] = { frameBuffer->ColorTexture->ImageView, frameBuffer->DepthTexture->ImageView };

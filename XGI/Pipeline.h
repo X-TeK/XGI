@@ -16,23 +16,67 @@ typedef enum ShaderType
 	ShaderTypeFragment = VK_SHADER_STAGE_FRAGMENT_BIT,
 } ShaderType;
 
+typedef enum PolygonMode
+{
+	PolygonModeFill = VK_POLYGON_MODE_FILL,
+	PolygonModeLine = VK_POLYGON_MODE_LINE,
+	PolygonModePoint = VK_POLYGON_MODE_POINT,
+} PolygonMode;
+
+typedef enum VertexPrimitive
+{
+	VertexPrimitiveTriangleList = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+	VertexPrimitiveTriangleFan = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN,
+	VertexPrimitiveTriangleStrip = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+	VertexPrimitiveLineList = VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
+	VertexPrimitiveLineStrip = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP,
+	VertexPrimitivePointList = VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
+} VertexPrimitive;
+
+typedef enum CullMode
+{
+	CullModeNone = VK_CULL_MODE_NONE,
+	CullModeFront = VK_CULL_MODE_FRONT_BIT,
+	CullModeBack = VK_CULL_MODE_BACK_BIT,
+	CullModeFrontAndBack = VK_CULL_MODE_FRONT_AND_BACK,
+} CullMode;
+
+typedef enum CompareOperation
+{
+	CompareOperationAlways = VK_COMPARE_OP_ALWAYS,
+	CompareOperationNever = VK_COMPARE_OP_NEVER,
+	CompareOperationEqual = VK_COMPARE_OP_EQUAL,
+	CompareOperationLess = VK_COMPARE_OP_LESS,
+	CompareOperationGreater = VK_COMPARE_OP_GREATER,
+	CompareOperationLessOrEqual = VK_COMPARE_OP_LESS_OR_EQUAL,
+	CompareOperationGreaterOrEqual = VK_COMPARE_OP_GREATER_OR_EQUAL,
+	CompareOperationNotEqual = VK_COMPARE_OP_NOT_EQUAL,
+} CompareOperation;
+
+typedef struct PipelineShader
+{
+	ShaderType Type;
+	unsigned long DataSize;
+	void * Data;
+} PipelineShader;
+
+PipelineShader PipelineShaderFromData(ShaderType type, unsigned long dataSize, void * data, bool Precompiled);
+PipelineShader PipelineShaderFromFile(ShaderType type, const char * file, bool Precompiled);
+
 typedef struct PipelineConfigure
 {
 	VertexLayout VertexLayout;
 	int ShaderCount;
-	struct
-	{
-		ShaderType Type;
-		bool LoadFromFile;
-		const char * File;
-		bool Precompiled;
-		unsigned long DataSize;
-		void * Data;
-	} Shaders[5];
-	bool WireFrame;
-	bool FaceCull;
+	PipelineShader Shaders[5];
+	VertexPrimitive Primitive;
+	Scalar LineWidth;
+	PolygonMode PolygonMode;
+	CullMode CullMode;
+	bool CullClockwise;
 	bool AlphaBlend;
 	bool DepthTest;
+	bool DepthWrite;
+	CompareOperation DepthCompare;
 } PipelineConfigure;
 
 typedef struct Pipeline

@@ -55,23 +55,16 @@ static void Initialize()
 		.ShaderCount = 2,
 		.Shaders =
 		{
-			{
-				.Type = ShaderTypeVertex,
-				.LoadFromFile = true,
-				.File = "Shaders/Default.vert.spv",
-				.Precompiled = true,
-			},
-			{
-				.Type = ShaderTypeFragment,
-				.LoadFromFile = true,
-				.File = "Shaders/Default.frag.spv",
-				.Precompiled = true,
-			}
+			PipelineShaderFromFile(ShaderTypeVertex, "Shaders/Default.vert.spv", true),
+			PipelineShaderFromFile(ShaderTypeFragment, "Shaders/Default.frag.spv", true),
 		},
-		.WireFrame = false,
-		.FaceCull = false,
+		.Primitive = VertexPrimitiveTriangleList,
+		.LineWidth = 1.0,
+		.PolygonMode = PolygonModeFill,
+		.CullMode = CullModeNone,
 		.AlphaBlend = false,
 		.DepthTest = false,
+		.DepthCompare = CompareOperationAlways,
 	};
 	pipeline = PipelineCreate(pipelineConfig);
 	Vector4 color = ColorToVector4(ColorWhite);
@@ -85,6 +78,17 @@ static void Initialize()
 	
 	EventHandlerSetCallback(EventTypeKeyDown, (void (*)(void))OnKeyPressed);
 	EventHandlerSetCallback(EventTypeWindowResized, (void (*)(void))OnWindowResized);
+	
+	TextureConfigure config =
+	{
+		.Width = Window.Width,
+		.Height = Window.Height,
+		.Format = TextureFormatDepthStencil,
+		.Filter = TextureFilterLinear,
+		.AddressMode = TextureAddressModeMirroredRepeat,
+	};
+	Texture texture = TextureCreate(config);
+	TextureDestroy(texture);
 }
 
 static void Update()

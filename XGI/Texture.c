@@ -7,8 +7,8 @@
 
 static void CreateImage(Texture texture)
 {
-	VkFormat format = texture->Format == TextureFormatDepth ? Swapchain.DepthFormat : Swapchain.ColorFormat;
-	VkImageUsageFlags usage = texture->Format == TextureFormatDepth ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	VkFormat format = texture->Format == TextureFormatColor ? Swapchain.ColorFormat : (VkFormat)texture->Format;
+	VkImageUsageFlags usage = texture->Format == TextureFormatColor ? VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT : VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 	VkImageCreateInfo imageInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -59,7 +59,7 @@ static void TransitionImageLayout(Texture texture)
 	};
 	vkBeginCommandBuffer(commandBuffer, &beginInfo);
 	
-	VkImageAspectFlags imageAspect = texture->Format == TextureFormatColor ? VK_IMAGE_ASPECT_COLOR_BIT : VK_IMAGE_ASPECT_DEPTH_BIT;
+	VkImageAspectFlags imageAspect = texture->Format == TextureFormatColor ? VK_IMAGE_ASPECT_COLOR_BIT : (texture->Format == TextureFormatDepth ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 	VkImageMemoryBarrier barrier =
 	{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
@@ -97,8 +97,8 @@ static void TransitionImageLayout(Texture texture)
 
 static void CreateImageView(Texture texture)
 {
-	VkImageAspectFlags imageAspect = texture->Format == TextureFormatColor ? VK_IMAGE_ASPECT_COLOR_BIT : VK_IMAGE_ASPECT_DEPTH_BIT;
-	VkFormat format = texture->Format == TextureFormatDepth ? Swapchain.DepthFormat : Swapchain.ColorFormat;
+	VkImageAspectFlags imageAspect = texture->Format == TextureFormatColor ? VK_IMAGE_ASPECT_COLOR_BIT : (texture->Format == TextureFormatDepth ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+	VkFormat format = texture->Format == TextureFormatColor ? Swapchain.ColorFormat : (VkFormat)texture->Format;
 	VkImageViewCreateInfo createInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
