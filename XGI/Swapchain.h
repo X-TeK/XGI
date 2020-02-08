@@ -9,7 +9,6 @@ struct Swapchain
 	VkSwapchainKHR Instance;
 	VkExtent2D Extent;
 	VkFormat ColorFormat;
-	VkFormat DepthFormat;
 	VkRenderPass RenderPass;
 	unsigned int ImageCount;
 	VkImage * Images;

@@ -203,7 +203,13 @@ static void CreateLayout(Pipeline pipeline, PipelineConfigure config)
 Pipeline PipelineCreate(PipelineConfigure config)
 {
 	Pipeline pipeline = malloc(sizeof(struct Pipeline));
-	*pipeline = (struct Pipeline){ .VertexLayout = config.VertexLayout };
+	*pipeline = (struct Pipeline)
+	{
+		.VertexLayout = config.VertexLayout,
+		.LineWidth = config.LineWidth,
+		.FrontStencilReference = config.FrontStencil.Reference,
+		.BackStencilReference = config.BackStencil.Reference,
+	};
 	
 	VkPipelineShaderStageCreateInfo shaderInfos[5];
 	VkShaderModule modules[5];
@@ -313,18 +319,40 @@ Pipeline PipelineCreate(PipelineConfigure config)
 		.depthWriteEnable = config.DepthWrite ? VK_TRUE : VK_FALSE,
 		.depthCompareOp = (VkCompareOp)config.DepthCompare,
 		.depthBoundsTestEnable = VK_FALSE,
-		.stencilTestEnable = VK_FALSE,
+		.stencilTestEnable = config.StencilTest ? VK_TRUE : VK_FALSE,
+		.front =
+		{
+			.compareOp = (VkCompareOp)config.FrontStencil.Compare,
+			.passOp = (VkStencilOp)config.FrontStencil.Pass,
+			.failOp = (VkStencilOp)config.FrontStencil.Fail,
+			.depthFailOp = (VkStencilOp)config.FrontStencil.DepthFail,
+			.compareMask = 0xffffffff,
+			.reference = config.FrontStencil.Reference,
+			.writeMask = 0xffffffff,
+		},
+		.back =
+		{
+			.compareOp = (VkCompareOp)config.BackStencil.Compare,
+			.passOp = (VkStencilOp)config.BackStencil.Pass,
+			.failOp = (VkStencilOp)config.BackStencil.Fail,
+			.depthFailOp = (VkStencilOp)config.BackStencil.DepthFail,
+			.compareMask = 0xffffffff,
+			.reference = config.BackStencil.Reference,
+			.writeMask = 0xffffffff,
+		},
 	};
 	
 	VkDynamicState dynamicStates[] =
 	{
 		VK_DYNAMIC_STATE_VIEWPORT,
 		VK_DYNAMIC_STATE_SCISSOR,
+		VK_DYNAMIC_STATE_LINE_WIDTH,
+		VK_DYNAMIC_STATE_STENCIL_REFERENCE,
 	};
 	VkPipelineDynamicStateCreateInfo dynamicState =
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-		.dynamicStateCount = 2,
+		.dynamicStateCount = 4,
 		.pDynamicStates = dynamicStates,
 	};
 	
@@ -434,6 +462,20 @@ void PipelineSetSampler(Pipeline pipeline, int binding, int arrayIndex, Texture 
 			ListPush(Graphics.FrameResources[i].UpdateDescriptorQueue, writeInfo);
 		}
 	}
+}
+
+void PipelineSetLineWidth(Pipeline pipeline, Scalar lineWidth)
+{
+	pipeline->LineWidth = lineWidth;
+}
+
+void PipelineSetFrontStencilReference(Pipeline pipeline, unsigned int reference)
+{
+	pipeline->FrontStencilReference = reference;
+}
+void PipelineSetBackStencilReference(Pipeline pipeline, unsigned int reference)
+{
+	pipeline->BackStencilReference = reference;
 }
 
 void PipelineQueueDestroy(Pipeline pipeline)

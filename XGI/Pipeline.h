@@ -53,6 +53,27 @@ typedef enum CompareOperation
 	CompareOperationNotEqual = VK_COMPARE_OP_NOT_EQUAL,
 } CompareOperation;
 
+typedef enum StencilOperation
+{
+	StencilOperationZero = VK_STENCIL_OP_ZERO,
+	StencilOperationKeep = VK_STENCIL_OP_KEEP,
+	StencilOperationInvert = VK_STENCIL_OP_INVERT,
+	StencilOperationReplace = VK_STENCIL_OP_REPLACE,
+	StencilOperationWrapIncrement = VK_STENCIL_OP_INCREMENT_AND_WRAP,
+	StencilOperationClampIncrement =  VK_STENCIL_OP_INCREMENT_AND_CLAMP,
+	StencilOperationWrapDecrement = VK_STENCIL_OP_DECREMENT_AND_WRAP,
+	StencilOperationClampDecrement = VK_STENCIL_OP_DECREMENT_AND_CLAMP,
+} StencilOperation;
+
+typedef struct StencilConfigure
+{
+	CompareOperation Compare;
+	StencilOperation Pass;
+	StencilOperation Fail;
+	StencilOperation DepthFail;
+	unsigned int Reference;
+} StencilConfigure;
+
 typedef struct PipelineShader
 {
 	ShaderType Type;
@@ -77,6 +98,9 @@ typedef struct PipelineConfigure
 	bool DepthTest;
 	bool DepthWrite;
 	CompareOperation DepthCompare;
+	bool StencilTest;
+	StencilConfigure FrontStencil;
+	StencilConfigure BackStencil;
 } PipelineConfigure;
 
 typedef struct Pipeline
@@ -84,6 +108,10 @@ typedef struct Pipeline
 	VkPipeline Instance;
 	VkPipelineLayout Layout;
 	VertexLayout VertexLayout;
+	Scalar LineWidth;
+	unsigned int FrontStencilReference;
+	unsigned int BackStencilReference;
+	
 	int StageCount;
 	struct PipelineStage
 	{
@@ -92,12 +120,10 @@ typedef struct Pipeline
 		int BindingCount;
 		SpvReflectDescriptorSet DescriptorInfo;
 	} * Stages;
-	
 	bool UsesDescriptors;
 	VkDescriptorSetLayout DescriptorLayout;
 	VkDescriptorPool DescriptorPool;
 	VkDescriptorSet * DescriptorSet;
-	
 	bool UsesPushConstant;
 	SpvReflectBlockVariable PushConstantInfo;
 	void * PushConstantData;
@@ -108,6 +134,9 @@ Pipeline PipelineCreate(PipelineConfigure config);
 void PipelineSetPushConstant(Pipeline pipeline, const char * variableName, void * value);
 void PipelineSetUniform(Pipeline pipeline, int binding, int arrayIndex, struct UniformBuffer * uniform);
 void PipelineSetSampler(Pipeline pipeline, int binding, int arrayIndex, Texture texture);
+void PipelineSetLineWidth(Pipeline pipeline, Scalar lineWidth);
+void PipelineSetFrontStencilReference(Pipeline pipeline, unsigned int reference);
+void PipelineSetBackStencilReference(Pipeline pipeline, unsigned int reference);
 void PipelineQueueDestroy(Pipeline pipeline);
 void PipelineDestroy(Pipeline pipeline);
 

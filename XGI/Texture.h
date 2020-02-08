@@ -6,7 +6,6 @@
 typedef enum TextureFormat
 {
 	TextureFormatColor,
-	TextureFormatDepth = VK_FORMAT_D32_SFLOAT,
 	TextureFormatDepthStencil = VK_FORMAT_D32_SFLOAT_S8_UINT,
 } TextureFormat;
 

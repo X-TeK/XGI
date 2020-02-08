@@ -11,7 +11,6 @@ typedef struct FrameBufferConfigure
 	unsigned int Width, Height;
 	TextureFilter Filter;
 	TextureAddressMode AddressMode;
-	bool UseStencil;
 } FrameBufferConfigure;
 
 typedef struct FrameBuffer
@@ -21,7 +20,6 @@ typedef struct FrameBuffer
 	TextureAddressMode AddressMode;
 	Texture ColorTexture;
 	Texture DepthTexture;
-	bool UseStencil;
 	VkFramebuffer Instance;
 } * FrameBuffer;
 

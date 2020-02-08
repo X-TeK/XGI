@@ -470,6 +470,9 @@ void GraphicsBindPipeline(Pipeline pipeline)
 	};
 	vkCmdSetViewport(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 0, 1, &viewport);
 	vkCmdSetScissor(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 0, 1, &scissor);
+	vkCmdSetLineWidth(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, pipeline->LineWidth);
+	vkCmdSetStencilReference(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_STENCIL_FACE_FRONT_BIT, pipeline->FrontStencilReference);
+	vkCmdSetStencilReference(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_STENCIL_FACE_BACK_BIT, pipeline->BackStencilReference);
 	
 	if (pipeline->UsesPushConstant)
 	{

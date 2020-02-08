@@ -34,7 +34,6 @@ static void Initialize()
 		.Height = Window.Height,
 		.Filter = TextureFilterNearest,
 		.AddressMode = TextureAddressModeRepeat,
-		.UseStencil = false,
 	};
 	frameBuffer = FrameBufferCreate(frameConfig);
 	
@@ -65,6 +64,7 @@ static void Initialize()
 		.AlphaBlend = false,
 		.DepthTest = false,
 		.DepthCompare = CompareOperationAlways,
+		.StencilTest = false,
 	};
 	pipeline = PipelineCreate(pipelineConfig);
 	Vector4 color = ColorToVector4(ColorWhite);

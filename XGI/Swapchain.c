@@ -101,7 +101,6 @@ static void CreateSwapchain(int width, int height)
 
 	Swapchain.Extent = extent;
 	Swapchain.ColorFormat = surfaceFormat.format;
-	Swapchain.DepthFormat = VK_FORMAT_D32_SFLOAT;
 	Window.Width = Swapchain.Extent.width;
 	Window.Height = Swapchain.Extent.height;
 }
@@ -186,7 +185,7 @@ static void CreateRenderPass()
 	
 	VkAttachmentDescription depthAttachment =
 	{
-		.format = Swapchain.DepthFormat,
+		.format = (VkFormat)TextureFormatDepthStencil,
 		.samples = VK_SAMPLE_COUNT_1_BIT,
 		.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
 		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
