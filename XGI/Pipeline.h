@@ -3,7 +3,7 @@
 
 #include <vulkan/vulkan.h>
 #include <stdbool.h>
-#include "spirv/spirv_reflect.h"
+#include <spirv/spirv_reflect.h>
 #include "VertexBuffer.h"
 #include "UniformBuffer.h"
 #include "Texture.h"
