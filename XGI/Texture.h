@@ -3,6 +3,14 @@
 
 #include <vulkan/vulkan.h>
 
+typedef struct TextureData
+{
+	unsigned long Width, Height;
+	void * Pixels;
+} TextureData;
+
+TextureData TextureDataFromFile(const char * file);
+
 typedef enum TextureFormat
 {
 	TextureFormatColor,

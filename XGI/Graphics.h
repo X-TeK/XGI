@@ -3,7 +3,7 @@
 
 #include <vulkan/vulkan.h>
 #include <libshaderc/shaderc.h>
-#include "vk_mem_alloc.h"
+#include <vk_mem_alloc.h>
 #include "Pipeline.h"
 #include "VertexBuffer.h"
 #include "LinearMath.h"

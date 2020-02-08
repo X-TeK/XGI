@@ -1,9 +1,22 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "vk_mem_alloc.h"
+#include <vk_mem_alloc.h>
+#include <stb_image.h>
 #include "Texture.h"
 #include "Graphics.h"
 #include "Swapchain.h"
+
+TextureData TextureDataFromFile(const char * file)
+{
+	int width, height, channels;
+	stbi_uc * pixels = stbi_load(file, &width, &height, &channels, STBI_rgb_alpha);
+	return (TextureData)
+	{
+		.Width = width,
+		.Height = height,
+		.Pixels = pixels,
+	};
+}
 
 static void CreateImage(Texture texture)
 {

@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <vk_mem_alloc.h>
 #include "Graphics.h"
 #include "VertexBuffer.h"
-#include "vk_mem_alloc.h"
 
 VertexLayout VertexLayoutCreate(int attributeCount, VertexAttribute * attributes)
 {
