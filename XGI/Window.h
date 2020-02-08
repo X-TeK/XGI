@@ -50,61 +50,58 @@ void WindowDisableScreenSaver(void);
 //! Enables the screen saver to run while the application is open
 void WindowEnableScreenSaver(void);
 
-//! Gets the current video driver
-const char * WindowGetVideoDriver(void);
-
 /*!
  Gets the width and height of a display
  @param displayIndex The index of the desired display
  @return A vector2 containing the width and height
  */
-Vector2 WindowGetDisplayDimensions(int displayIndex);
+Vector2 WindowDisplayDimensions(int displayIndex);
 
 /*!
  Gets the usable width and height of a display
  @param displayIndex The display index
  @return A vector2 containing the width and height
  */
-Vector2 WindowGetUsableDisplayDimensions(int displayIndex);
+Vector2 WindowUsableDisplayDimensions(int displayIndex);
 
 /*!
  Gets the DPI of a chosen display
  @param displayIndex The index of the disired display
  @return A vector3 containing .X = horizontal dpi, .Y = vertical dpi, .Z = diagonal dpi
  */
-Vector3 WindowGetDisplayDPI(int displayIndex);
+Vector3 WindowDisplayDPI(int displayIndex);
 
 //! Gets the name of a display
-const char * WindowGetDisplayName(int displayIndex);
+const char * WindowDisplayName(int displayIndex);
 
 //! Gets the number of displays
-int WindowGetDisplayCount(void);
+int WindowDisplayCount(void);
 
 /*!
  Gets the size of each border around the window
  @return A vector4: .X = left, .Y = right, .Z = top, .W = bottom
  */
-Vector4 WindowGetBorderSize(void);
+Vector4 WindowBorderSize(void);
 
 /*! Gets the window brightness
  @return 0.0 is the darkest 1.0 is the brightest
  */
-float WindowGetBrightness(void);
+float WindowBrightness(void);
 
 //! Gets the display index that the current window is on
-int WindowGetDisplayIndex(void);
+int WindowDisplayIndex(void);
 
-Vector2 WindowGetMaximumSize(void);
+Vector2 WindowMaximumSize(void);
 
-Vector2 WindowGetMinimumSize(void);
+Vector2 WindowMinimumSize(void);
 
-float WindowGetOpacity(void);
+float WindowOpacity(void);
 
-Vector2 WindowGetPosition(void);
+Vector2 WindowPosition(void);
 
-Vector2 WindowGetSize(void);
+Vector2 WindowSize(void);
 
-const char * WindowGetTitle(void);
+const char * WindowTitle(void);
 
 void WindowHide(void);
 

@@ -56,8 +56,9 @@ struct Graphics
 void GraphicsInitialize(GraphicsConfigure config);
 void GraphicsBegin(FrameBuffer frameBuffer);
 void GraphicsClearColor(Color clearColor);
-void GraphicsDepthStencil(float depth, int stencil);
-void GraphicsClear(Color clearColor, float depth, int stencil);
+void GraphicsClearDepth(Scalar depth);
+void GraphicsClearStencil(unsigned int stencil);
+void GraphicsClear(Color clearColor, Scalar depth, int stencil);
 void GraphicsBindPipeline(Pipeline pipeline);
 void GraphicsRenderVertexBuffer(VertexBuffer vertexBuffer);
 void GraphicsEnd(void);

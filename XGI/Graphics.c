@@ -381,7 +381,7 @@ void GraphicsBegin(FrameBuffer frameBuffer)
 	vkCmdBeginRenderPass(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, &renderPassBegin, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void GraphicsClearColor(Color clearColor)
+static void Clear(Color clearColor, float depth, int stencil, VkImageAspectFlagBits aspect)
 {
 	Vector4 color = ColorToVector4(clearColor);
 	VkClearRect rect =
@@ -394,60 +394,38 @@ void GraphicsClearColor(Color clearColor)
 			.extent = { Graphics.BoundFrameBuffer->Width, Graphics.BoundFrameBuffer->Height },
 		},
 	};
-	VkClearAttachment clear =
+	
+	VkClearAttachment clear = aspect == VK_IMAGE_ASPECT_COLOR_BIT ? (VkClearAttachment)
 	{
-		.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-		.colorAttachment = 0,
+		.aspectMask = aspect,
 		.clearValue = { .color = { color.X, color.Y, color.Z, color.W } },
+	} : (VkClearAttachment)
+	{
+		.aspectMask = aspect,
+		.clearValue = { .depthStencil = { .depth = depth, .stencil = stencil }, }
 	};
 	vkCmdClearAttachments(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 1, &clear, 1, &rect);
 }
 
-void GraphicsClearDepth(float depth)
+void GraphicsClearColor(Color clearColor)
 {
-	VkClearRect rect =
-	{
-		.baseArrayLayer = 0,
-		.layerCount = 1,
-		.rect =
-		{
-			.offset = { 0, 0 },
-			.extent = { Graphics.BoundFrameBuffer->Width, Graphics.BoundFrameBuffer->Height },
-		},
-	};
-	VkClearAttachment clear =
-	{
-		.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
-		.clearValue = { .depthStencil = { .depth = depth } },
-	};
-	vkCmdClearAttachments(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 1, &clear, 1, &rect);
+	Clear(clearColor, 0.0, 0, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
-void GraphicsClearStencil(int stencil)
+void GraphicsClearDepth(Scalar depth)
 {
-	VkClearRect rect =
-	{
-		.baseArrayLayer = 0,
-		.layerCount = 1,
-		.rect =
-		{
-			.offset = { 0, 0 },
-			.extent = { Graphics.BoundFrameBuffer->Width, Graphics.BoundFrameBuffer->Height },
-		},
-	};
-	VkClearAttachment clear =
-	{
-		.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT,
-		.clearValue = { .depthStencil = { .stencil = stencil } },
-	};
-	vkCmdClearAttachments(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 1, &clear, 1, &rect);
+	Clear(ColorBlack, depth, 0, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
-void GraphicsClear(Color clearColor, float depth, int stencil)
+void GraphicsClearStencil(unsigned int stencil)
+{
+	Clear(ColorBlack, 0.0, stencil, VK_IMAGE_ASPECT_STENCIL_BIT);
+}
+
+void GraphicsClear(Color clearColor, Scalar depth, int stencil)
 {
 	GraphicsClearColor(clearColor);
-	GraphicsClearDepth(depth);
-	GraphicsClearStencil(stencil);
+	Clear(clearColor, depth, stencil, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 void GraphicsBindPipeline(Pipeline pipeline)

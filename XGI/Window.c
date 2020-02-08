@@ -40,80 +40,78 @@ void WindowDisableScreenSaver() { SDL_DisableScreenSaver(); }
 
 void WindowEnableScreenSaver() { SDL_EnableScreenSaver(); }
 
-const char * WindowGetVideoDriver() { return SDL_GetCurrentVideoDriver(); }
-
-Vector2 WindowGetDisplayDimensions(int index)
+Vector2 WindowDisplayDimensions(int index)
 {
 	SDL_Rect dimensions;
 	SDL_GetDisplayBounds(index, &dimensions);
 	return (Vector2){ dimensions.w, dimensions.h };
 }
 
-Vector2 WindowGetUsableDisplayDimensions(int index)
+Vector2 WindowUsableDisplayDimensions(int index)
 {
 	SDL_Rect dimensions;
 	SDL_GetDisplayUsableBounds(index, &dimensions);
 	return (Vector2){ dimensions.w, dimensions.h };
 }
 
-Vector3 WindowGetDisplayDPI(int index)
+Vector3 WindowDisplayDPI(int index)
 {
 	Vector3 dpi;
 	SDL_GetDisplayDPI(index, &dpi.X, &dpi.Y, &dpi.Z);
 	return dpi;
 }
 
-const char * WindowGetDisplayName(int index) { return SDL_GetDisplayName(index); }
+const char * WindowDisplayName(int index) { return SDL_GetDisplayName(index); }
 
-int WindowGetDisplayCount() { return SDL_GetNumVideoDisplays(); }
+int WindowDisplayCount() { return SDL_GetNumVideoDisplays(); }
 
-Vector4 WindowGetBorderSize()
+Vector4 WindowBorderSize()
 {
 	int t, l, b, r;
 	SDL_GetWindowBordersSize(Window.Handle, &t, &l, &b, &r);
 	return (Vector4){ l, r, t, b };
 }
 
-float WindowGetBrightness() { return SDL_GetWindowBrightness(Window.Handle); }
+float WindowBrightness() { return SDL_GetWindowBrightness(Window.Handle); }
 
-int WindowGetDisplayIndex() { return SDL_GetWindowDisplayIndex(Window.Handle); }
+int WindowDisplayIndex() { return SDL_GetWindowDisplayIndex(Window.Handle); }
 
 void WindowDeinitialize() { SDL_DestroyWindow(Window.Handle); }
 
-Vector2 WindowGetMaximumSize()
+Vector2 WindowMaximumSize()
 {
 	int w, h;
 	SDL_GetWindowMaximumSize(Window.Handle, &w, &h);
 	return (Vector2){ w, h };
 }
 
-Vector2 WindowGetMinimumSize()
+Vector2 WindowMinimumSize()
 {
 	int w, h;
 	SDL_GetWindowMinimumSize(Window.Handle, &w, &h);
 	return (Vector2){ w, h };
 }
 
-float WindowGetOpacity()
+float WindowOpacity()
 {
 	float opacity;
 	SDL_GetWindowOpacity(Window.Handle, &opacity);
 	return opacity;
 }
 
-Vector2 WindowGetPosition()
+Vector2 WindowPosition()
 {
 	int x, y;
 	SDL_GetWindowPosition(Window.Handle, &x, &y);
 	return (Vector2){ x, y };
 }
 
-Vector2 WindowGetSize()
+Vector2 WindowSize()
 {
 	return (Vector2){ Window.Width, Window.Height };
 }
 
-const char * WindowGetTitle() { return SDL_GetWindowTitle(Window.Handle); }
+const char * WindowTitle() { return SDL_GetWindowTitle(Window.Handle); }
 
 void WindowHide() { SDL_HideWindow(Window.Handle); }
 

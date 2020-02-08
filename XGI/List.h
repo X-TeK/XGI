@@ -69,6 +69,8 @@ void ListRemoveAll(List list, void * value);
  */
 void * ListIndex(List list, int index);
 
+void ListSetIndex(List list, int index, void * value);
+
 /*!
  Looks if the list contains the specified value
  @param value The value to look for

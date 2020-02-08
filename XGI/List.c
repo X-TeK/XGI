@@ -85,6 +85,11 @@ void * ListIndex(List list, int index)
 	}
 }
 
+void ListSetIndex(List list, int index, void * value)
+{
+	if (index < list->Count && index >= 0) { list->Data[index] = value; }
+}
+
 bool ListContains(List list, void * value)
 {
 	for (int i = 0; i < list->Count; i++)
