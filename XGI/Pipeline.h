@@ -81,8 +81,8 @@ typedef struct PipelineShader
 	void * Data;
 } PipelineShader;
 
-PipelineShader PipelineShaderFromData(ShaderType type, unsigned long dataSize, void * data, bool Precompiled);
-PipelineShader PipelineShaderFromFile(ShaderType type, const char * file, bool Precompiled);
+PipelineShader PipelineShaderFromData(ShaderType type, unsigned long dataSize, void * data, bool precompiled);
+PipelineShader PipelineShaderFromFile(ShaderType type, const char * file, bool precompiled);
 
 typedef struct PipelineConfigure
 {

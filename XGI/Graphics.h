@@ -2,6 +2,7 @@
 #define Graphics_h
 
 #include <vulkan/vulkan.h>
+#include <libshaderc/shaderc.h>
 #include "vk_mem_alloc.h"
 #include "Pipeline.h"
 #include "VertexBuffer.h"
@@ -28,6 +29,7 @@ struct Graphics
 	unsigned int PresentQueueIndex;
 	VkCommandPool CommandPool;
 	VmaAllocator Allocator;
+	shaderc_compiler_t ShaderCompiler;
 	
 	List PreRenderSemaphores;
 	int FrameResourceCount;

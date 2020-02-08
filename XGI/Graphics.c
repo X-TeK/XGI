@@ -307,6 +307,11 @@ static void CreateAllocator()
 	vmaCreateAllocator(&allocatorInfo, &Graphics.Allocator);
 }
 
+static void CreateCompiler()
+{
+	Graphics.ShaderCompiler = shaderc_compiler_initialize();
+}
+
 static void CreateFrameResources()
 {
 	Graphics.FrameResources = malloc(Graphics.FrameResourceCount * sizeof(*Graphics.FrameResources));
@@ -357,6 +362,7 @@ void GraphicsInitialize(GraphicsConfigure config)
 	CreateLogicalDevice();
 	CreateCommandPool();
 	CreateAllocator();
+	CreateCompiler();
 	CreateFrameResources();
 	printf("\n[Log] Successfully initialized vulkan\n");
 }
@@ -579,6 +585,7 @@ void GraphicsDeinitialize()
 		vkFreeCommandBuffers(Graphics.Device, Graphics.CommandPool, 1, &Graphics.FrameResources[i].CommandBuffer);
 	}
 	free(Graphics.FrameResources);
+	shaderc_compiler_release(Graphics.ShaderCompiler);
 	vmaDestroyAllocator(Graphics.Allocator);
 	vkDestroyCommandPool(Graphics.Device, Graphics.CommandPool, NULL);
 	vkDestroyDevice(Graphics.Device, NULL);

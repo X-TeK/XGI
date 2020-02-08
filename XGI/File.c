@@ -20,6 +20,7 @@ File FileOpen(const char * path, FileMode mode)
 	file->RW = SDL_RWFromFile(path, fileMode);
 	if (file->RW == NULL)
 	{
+		printf("File doesn't exist\n");
 		exit(-1);
 	}
 	file->Size = SDL_RWsize(file->RW);

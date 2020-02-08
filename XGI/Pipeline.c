@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <libshaderc/shaderc.h>
 #include "Pipeline.h"
 #include "Graphics.h"
 #include "Swapchain.h"
@@ -8,8 +9,16 @@
 #include "spirv/spirv_reflect.h"
 #include "File.h"
 
-PipelineShader PipelineShaderFromData(ShaderType type, unsigned long dataSize, void * data, bool Precompiled)
+PipelineShader PipelineShaderFromData(ShaderType type, unsigned long dataSize, void * data, bool precompiled)
 {
+	if (!precompiled)
+	{
+		shaderc_shader_kind shaderType = type == ShaderTypeVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
+		shaderc_compilation_result_t result = shaderc_compile_into_spv(Graphics.ShaderCompiler, data, dataSize, shaderType, "shader", "main", 0);
+		data = (void *)shaderc_result_get_bytes(result);
+		dataSize = shaderc_result_get_length(result);
+		shaderc_result_release(result);
+	}
 	return (PipelineShader)
 	{
 		.Type = type,
@@ -18,8 +27,27 @@ PipelineShader PipelineShaderFromData(ShaderType type, unsigned long dataSize, v
 	};
 }
 
-PipelineShader PipelineShaderFromFile(ShaderType type, const char * file, bool Precompiled)
+PipelineShader PipelineShaderFromFile(ShaderType type, const char * file, bool precompiled)
 {
+	if (!precompiled)
+	{
+		File shader = FileOpen(file, FileModeRead);
+		unsigned long size = FileSize(shader);
+		char * text = malloc(size);
+		FileRead(shader, 0, size, text);
+		FileClose(shader);
+		shaderc_shader_kind shaderType = type == ShaderTypeVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
+		shaderc_compilation_result_t result = shaderc_compile_into_spv(Graphics.ShaderCompiler, text, size, shaderType, "shader", "main", 0);
+		void * data = (void *)shaderc_result_get_bytes(result);
+		unsigned long dataSize = shaderc_result_get_length(result);
+		shaderc_result_release(result);
+		return (PipelineShader)
+		{
+			.Type = type,
+			.DataSize = dataSize,
+			.Data = data,
+		};
+	}
 	File spv = FileOpen(file, FileModeReadBinary);
 	unsigned long size = FileSize(spv);
 	void * data = malloc(size);
