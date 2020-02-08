@@ -80,6 +80,7 @@ static void Initialize()
 	EventHandlerSetCallback(EventTypeKeyDown, (void (*)(void))OnKeyPressed);
 	EventHandlerSetCallback(EventTypeWindowResized, (void (*)(void))OnWindowResized);
 	
+	TextureData data = TextureDataFromFile("image.jpg");
 	TextureConfigure config =
 	{
 		.Width = Window.Width,
@@ -88,9 +89,10 @@ static void Initialize()
 		.Filter = TextureFilterLinear,
 		.AddressMode = TextureAddressModeMirroredRepeat,
 		.LoadFromData = true,
-		.Data = TextureDataFromFile("Shaders/image.jpg"),
+		.Data = data,
 	};
 	image = TextureCreate(config);
+	TextureDataDestroy(data);
 	PipelineSetSampler(pipeline, 1, 0, image);
 }
 

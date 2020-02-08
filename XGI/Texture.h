@@ -11,6 +11,7 @@ typedef struct TextureData
 } TextureData;
 
 TextureData TextureDataFromFile(const char * file);
+void TextureDataDestroy(TextureData data);
 
 typedef enum TextureFormat
 {

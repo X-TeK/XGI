@@ -19,6 +19,10 @@ TextureData TextureDataFromFile(const char * fileName)
 		.Pixels = pixels,
 	};
 }
+void TextureDataDestroy(TextureData data)
+{
+	stbi_image_free(data.Pixels);
+}
 
 static void CreateImage(Texture texture)
 {
