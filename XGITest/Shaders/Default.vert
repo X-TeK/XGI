@@ -15,6 +15,7 @@ layout (binding = 0) uniform UBO
 } UBOInput;
 
 layout (location = 0) out vec4 VertexColor;
+layout (location = 1) out vec2 VertexUV;
 
 void main()
 {
@@ -22,4 +23,5 @@ void main()
 	float aspect = UBOInput.Dimensions.x / UBOInput.Dimensions.y;
 	gl_Position = Input.Transform * vec4(PositionAttribute.xy, 0.0, 1.0);
 	gl_Position.xy /= vec2(aspect, 1.0);
+	VertexUV = gl_Position.xy;
 }

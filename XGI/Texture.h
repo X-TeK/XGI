@@ -2,10 +2,11 @@
 #define Texture_h
 
 #include <vulkan/vulkan.h>
+#include <stdbool.h>
 
 typedef struct TextureData
 {
-	unsigned long Width, Height;
+	unsigned int Width, Height;
 	void * Pixels;
 } TextureData;
 
@@ -37,6 +38,8 @@ typedef struct TextureConfigure
 	TextureFormat Format;
 	TextureFilter Filter;
 	TextureAddressMode AddressMode;
+	bool LoadFromData;
+	TextureData Data;
 } TextureConfigure;
 
 typedef struct Texture

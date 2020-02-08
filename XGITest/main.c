@@ -13,6 +13,7 @@ VertexLayout vertexLayout;
 VertexBuffer vertexBuffer;
 Pipeline pipeline;
 UniformBuffer uniform;
+Texture image;
 int frame;
 
 struct Vertex
@@ -83,18 +84,21 @@ static void Initialize()
 	{
 		.Width = Window.Width,
 		.Height = Window.Height,
-		.Format = TextureFormatDepthStencil,
+		.Format = TextureFormatColor,
 		.Filter = TextureFilterLinear,
 		.AddressMode = TextureAddressModeMirroredRepeat,
+		.LoadFromData = true,
+		.Data = TextureDataFromFile("Shaders/image.jpg"),
 	};
-	Texture texture = TextureCreate(config);
-	TextureDestroy(texture);
+	image = TextureCreate(config);
+	PipelineSetSampler(pipeline, 1, 0, image);
 }
 
 static void Update()
 {
 	frame++;
 	Matrix4x4 transform = Matrix4x4FromAxisAngle(Vector3Forward, frame / 60.0);
+	transform = Matrix4x4Multiply(transform, Matrix4x4FromScale((Vector3){ 4.0, 4.0, 4.0 }));
 	PipelineSetPushConstant(pipeline, "Transform", &transform);
 }
 
@@ -127,6 +131,7 @@ static void Deinitialize()
 	PipelineDestroy(pipeline);
 	FrameBufferDestroy(frameBuffer);
 	VertexLayoutDestroy(vertexLayout);
+	TextureDestroy(image);
 }
 
 int main(int argc, const char * argv[])
