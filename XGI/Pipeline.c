@@ -173,22 +173,31 @@ static void CreateDescriptorPool(Pipeline pipeline, int uboCount, int samplerCou
 {
 	if (pipeline->UsesDescriptors)
 	{
-		VkDescriptorPoolSize poolSizes[] =
+		VkDescriptorPoolSize poolSizes[2];
+		int i = 0;
+		if (uboCount > 0)
 		{
+			poolSizes[i] = (VkDescriptorPoolSize)
 			{
 				.descriptorCount = uboCount * Graphics.FrameResourceCount,
 				.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			},
+			};
+			i++;
+		}
+		if (samplerCount > 0)
+		{
+			poolSizes[i] = (VkDescriptorPoolSize)
 			{
 				.descriptorCount = samplerCount * Graphics.FrameResourceCount,
 				.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-			}
-		};
+			};
+			i++;
+		}
 		VkDescriptorPoolCreateInfo poolInfo =
 		{
 			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
 			.maxSets = Graphics.FrameResourceCount,
-			.poolSizeCount = 2,
+			.poolSizeCount = i,
 			.pPoolSizes = poolSizes,
 		};
 		vkCreateDescriptorPool(Graphics.Device, &poolInfo, NULL, &pipeline->DescriptorPool);
