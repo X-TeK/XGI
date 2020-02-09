@@ -110,6 +110,7 @@ static VkPushConstantRange GetPushConstantRange(Pipeline pipeline)
 static void CreateDescriptorLayout(Pipeline pipeline, int * uboCount, int * samplerCount)
 {
 	unsigned int bindingCount = 0;
+	pipeline->UsesDescriptors = false;
 	for (int i = 0; i < pipeline->StageCount; i++)
 	{
 		struct PipelineStage * stage = pipeline->Stages + i;
@@ -127,43 +128,45 @@ static void CreateDescriptorLayout(Pipeline pipeline, int * uboCount, int * samp
 			bindingCount += stage->DescriptorInfo.binding_count;
 		}
 	}
-	
-	VkDescriptorSetLayoutBinding * layoutBindings = malloc(bindingCount * sizeof(VkDescriptorSetLayoutBinding));
-	for (int i = 0, c = 0; i < pipeline->StageCount; i++)
+	if (pipeline->UsesDescriptors)
 	{
-		struct PipelineStage * stage = pipeline->Stages + i;
-		unsigned int setCount;
-		spvReflectEnumerateDescriptorSets(&stage->Module, &setCount, NULL);
-		SpvReflectDescriptorSet * sets = malloc(setCount * sizeof(SpvReflectDescriptorSet));
-		spvReflectEnumerateDescriptorSets(&stage->Module, &setCount, &sets);
-		
-		if (setCount > 0)
+		VkDescriptorSetLayoutBinding * layoutBindings = malloc(bindingCount * sizeof(VkDescriptorSetLayoutBinding));
+		for (int i = 0, c = 0; i < pipeline->StageCount; i++)
 		{
-			for (int j = 0; j < stage->DescriptorInfo.binding_count; j++, c++)
+			struct PipelineStage * stage = pipeline->Stages + i;
+			unsigned int setCount;
+			spvReflectEnumerateDescriptorSets(&stage->Module, &setCount, NULL);
+			SpvReflectDescriptorSet* sets = malloc(setCount * sizeof(SpvReflectDescriptorSet));
+			spvReflectEnumerateDescriptorSets(&stage->Module, &setCount, &sets);
+
+			if (setCount > 0)
 			{
-				SpvReflectDescriptorBinding * binding = stage->DescriptorInfo.bindings[j];
-				printf("%s set:%i binding:%i count:%i\n", binding->name, binding->set, binding->binding, binding->count);
-				layoutBindings[c] = (VkDescriptorSetLayoutBinding)
+				for (int j = 0; j < stage->DescriptorInfo.binding_count; j++, c++)
 				{
-					.binding = binding->binding,
-					.descriptorCount = binding->count,
-					.descriptorType = (VkDescriptorType)binding->descriptor_type,
-					.stageFlags = stage->ShaderType,
-				};
-				if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) { (*samplerCount) += binding->count; }
-				if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) { (*uboCount) += binding->count; }
+					SpvReflectDescriptorBinding * binding = stage->DescriptorInfo.bindings[j];
+					printf("%s set:%i binding:%i count:%i\n", binding->name, binding->set, binding->binding, binding->count);
+					layoutBindings[c] = (VkDescriptorSetLayoutBinding)
+					{
+						.binding = binding->binding,
+						.descriptorCount = binding->count,
+						.descriptorType = (VkDescriptorType)binding->descriptor_type,
+						.stageFlags = stage->ShaderType,
+					};
+					if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) { (*samplerCount) += binding->count; }
+					if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) { (*uboCount) += binding->count; }
+				}
 			}
 		}
+
+		VkDescriptorSetLayoutCreateInfo layoutInfo =
+		{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+			.bindingCount = bindingCount,
+			.pBindings = layoutBindings,
+		};
+		vkCreateDescriptorSetLayout(Graphics.Device, &layoutInfo, NULL, &pipeline->DescriptorLayout);
+		free(layoutBindings);
 	}
-	
-	VkDescriptorSetLayoutCreateInfo layoutInfo =
-	{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-		.bindingCount = bindingCount,
-		.pBindings = layoutBindings,
-	};
-	vkCreateDescriptorSetLayout(Graphics.Device, &layoutInfo, NULL, &pipeline->DescriptorLayout);
-	free(layoutBindings);
 }
 
 static void CreateDescriptorPool(Pipeline pipeline, int uboCount, int samplerCount)
