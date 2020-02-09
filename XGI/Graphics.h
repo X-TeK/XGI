@@ -2,7 +2,7 @@
 #define Graphics_h
 
 #include <vulkan/vulkan.h>
-#include <libshaderc/shaderc.h>
+#include <shaderc/shaderc.h>
 #include <vk_mem_alloc.h>
 #include "Pipeline.h"
 #include "VertexBuffer.h"

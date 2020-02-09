@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <libshaderc/shaderc.h>
+#include <shaderc/shaderc.h>
 #include <spirv/spirv_reflect.h>
 #include "Pipeline.h"
 #include "Graphics.h"
@@ -15,9 +15,13 @@ PipelineShader PipelineShaderFromData(ShaderType type, unsigned long dataSize, v
 	{
 		shaderc_shader_kind shaderType = type == ShaderTypeVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
 		shaderc_compilation_result_t result = shaderc_compile_into_spv(Graphics.ShaderCompiler, data, dataSize, shaderType, "shader", "main", 0);
+		if (shaderc_result_get_num_errors(result) > 0)
+		{
+			printf("%s\n", shaderc_result_get_error_message(result));
+			exit(-1);
+		}
 		data = (void *)shaderc_result_get_bytes(result);
 		dataSize = shaderc_result_get_length(result);
-		shaderc_result_release(result);
 	}
 	return (PipelineShader)
 	{
@@ -37,10 +41,14 @@ PipelineShader PipelineShaderFromFile(ShaderType type, const char * file, bool p
 		FileRead(shader, 0, size, text);
 		FileClose(shader);
 		shaderc_shader_kind shaderType = type == ShaderTypeVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
-		shaderc_compilation_result_t result = shaderc_compile_into_spv(Graphics.ShaderCompiler, text, size, shaderType, "shader", "main", 0);
+		shaderc_compilation_result_t result = shaderc_compile_into_spv(Graphics.ShaderCompiler, text, size, shaderType, file, "main", 0);
+		if (shaderc_result_get_num_errors(result) > 0)
+		{
+			printf("%s\n", shaderc_result_get_error_message(result));
+			exit(-1);
+		}
 		void * data = (void *)shaderc_result_get_bytes(result);
 		unsigned long dataSize = shaderc_result_get_length(result);
-		shaderc_result_release(result);
 		return (PipelineShader)
 		{
 			.Type = type,
