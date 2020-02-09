@@ -51,7 +51,7 @@ void UniformBufferSetVariable(UniformBuffer uniformBuffer, const char * variable
 		{
 			unsigned int offset = uniformBuffer->Info.members[i].offset;
 			unsigned int size = uniformBuffer->Info.members[i].size;
-			memcpy(data + offset, value, size);
+			memcpy((unsigned char *)data + offset, value, size);
 		}
 	}
 	vmaUnmapMemory(Graphics.Allocator, uniformBuffer->Allocation);

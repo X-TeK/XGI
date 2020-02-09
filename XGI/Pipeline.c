@@ -435,7 +435,7 @@ void PipelineSetPushConstant(Pipeline pipeline, const char * variable, void * va
 			SpvReflectBlockVariable member = pipeline->PushConstantInfo.members[i];
 			if (strcmp(member.name, variable) == 0)
 			{
-				memcpy(pipeline->PushConstantData + member.offset, value, member.size);
+				memcpy((unsigned char *)pipeline->PushConstantData + member.offset, value, member.size);
 			}
 		}
 	}
