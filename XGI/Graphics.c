@@ -1,5 +1,6 @@
 #include <SDL2/SDL_vulkan.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "Graphics.h"
 #include "Swapchain.h"

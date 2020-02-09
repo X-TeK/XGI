@@ -2250,7 +2250,7 @@ VMA_CALL_PRE void VMA_CALL_POST vmaFreeStatsString(
 
 #endif // #if VMA_STATS_STRING_ENABLED
 
-/** \struct VmaPool
+/** VmaPool
 \brief Represents custom memory pool
 
 Fill structure VmaPoolCreateInfo and call function vmaCreatePool() to create it.
@@ -3209,7 +3209,7 @@ typedef struct VmaDefragmentationPassInfo {
 
 /** \brief Deprecated. Optional configuration parameters to be passed to function vmaDefragment().
 
-\deprecated This is a part of the old interface. It is recommended to use structure #VmaDefragmentationInfo2 and function vmaDefragmentationBegin() instead.
+ This is a part of the old interface. It is recommended to use structure #VmaDefragmentationInfo2 and function vmaDefragmentationBegin() instead.
 */
 typedef struct VmaDefragmentationInfo {
     /** \brief Maximum total numbers of bytes that can be copied while moving allocations to different places.
@@ -3299,7 +3299,7 @@ VMA_CALL_PRE VkResult VMA_CALL_POST vmaEndDefragmentationPass(
 @param[out] pDefragmentationStats Statistics returned by the function. Optional - pass null if you don't need this information.
 @return `VK_SUCCESS` if completed, negative error code in case of error.
 
-\deprecated This is a part of the old interface. It is recommended to use structure #VmaDefragmentationInfo2 and function vmaDefragmentationBegin() instead.
+ This is a part of the old interface. It is recommended to use structure #VmaDefragmentationInfo2 and function vmaDefragmentationBegin() instead.
 
 This function works by moving allocations to different places (different
 `VkDeviceMemory` objects and/or different offsets) in order to optimize memory
@@ -11976,7 +11976,7 @@ VkResult VmaBlockVector::AllocatePage(
     const bool mapped = (createInfo.flags & VMA_ALLOCATION_CREATE_MAPPED_BIT) != 0;
     const bool isUserDataString = (createInfo.flags & VMA_ALLOCATION_CREATE_USER_DATA_COPY_STRING_BIT) != 0;
     
-    const bool withinBudget = (createInfo.flags & VMA_ALLOCATION_CREATE_WITHIN_BUDGET_BIT) != 0;
+    //const bool withinBudget = (createInfo.flags & VMA_ALLOCATION_CREATE_WITHIN_BUDGET_BIT) != 0;
     VkDeviceSize freeMemory;
     {
         const uint32_t heapIndex = m_hAllocator->MemoryTypeIndexToHeapIndex(m_MemoryTypeIndex);

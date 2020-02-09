@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "Window.h"
 
 struct Window Window = { 0 };
