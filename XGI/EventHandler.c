@@ -3,12 +3,10 @@
 #include "Swapchain.h"
 
 static void (*Callbacks[EventTypeCount])(void);
-Key KeysDown[KeyScancodeCount];
 
 void EventHandlerInitialize()
 {
 	for (int i = 0; i < EventTypeCount; i++) { Callbacks[i] = NULL; }
-	for (int i = 0; i < KeyScancodeCount; i++) { KeysDown[i] = false; }
 }
 
 void EventHandlerSetCallback(EventType event, void (*callback)(void))
@@ -73,10 +71,10 @@ void EventHandlerPoll()
 				}
 				break;
 			case SDL_KEYDOWN:
-				EventHandlerCallbackKeyDown((Key)event.key.keysym.scancode);
+				EventHandlerCallbackKeyPressed((Key)event.key.keysym.scancode);
 				break;
 			case SDL_KEYUP:
-				EventHandlerCallbackKeyUp((Key)event.key.keysym.scancode);
+				EventHandlerCallbackKeyReleased((Key)event.key.keysym.scancode);
 				break;
 			case SDL_TEXTEDITING:
 				EventHandlerCallbackTextEditing(event.edit.text, event.edit.start, event.edit.length);
@@ -91,13 +89,34 @@ void EventHandlerPoll()
 				EventHandlerCallbackMouseMotion(event.motion.which, event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel);
 				break;
 			case SDL_MOUSEBUTTONDOWN:
-				EventHandlerCallbackMouseButtonDown(event.button.which, event.button.button, event.button.x, event.button.y);
+				EventHandlerCallbackMouseButtonPressed(event.button.which, event.button.button, event.button.x, event.button.y);
 				break;
 			case SDL_MOUSEBUTTONUP:
-				EventHandlerCallbackMouseButtonUp(event.button.which, event.button.button, event.button.x, event.button.y);
+				EventHandlerCallbackMouseButtonReleased(event.button.which, event.button.button, event.button.x, event.button.y);
 				break;
 			case SDL_MOUSEWHEEL:
 				EventHandlerCallbackMouseWheelMotion(event.wheel.which, event.wheel.x, event.wheel.y);
+				break;
+			case SDL_JOYAXISMOTION:
+				EventHandlerCallbackControllerAxisMotion(event.jaxis.which, event.jaxis.axis, event.jaxis.value);
+				break;
+			case SDL_JOYBALLMOTION:
+				EventHandlerCallbackControllerBallMotion(event.jball.which, event.jball.ball, event.jball.xrel, event.jball.yrel);
+				break;
+			case SDL_JOYHATMOTION:
+				EventHandlerCallbackControllerHatMotion(event.jhat.which, event.jhat.hat, event.jhat.value);
+				break;
+			case SDL_JOYBUTTONDOWN:
+				EventHandlerCallbackControllerButtonPressed(event.jbutton.which, event.jbutton.button);
+				break;
+			case SDL_JOYBUTTONUP:
+				EventHandlerCallbackControllerButtonReleased(event.jbutton.which, event.jbutton.button);
+				break;
+			case SDL_JOYDEVICEADDED:
+				EventHandlerCallbackControllerConnected(event.jdevice.which);
+				break;
+			case SDL_JOYDEVICEREMOVED:
+				EventHandlerCallbackControllerDisconnected(event.jdevice.which);
 				break;
 		}
 	}
@@ -176,16 +195,14 @@ void EventHandlerCallbackWindowClose()
 	if (Callbacks[EventTypeWindowClose] != NULL) { Callbacks[EventTypeWindowClose](); }
 }
 
-void EventHandlerCallbackKeyDown(Key key)
+void EventHandlerCallbackKeyPressed(Key key)
 {
-	KeysDown[key] = true;
-	if (Callbacks[EventTypeKeyDown] != NULL) { ((void (*)(Key))Callbacks[EventTypeKeyDown])(key); }
+	if (Callbacks[EventTypeKeyPressed] != NULL) { ((void (*)(Key))Callbacks[EventTypeKeyPressed])(key); }
 }
 
-void EventHandlerCallbackKeyUp(Key key)
+void EventHandlerCallbackKeyReleased(Key key)
 {
-	KeysDown[key] = false;
-	if (Callbacks[EventTypeKeyUp] != NULL) { ((void (*)(Key))Callbacks[EventTypeKeyUp])(key); }
+	if (Callbacks[EventTypeKeyReleased] != NULL) { ((void (*)(Key))Callbacks[EventTypeKeyReleased])(key); }
 }
 
 void EventHandlerCallbackTextEditing(char * text, int start, int length)
@@ -214,19 +231,19 @@ void EventHandlerCallbackMouseMotion(int mouse, int x, int y, int dx, int dy)
 	}
 }
 
-void EventHandlerCallbackMouseButtonDown(int mouse, MouseButton button, int x, int y)
+void EventHandlerCallbackMouseButtonPressed(int mouse, MouseButton button, int x, int y)
 {
-	if (Callbacks[EventTypeMouseButtonDown] != NULL)
+	if (Callbacks[EventTypeMouseButtonPressed] != NULL)
 	{
-		((void (*)(int, MouseButton, int, int))Callbacks[EventTypeMouseButtonDown])(mouse, button, x, y);
+		((void (*)(int, MouseButton, int, int))Callbacks[EventTypeMouseButtonPressed])(mouse, button, x, y);
 	}
 }
 
-void EventHandlerCallbackMouseButtonUp(int mouse, MouseButton button, int x, int y)
+void EventHandlerCallbackMouseButtonReleased(int mouse, MouseButton button, int x, int y)
 {
-	if (Callbacks[EventTypeMouseButtonUp] != NULL)
+	if (Callbacks[EventTypeMouseButtonReleased] != NULL)
 	{
-		((void (*)(int, MouseButton, int, int))Callbacks[EventTypeMouseButtonUp])(mouse, button, x, y);
+		((void (*)(int, MouseButton, int, int))Callbacks[EventTypeMouseButtonReleased])(mouse, button, x, y);
 	}
 }
 
@@ -235,6 +252,62 @@ void EventHandlerCallbackMouseWheelMotion(int mouse, int dx, int dy)
 	if (Callbacks[EventTypeMouseWheelMotion] != NULL)
 	{
 		((void (*)(int, int, int))Callbacks[EventTypeMouseWheelMotion])(mouse, dx, dy);
+	}
+}
+
+void EventHandlerCallbackControllerAxisMotion(int controller, unsigned char axis, int value)
+{
+	if (Callbacks[EventTypeControllerAxisMotion] != NULL)
+	{
+		((void (*)(int, unsigned char, int))Callbacks[EventTypeControllerAxisMotion])(controller, axis, value);
+	}
+}
+
+void EventHandlerCallbackControllerBallMotion(int controller, unsigned char ball, int dx, int dy)
+{
+	if (Callbacks[EventTypeControllerBallMotion] != NULL)
+	{
+		((void (*)(int, unsigned char, int, int))Callbacks[EventTypeControllerBallMotion])(controller, ball, dx, dy);
+	}
+}
+
+void EventHandlerCallbackControllerHatMotion(int controller, unsigned char hat, ControllerHatPosition position)
+{
+	if (Callbacks[EventTypeControllerHatMotion] != NULL)
+	{
+		((void (*)(int, unsigned char, ControllerHatPosition))Callbacks[EventTypeControllerHatMotion])(controller, hat, position);
+	}
+}
+
+void EventHandlerCallbackControllerButtonPressed(int controller, unsigned char button)
+{
+	if (Callbacks[EventTypeControllerButtonPressed] != NULL)
+	{
+		((void (*)(int, unsigned char))Callbacks[EventTypeControllerButtonPressed])(controller, button);
+	}
+}
+
+void EventHandlerCallbackControllerButtonReleased(int controller, unsigned char button)
+{
+	if (Callbacks[EventTypeControllerButtonReleased] != NULL)
+	{
+		((void (*)(int, unsigned char))Callbacks[EventTypeControllerButtonReleased])(controller, button);
+	}
+}
+
+void EventHandlerCallbackControllerConnected(int controller)
+{
+	if (Callbacks[EventTypeControllerConnected] != NULL)
+	{
+		((void (*)(int))Callbacks[EventTypeControllerConnected])(controller);
+	}
+}
+
+void EventHandlerCallbackControllerDisconnected(int controller)
+{
+	if (Callbacks[EventTypeControllerDisconnected] != NULL)
+	{
+		((void (*)(int))Callbacks[EventTypeControllerDisconnected])(controller);
 	}
 }
 

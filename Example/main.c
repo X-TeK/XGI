@@ -97,7 +97,7 @@ int main(int argc, char * argv[])
 	TextureDataDestroy(data);
 	PipelineSetSampler(pipeline, 0, 0, texture);
 
-	EventHandlerSetCallback(EventTypeKeyDown, (void (*)(void))OnKeyPressed);
+	EventHandlerSetCallback(EventTypeKeyPressed, (void (*)(void))OnKeyPressed);
 	EventHandlerSetCallback(EventTypeWindowResized, (void (*)(void))OnResize);
 
 	while (Window.Running)
