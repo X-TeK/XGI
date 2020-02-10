@@ -4,6 +4,7 @@
 #include "Graphics.h"
 #include "LinearMath.h"
 #include "Window.h"
+#include "EventHandler.h"
 
 struct Swapchain Swapchain = { 0 };
 
@@ -257,7 +258,13 @@ void SwapchainAquireNextImage()
 	}
 	ListClear(Graphics.FrameResources[i].UpdateDescriptorQueue);
 	
-	vkAcquireNextImageKHR(Graphics.Device, Swapchain.Instance, UINT64_MAX, Graphics.FrameResources[i].ImageAvailable, VK_NULL_HANDLE, &Swapchain.CurrentImageIndex);
+	VkResult result = vkAcquireNextImageKHR(Graphics.Device, Swapchain.Instance, UINT64_MAX, Graphics.FrameResources[i].ImageAvailable, VK_NULL_HANDLE, &Swapchain.CurrentImageIndex);
+	if (result != VK_SUCCESS) { printf("%i\n", result); }
+	while (result != VK_SUCCESS)
+	{
+		EventHandlerPoll();
+		result = vkAcquireNextImageKHR(Graphics.Device, Swapchain.Instance, UINT64_MAX, Graphics.FrameResources[i].ImageAvailable, VK_NULL_HANDLE, &Swapchain.CurrentImageIndex);
+	}
 	
 	vkResetCommandBuffer(Graphics.FrameResources[i].CommandBuffer, 0);
 	VkCommandBufferBeginInfo beginInfo =
@@ -265,7 +272,7 @@ void SwapchainAquireNextImage()
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
 	};
-	VkResult result = vkBeginCommandBuffer(Graphics.FrameResources[i].CommandBuffer, &beginInfo);
+	result = vkBeginCommandBuffer(Graphics.FrameResources[i].CommandBuffer, &beginInfo);
 	if (result != VK_SUCCESS)
 	{
 		printf("[Error] Failed to begin command buffer: %i\n", result);

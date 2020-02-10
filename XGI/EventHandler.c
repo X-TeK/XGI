@@ -41,8 +41,10 @@ void EventHandlerPoll()
 					case SDL_WINDOWEVENT_MOVED:
 						EventHandlerCallbackWindowMoved(event.window.data1, event.window.data2);
 						break;
-					case SDL_WINDOWEVENT_RESIZED:
+					case SDL_WINDOWEVENT_SIZE_CHANGED:
 						EventHandlerCallbackWindowResized(event.window.data1, event.window.data2);
+						break;
+					case SDL_WINDOWEVENT_RESIZED:
 						break;
 					case SDL_WINDOWEVENT_MINIMIZED:
 						EventHandlerCallbackWindowMinimized();

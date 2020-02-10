@@ -10,4 +10,5 @@ layout (location = 0) out vec4 FragColor;
 void main()
 {
 	FragColor = VertexColor * texture(Texture, VertexUV);
+	FragColor = FragColor.bgra;
 }
