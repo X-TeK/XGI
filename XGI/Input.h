@@ -62,15 +62,58 @@ typedef enum ControllerHatPosition
 	ControllerHatPositionCentered = SDL_HAT_CENTERED,
 } ControllerHatPosition;
 
-bool InputIsKeyDown(Key key);
-bool InputIsMouseButtonPressed(MouseButton button);
-void InputSetLocalMousePosition(Vector2 position);
-Vector2 InputLocalMousePosition(void);
-void InputSetGlobalMousePosition(Vector2 position);
-Vector2 InputGlobalMousePosition(void);
-Vector2 InputDeltaMousePosition(void);
-void InputSetMouseShown(bool shown);
-void InputSetMouseCaptured(bool captured);
-void InputSetGlobalMouseTracking(bool track);
+typedef enum ControllerPowerLevel
+{
+	ControllerPowerLevelUnknown = SDL_JOYSTICK_POWER_UNKNOWN,
+	ControllerPowerLevelEmpty = SDL_JOYSTICK_POWER_EMPTY,
+	ControllerPowerLevelLow = SDL_JOYSTICK_POWER_LOW,
+	ControllerPowerLevelMedium = SDL_JOYSTICK_POWER_MEDIUM,
+	ControllerPowerLevelFull = SDL_JOYSTICK_POWER_FULL,
+	ControllerPowerLevelWired = SDL_JOYSTICK_POWER_WIRED,
+	ControllerPowerLevelMax = SDL_JOYSTICK_POWER_MAX,
+} ControllerPowerLevel;
+
+bool KeyboardIsKeyDown(Key key);
+
+bool MouseIsButtonPressed(MouseButton button);
+
+void MouseSetLocalPosition(Vector2 position);
+
+Vector2 MouseLocalPosition(void);
+
+void MouseSetGlobalPosition(Vector2 position);
+
+Vector2 MouseGlobalPosition(void);
+
+Vector2 MouseDeltaPosition(void);
+
+void MouseSetShown(bool shown);
+
+void MouseSetCaptured(bool captured);
+
+void MouseSetGlobalTracking(bool track);
+
+ControllerPowerLevel ControllerCurrentPowerLevel(int controller);
+
+short ControllerAxisPosition(int controller, int axis);
+
+Vector2 ControllerBallDeltaPosition(int controller, int ball);
+
+bool ControllerIsButtonDown(int controller, int button);
+
+ControllerHatPosition ControllerCurrentHatPosition(int controller, int hat);
+
+const char * ControllerName(int controller);
+
+int ControllerAxisCount(int controller);
+
+int ControllerBallCount(int controller);
+
+int ControllerButtonCount(int controller);
+
+int ControllerHatCount(int controller);
+
+int ControllerCount(void);
+
 
 #endif

@@ -11,7 +11,7 @@ void WindowInitialize(WindowConfigure flags)
 	Window.Width = flags.Width;
 	Window.Height = flags.Height;
 	Window.Running = true;
-	int result = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+	int result = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_JOYSTICK);
 	if (result < 0) { printf("[Error] Unable to initialize SDL\n"); exit(-1); }
 	
 	unsigned int orFlags = SDL_WINDOW_VULKAN;
