@@ -32,6 +32,8 @@ void WindowInitialize(WindowConfigure flags)
 	SDL_GetWindowSize(Window.Handle, &Window.Width, &Window.Height);
 }
 
+bool WindowRunning() { return Window.Running; }
+
 void WindowExitLoop()
 {
 	Window.Running = false;
