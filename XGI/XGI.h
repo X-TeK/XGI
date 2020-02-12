@@ -15,7 +15,12 @@
 #include "VertexBuffer.h"
 #include "Window.h"
 
+/// Initializes the engine
+/// \param windowFlags The window configuration
+/// \param graphicsFlags The graphics configuration
 void XGIInitialize(WindowConfigure windowFlags, GraphicsConfigure graphicsFlags);
+
+/// Deinitializes the engine
 void XGIDeinitialize(void);
 
 #endif
