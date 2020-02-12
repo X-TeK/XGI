@@ -40,6 +40,8 @@ int main(int argc, char * argv[])
 	};
 	XGIInitialize(windowConfig, graphicsConfig);
 	
+	WindowSetOpacity(0.5);
+	
 	//Initialization code starts here
 	FrameBufferConfigure frameConfig =
 	{

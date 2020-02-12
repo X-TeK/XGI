@@ -73,46 +73,100 @@ typedef enum ControllerPowerLevel
 	ControllerPowerLevelMax = SDL_JOYSTICK_POWER_MAX,
 } ControllerPowerLevel;
 
-bool KeyboardIsKeyDown(Key key);
+/// Detects if a key is pressed
+/// \param key The key to detect
+/// \return whether or not the key is pressed
+bool KeyboardIsKeyPressed(Key key);
 
+/// Detects if a mouse button is pressed
+/// \param button The mouse button to detect
+/// \return Whether or not the button is pressed
 bool MouseIsButtonPressed(MouseButton button);
 
+/// Sets the mouse position relative to the window
+/// \param position The position to set
 void MouseSetLocalPosition(Vector2 position);
 
+/// Gets the mouse position relative to the window
+/// \return A vector2 representing the position
 Vector2 MouseLocalPosition(void);
 
+/// Sets the mouse position relative to the top left of the display
+/// \param position The position to set
 void MouseSetGlobalPosition(Vector2 position);
 
+/// Gets the mouse position relative to the top left of the display
+/// \return A vector2 representing the position
 Vector2 MouseGlobalPosition(void);
 
+/// Gets the difference in position since the last time this function was called
+/// \return A vector2 representing the delta position
 Vector2 MouseDeltaPosition(void);
 
+/// Sets whether or not the mouse is shown
+/// \param shown True or false
 void MouseSetShown(bool shown);
 
+/// Sets whether or not the mouse is captured within the window
+/// \param captured True or false
 void MouseSetCaptured(bool captured);
 
-void MouseSetGlobalTracking(bool track);
-
+/// Gets the power level of the specified controller
+/// \param controller The controller device id
+/// \return Enumeration for power level
 ControllerPowerLevel ControllerCurrentPowerLevel(int controller);
 
+/// Gets the position of an axis on a controller
+/// \param controller The controller device id
+/// \param axis The axis id
+/// \return The axis position
 short ControllerAxisPosition(int controller, int axis);
 
+/// Gets the delta position of a ball on a controller
+/// \param controller The controller device id
+/// \param ball The ball id
+/// \return A vector2 representing position
 Vector2 ControllerBallDeltaPosition(int controller, int ball);
 
-bool ControllerIsButtonDown(int controller, int button);
+/// Checks whether or not a button on a controller is pressed
+/// \param controller The controller device id
+/// \param button The button id
+/// \return Whether or not it's pressed
+bool ControllerIsButtonPressed(int controller, int button);
 
+/// Gets the position of a hat on a controller
+/// \param controller The controller device id
+/// \param hat The hat id
+/// \return The hat position
 ControllerHatPosition ControllerCurrentHatPosition(int controller, int hat);
 
+/// Gets the name of a controller
+/// \param controller The controller device id
+/// \return The name as a string
 const char * ControllerName(int controller);
 
+/// Gets the number of axes on a controller
+/// \param controller The controller device id
+/// \return The number of axes
 int ControllerAxisCount(int controller);
 
+/// Gets the number of balls on a controller
+/// \param controller The controller device id
+/// \return The number of balls
 int ControllerBallCount(int controller);
 
+/// Gets the number of buttons on a controller
+/// \param controller The controller device id
+/// \return The number of button
 int ControllerButtonCount(int controller);
 
+/// Gets the number of hats on a controller
+/// \param controller The controller device id
+/// \return The number of hats
 int ControllerHatCount(int controller);
 
+/// Gets the number of controllers connected
+/// \return The number of controllers
 int ControllerCount(void);
 
 

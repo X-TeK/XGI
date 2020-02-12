@@ -1,7 +1,7 @@
 #include "Input.h"
 #include "Window.h"
 
-bool KeyboardIsKeyDown(Key key)
+bool KeyboardIsKeyPressed(Key key)
 {
 	return SDL_GetKeyboardState(NULL)[key];
 }
@@ -52,11 +52,6 @@ void MouseSetCaptured(bool captured)
 	SDL_SetRelativeMouseMode(captured ? SDL_TRUE : SDL_FALSE);
 }
 
-void MouseSetGlobalTracking(bool track)
-{
-	SDL_CaptureMouse(track ? SDL_TRUE : SDL_FALSE);
-}
-
 ControllerPowerLevel ControllerCurrentPowerLevel(int controller)
 {
 	SDL_Joystick * joystick = SDL_JoystickOpen(controller);
@@ -82,7 +77,7 @@ Vector2 ControllerBallDeltaPosition(int controller, int ball)
 	return (Vector2){ dx, dy };
 }
 
-bool ControllerIsButtonDown(int controller, int button)
+bool ControllerIsButtonPressed(int controller, int button)
 {
 	SDL_Joystick * joystick = SDL_JoystickOpen(controller);
 	bool value = SDL_JoystickGetButton(joystick, button);
