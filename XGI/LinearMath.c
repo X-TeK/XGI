@@ -11,6 +11,9 @@ Vector3 Vector3Up = { 0.0, 1.0, 0.0 };
 Vector3 Vector3Right = { 1.0, 0.0, 0.0 };
 Vector3 Vector3Forward = { 0.0, 0.0, 1.0 };
 
+Vector4 Vector4Zero = { 0.0, 0.0, 0.0, 0.0 };
+Vector4 Vector4One = { 1.0, 1.0, 1.0, 1.0 };
+
 Matrix4x4 Matrix4x4Identity =
 {
 	1.0, 0.0, 0.0, 0.0,

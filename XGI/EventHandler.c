@@ -2,12 +2,7 @@
 #include "Window.h"
 #include "Swapchain.h"
 
-static void (*Callbacks[EventTypeCount])(void);
-
-void EventHandlerInitialize()
-{
-	for (int i = 0; i < EventTypeCount; i++) { Callbacks[i] = NULL; }
-}
+static void (*Callbacks[EventTypeCount])(void) = { NULL };
 
 void EventHandlerSetCallback(EventType event, void (*callback)(void))
 {
@@ -33,9 +28,6 @@ void EventHandlerPoll()
 					case SDL_WINDOWEVENT_HIDDEN:
 						EventHandlerCallbackWindowHidden();
 						break;
-					case SDL_WINDOWEVENT_EXPOSED:
-						EventHandlerCallbackWindowExposed();
-						break;
 					case SDL_WINDOWEVENT_MOVED:
 						EventHandlerCallbackWindowMoved(event.window.data1, event.window.data2);
 						break;
@@ -54,16 +46,16 @@ void EventHandlerPoll()
 						EventHandlerCallbackWindowRestored();
 						break;
 					case SDL_WINDOWEVENT_ENTER:
-						EventHandlerCallbackWindowEnter();
+						EventHandlerCallbackWindowMouseFocusGained();
 						break;
 					case SDL_WINDOWEVENT_LEAVE:
-						EventHandlerCallbackWindowLeave();
+						EventHandlerCallbackWindowMouseFocusLost();
 						break;
 					case SDL_WINDOWEVENT_FOCUS_GAINED:
-						EventHandlerCallbackWindowFocusGained();
+						EventHandlerCallbackWindowKeyboardFocusGained();
 						break;
 					case SDL_WINDOWEVENT_FOCUS_LOST:
-						EventHandlerCallbackWindowFocusLost();
+						EventHandlerCallbackWindowKeyboardFocusLost();
 						break;
 					case SDL_WINDOWEVENT_CLOSE:
 						EventHandlerCallbackWindowClose();
@@ -75,9 +67,6 @@ void EventHandlerPoll()
 				break;
 			case SDL_KEYUP:
 				EventHandlerCallbackKeyReleased((Key)event.key.keysym.scancode);
-				break;
-			case SDL_TEXTEDITING:
-				EventHandlerCallbackTextEditing(event.edit.text, event.edit.start, event.edit.length);
 				break;
 			case SDL_TEXTINPUT:
 				EventHandlerCallbackTextInput(event.text.text);
@@ -138,11 +127,6 @@ void EventHandlerCallbackWindowHidden()
 	if (Callbacks[EventTypeWindowHidden] != NULL) { Callbacks[EventTypeWindowHidden](); }
 }
 
-void EventHandlerCallbackWindowExposed()
-{
-	if (Callbacks[EventTypeWindowExposed] != NULL) { Callbacks[EventTypeWindowExposed](); }
-}
-
 void EventHandlerCallbackWindowMoved(int x, int y)
 {
 	if (Callbacks[EventTypeWindowMoved] != NULL) { ((void (*)(int, int))Callbacks[EventTypeWindowMoved])(x, y); }
@@ -170,24 +154,24 @@ void EventHandlerCallbackWindowRestored()
 	if (Callbacks[EventTypeWindowRestored] != NULL) { Callbacks[EventTypeWindowRestored](); }
 }
 
-void EventHandlerCallbackWindowEnter()
+void EventHandlerCallbackWindowMouseFocusGained()
 {
-	if (Callbacks[EventTypeWindowEnter] != NULL) { Callbacks[EventTypeWindowEnter](); }
+	if (Callbacks[EventTypeWindowMouseFocusGained] != NULL) { Callbacks[EventTypeWindowMouseFocusGained](); }
 }
 
-void EventHandlerCallbackWindowLeave()
+void EventHandlerCallbackWindowMouseFocusLost()
 {
-	if (Callbacks[EventTypeWindowLeave] != NULL) { Callbacks[EventTypeWindowLeave](); }
+	if (Callbacks[EventTypeWindowMouseFocusLost] != NULL) { Callbacks[EventTypeWindowMouseFocusLost](); }
 }
 
-void EventHandlerCallbackWindowFocusGained()
+void EventHandlerCallbackWindowKeyboardFocusGained()
 {
-	if (Callbacks[EventTypeWindowFocusGained] != NULL) { Callbacks[EventTypeWindowFocusGained](); }
+	if (Callbacks[EventTypeWindowKeyboardFocusGained] != NULL) { Callbacks[EventTypeWindowKeyboardFocusGained](); }
 }
 
-void EventHandlerCallbackWindowFocusLost()
+void EventHandlerCallbackWindowKeyboardFocusLost()
 {
-	if (Callbacks[EventTypeWindowFocusLost] != NULL) { Callbacks[EventTypeWindowFocusLost](); }
+	if (Callbacks[EventTypeWindowKeyboardFocusLost] != NULL) { Callbacks[EventTypeWindowKeyboardFocusLost](); }
 }
 
 void EventHandlerCallbackWindowClose()
@@ -203,14 +187,6 @@ void EventHandlerCallbackKeyPressed(Key key)
 void EventHandlerCallbackKeyReleased(Key key)
 {
 	if (Callbacks[EventTypeKeyReleased] != NULL) { ((void (*)(Key))Callbacks[EventTypeKeyReleased])(key); }
-}
-
-void EventHandlerCallbackTextEditing(char * text, int start, int length)
-{
-	if (Callbacks[EventTypeTextEditing] != NULL)
-	{
-		((void (*)(char *, int, int))Callbacks[EventTypeTextEditing])(text, start, length);
-	}
 }
 
 void EventHandlerCallbackTextInput(char * text)
@@ -309,8 +285,4 @@ void EventHandlerCallbackControllerDisconnected(int controller)
 	{
 		((void (*)(int))Callbacks[EventTypeControllerDisconnected])(controller);
 	}
-}
-
-void EventHandlerDeinitialize()
-{
 }

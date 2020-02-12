@@ -27,9 +27,14 @@ File FileOpen(const char * path, FileMode mode)
 	return file;
 }
 
-unsigned long FileSize(File file)
+unsigned long FileGetSize(File file)
 {
 	return file->Size;
+}
+
+const char * FileGetPath(File file)
+{
+	return file->Path;
 }
 
 void FileRead(File file, unsigned long offset, unsigned long size, void * data)

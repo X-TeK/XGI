@@ -9,7 +9,7 @@
 #include "UniformBuffer.h"
 #include "File.h"
 
-PipelineShader PipelineShaderFromData(ShaderType type, unsigned long dataSize, void * data, bool precompiled)
+ShaderData ShaderDataFromMemory(ShaderType type, unsigned long dataSize, void * data, bool precompiled)
 {
 	if (!precompiled)
 	{
@@ -23,7 +23,7 @@ PipelineShader PipelineShaderFromData(ShaderType type, unsigned long dataSize, v
 		data = (void *)shaderc_result_get_bytes(result);
 		dataSize = shaderc_result_get_length(result);
 	}
-	return (PipelineShader)
+	return (ShaderData)
 	{
 		.Type = type,
 		.DataSize = dataSize,
@@ -31,12 +31,12 @@ PipelineShader PipelineShaderFromData(ShaderType type, unsigned long dataSize, v
 	};
 }
 
-PipelineShader PipelineShaderFromFile(ShaderType type, const char * file, bool precompiled)
+ShaderData ShaderDataFromFile(ShaderType type, const char * file, bool precompiled)
 {
 	if (!precompiled)
 	{
 		File shader = FileOpen(file, FileModeRead);
-		unsigned long size = FileSize(shader);
+		unsigned long size = FileGetSize(shader);
 		char * text = malloc(size);
 		FileRead(shader, 0, size, text);
 		FileClose(shader);
@@ -49,7 +49,7 @@ PipelineShader PipelineShaderFromFile(ShaderType type, const char * file, bool p
 		}
 		void * data = (void *)shaderc_result_get_bytes(result);
 		unsigned long dataSize = shaderc_result_get_length(result);
-		return (PipelineShader)
+		return (ShaderData)
 		{
 			.Type = type,
 			.DataSize = dataSize,
@@ -57,11 +57,11 @@ PipelineShader PipelineShaderFromFile(ShaderType type, const char * file, bool p
 		};
 	}
 	File spv = FileOpen(file, FileModeReadBinary);
-	unsigned long size = FileSize(spv);
+	unsigned long size = FileGetSize(spv);
 	void * data = malloc(size);
 	FileRead(spv, 0, size, data);
 	FileClose(spv);
-	return (PipelineShader)
+	return (ShaderData)
 	{
 		.Type = type,
 		.DataSize = size,

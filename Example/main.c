@@ -39,7 +39,7 @@ int main(int argc, char * argv[])
 		.FrameResourceCount = 3,
 	};
 	XGIInitialize(windowConfig, graphicsConfig);
-
+	
 	//Initialization code starts here
 	FrameBufferConfigure frameConfig =
 	{
@@ -52,15 +52,15 @@ int main(int argc, char * argv[])
 
 	VertexAttribute attributes[] = { VertexAttributeVector3, VertexAttributeByte4, VertexAttributeVector2 };
 	vertexLayout = VertexLayoutCreate(3, attributes);
-	
+
 	PipelineConfigure pipelineConfig =
 	{
 		.VertexLayout = vertexLayout,
 		.ShaderCount = 2,
 		.Shaders =
 		{
-			PipelineShaderFromFile(ShaderTypeVertex, "Example/Shaders/Default.vert", false),
-			PipelineShaderFromFile(ShaderTypeFragment, "Example/Shaders/Default.frag", false),
+			ShaderDataFromFile(ShaderTypeVertex, "Example/Shaders/Default.vert", false),
+			ShaderDataFromFile(ShaderTypeFragment, "Example/Shaders/Default.frag", false),
 		},
 		.Primitive = VertexPrimitiveTriangleList,
 		.LineWidth = 1.0,
@@ -99,7 +99,7 @@ int main(int argc, char * argv[])
 
 	EventHandlerSetCallback(EventTypeKeyPressed, (void (*)(void))OnKeyPressed);
 	EventHandlerSetCallback(EventTypeWindowResized, (void (*)(void))OnResize);
-
+	
 	while (Window.Running)
 	{
 		EventHandlerPoll();

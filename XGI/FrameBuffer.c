@@ -47,6 +47,14 @@ FrameBuffer FrameBufferCreate(FrameBufferConfigure config)
 	return frameBuffer;
 }
 
+unsigned int FrameBufferGetWidth(FrameBuffer frameBuffer) { return frameBuffer->Width; }
+
+unsigned int FrameBufferGetHeight(FrameBuffer frameBuffer) { return frameBuffer->Height; }
+
+TextureFilter FrameBufferGetFilter(FrameBuffer frameBuffer) { return frameBuffer->Filter; }
+
+TextureAddressMode FrameBufferGetAddressMode(FrameBuffer frameBuffer) { return frameBuffer->AddressMode; }
+
 FrameBuffer FrameBufferResize(FrameBuffer frameBuffer, unsigned int width, unsigned int height)
 {
 	GraphicsStopOperations();

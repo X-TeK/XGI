@@ -245,13 +245,13 @@ void SwapchainAquireNextImage()
 	
 	for (int j = 0; j < Graphics.FrameResources[i].DestroyVertexBufferQueue->Count; j++)
 	{
-		VertexBuffer vertexBuffer = ListIndex(Graphics.FrameResources[i].DestroyVertexBufferQueue, j);
+		VertexBuffer vertexBuffer = ListGetValue(Graphics.FrameResources[i].DestroyVertexBufferQueue, j);
 		VertexBufferDestroy(vertexBuffer);
 	}
 	ListClear(Graphics.FrameResources[i].DestroyVertexBufferQueue);
 	for (int j = 0; j < Graphics.FrameResources[i].UpdateDescriptorQueue->Count; j++)
 	{
-		VkWriteDescriptorSet * writeInfo = ListIndex(Graphics.FrameResources[i].UpdateDescriptorQueue, j);
+		VkWriteDescriptorSet * writeInfo = ListGetValue(Graphics.FrameResources[i].UpdateDescriptorQueue, j);
 		vkUpdateDescriptorSets(Graphics.Device, 1, writeInfo, 0, NULL);
 		free((void *)writeInfo->pBufferInfo);
 		free(writeInfo);
@@ -297,7 +297,7 @@ void SwapchainPresent()
 	waitStages[0] = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 	for (int i = 0; i < Graphics.PreRenderSemaphores->Count; i++)
 	{
-		waitSemaphores[i + 1] = *(VkSemaphore *)ListIndex(Graphics.PreRenderSemaphores, i);
+		waitSemaphores[i + 1] = *(VkSemaphore *)ListGetValue(Graphics.PreRenderSemaphores, i);
 		waitStages[i + 1] = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 	}
 	

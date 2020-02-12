@@ -14,7 +14,7 @@ List ListCreate()
 	return list;
 }
 
-int ListCount(List list)
+int ListGetCount(List list)
 {
 	return list->Count;
 }
@@ -66,7 +66,7 @@ void ListRemoveAll(List list, void * value)
 {
 	for (int i = 0; i < list->Count; i++)
 	{
-		if (ListIndex(list, i) == value)
+		if (ListGetValue(list, i) == value)
 		{
 			ListOutsert(list, i);
 			i--;
@@ -74,7 +74,7 @@ void ListRemoveAll(List list, void * value)
 	}
 }
 
-void * ListIndex(List list, int index)
+void * ListGetValue(List list, int index)
 {
 	if (index < list->Count && index >= 0) { return list->Data[index]; }
 	else
@@ -94,7 +94,7 @@ bool ListContains(List list, void * value)
 {
 	for (int i = 0; i < list->Count; i++)
 	{
-		if (ListIndex(list, i) == value) { return true; }
+		if (ListGetValue(list, i) == value) { return true; }
 	}
 	return false;
 }
@@ -106,22 +106,6 @@ void ListClear(List list)
 		ListOutsert(list, i);
 	}
 }
-
-/*
-static List RemoveDuplicates(List list)
-{
-	List new_list = List2.Create();
-	for (int i = 0; i < list->Count; i++)
-	{
-		void * value = List2.Index(list, i);
-		if (!List2.Contains(new_list, value))
-		{
-			List2.Add(new_list, value);
-		}
-	}
-	return new_list;
-}
- */
 
 void ListDestroy(List list)
 {
