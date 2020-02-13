@@ -12,7 +12,7 @@
 ## Modules:
 Module            | Description
 ------------------|---------------------
-`EventHandler`    | Processes events and manages callbacks
+[`EventHandler`](https://github.com/X-TeK/XGI/wiki/EventHandler.h)    | Processes events and manages callbacks
 `File`            | Provides an easy way to read/write files
 `FrameBuffer`     | Abstracts a color texture and depth-stencil texture for use in rendering
 `Graphics`        | Provides all of the commands necessary for rendering
@@ -214,7 +214,7 @@ void main()
 ```
 
 `Default.frag`:
-```
+```glsl
 #version 450
 
 layout (location = 1) in vec2 VertexUV;
