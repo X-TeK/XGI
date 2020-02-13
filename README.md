@@ -12,8 +12,8 @@
 ## Modules:
 Module            | Description
 ------------------|---------------------
-[`EventHandler`](https://github.com/X-TeK/XGI/wiki/EventHandler.h)    | Processes events and manages callbacks
-`File`            | Provides an easy way to read/write files
+[`EventHandler`](https://github.com/X-TeK/XGI/wiki/EventHandler.h) | Processes events and manages callbacks
+[`File`](https://github.com/X-TeK/XGI/wiki/File.h) | Provides an easy way to read/write files
 `FrameBuffer`     | Abstracts a color texture and depth-stencil texture for use in rendering
 `Graphics`        | Provides all of the commands necessary for rendering
 `Input`           | Provides the functionality to query information about input devices
@@ -36,8 +36,9 @@ Module            | Description
 ### iOS:
 
 ## Example:
-`main.c`:
 ```C
+// main.c
+
 #include "../XGI/XGI.h"
 
 // A textured triangle example: in 100 lines of code instead of 1000
@@ -191,9 +192,8 @@ int main(int argc, char * argv[])
 	return 0;
 }
 ```
-
-`Default.vert`:
 ```glsl
+// Default.vert
 #version 450
 
 layout (location = 0) in vec3 PositionAttribute;
@@ -212,9 +212,8 @@ void main()
 	gl_Position = Input.Transform * vec4(PositionAttribute, 1.0);
 }
 ```
-
-`Default.frag`:
 ```glsl
+// Default.frag
 #version 450
 
 layout (location = 1) in vec2 VertexUV;
