@@ -97,7 +97,14 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
 
   /* Get current time */
   time_t t = time(NULL);
+#ifdef _WIN32
+  struct tm l;
+  struct tm *lt = &l;
+  localtime_s(lt, &t);
+#else
   struct tm *lt = localtime(&t);
+#endif
+
 
   /* Log to stderr */
   if (!L.quiet) {
