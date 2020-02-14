@@ -4,7 +4,6 @@
 #include <stb_image.h>
 #include "Texture.h"
 #include "Graphics.h"
-#include "Swapchain.h"
 #include "File.h"
 
 TextureData TextureDataFromFile(const char * fileName)
@@ -26,7 +25,7 @@ void TextureDataDestroy(TextureData data)
 
 static void CreateImage(Texture texture)
 {
-	VkFormat format = texture->Format == TextureFormatColor ? Swapchain.ColorFormat : (VkFormat)texture->Format;
+	VkFormat format = texture->Format == TextureFormatColor ? Graphics.Swapchain.ColorFormat : (VkFormat)texture->Format;
 	VkImageUsageFlags usage = texture->Format == TextureFormatColor ? VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT : VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 	VkImageCreateInfo imageInfo =
 	{
@@ -196,7 +195,7 @@ static void CopyImageData(Texture texture, TextureConfigure config)
 static void CreateImageView(Texture texture)
 {
 	VkImageAspectFlags imageAspect = texture->Format == TextureFormatColor ? VK_IMAGE_ASPECT_COLOR_BIT : VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-	VkFormat format = texture->Format == TextureFormatColor ? Swapchain.ColorFormat : (VkFormat)texture->Format;
+	VkFormat format = texture->Format == TextureFormatColor ? Graphics.Swapchain.ColorFormat : (VkFormat)texture->Format;
 	VkImageViewCreateInfo createInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,

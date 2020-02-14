@@ -1,6 +1,6 @@
 #include "EventHandler.h"
 #include "Window.h"
-#include "Swapchain.h"
+#include "Graphics.h"
 
 static void (*Callbacks[EventTypeCount])(void) = { NULL };
 
@@ -134,8 +134,8 @@ void EventHandlerCallbackWindowMoved(int x, int y)
 
 void EventHandlerCallbackWindowResized(int width, int height)
 {
-	SwapchainDestroy();
-	SwapchainCreate(width, height);
+	GraphicsDestroySwapchain();
+	GraphicsCreateSwapchain(width, height);
 	if (Callbacks[EventTypeWindowResized] != NULL) { ((void (*)(int, int))Callbacks[EventTypeWindowResized])(Window.Width, Window.Height); }
 }
 

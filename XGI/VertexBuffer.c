@@ -101,9 +101,6 @@ VertexBuffer VertexBufferCreate(int vertexCount, int vertexSize)
 	};
 	vkCreateSemaphore(Graphics.Device, &semaphoreInfo, NULL, &vertexBuffer->Semaphore);
 	
-	Graphics.VertexBufferCount++;
-	Graphics.VertexCount += vertexCount;
-	
 	return vertexBuffer;
 }
 
@@ -159,8 +156,6 @@ void VertexBufferQueueDestroy(VertexBuffer vertexBuffer)
 
 void VertexBufferDestroy(VertexBuffer vertexBuffer)
 {
-	Graphics.VertexBufferCount--;
-	Graphics.VertexCount -= vertexBuffer->VertexCount;
 	vkWaitForFences(Graphics.Device, 1, &vertexBuffer->Fence, VK_TRUE, UINT64_MAX);
 	vkDestroyFence(Graphics.Device, vertexBuffer->Fence, NULL);
 	vkDestroySemaphore(Graphics.Device, vertexBuffer->Semaphore, NULL);

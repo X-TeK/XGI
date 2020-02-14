@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include "FrameBuffer.h"
 #include "Graphics.h"
-#include "Swapchain.h"
 
 FrameBuffer FrameBufferCreate(FrameBufferConfigure config)
 {
@@ -30,7 +29,7 @@ FrameBuffer FrameBufferCreate(FrameBufferConfigure config)
 	VkFramebufferCreateInfo createInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-		.renderPass = Swapchain.RenderPass,
+		.renderPass = Graphics.RenderPass,
 		.attachmentCount = 2,
 		.pAttachments = attachments,
 		.width = config.Width,

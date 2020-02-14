@@ -1,18 +1,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "Window.h"
+#include "log.h"
 
 struct Window Window = { 0 };
 
 void WindowInitialize(WindowConfigure flags)
 {
-	printf("\n[Log] Initializing window...\n");
+	log_info("Initializing the window...\n");
 	Window.Title = flags.Title;
 	Window.Width = flags.Width;
 	Window.Height = flags.Height;
 	Window.Running = true;
-	int result = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_JOYSTICK);
-	if (result < 0) { printf("[Error] Unable to initialize SDL\n"); exit(-1); }
 	
 	unsigned int orFlags = SDL_WINDOW_VULKAN;
 	orFlags |= flags.AlwaysOnTop ? SDL_WINDOW_ALWAYS_ON_TOP : orFlags;
@@ -28,8 +27,12 @@ void WindowInitialize(WindowConfigure flags)
 	orFlags |= flags.MouseFocus ? SDL_WINDOW_MOUSE_FOCUS : orFlags;
 	orFlags |= flags.Resizable ? SDL_WINDOW_RESIZABLE : orFlags;
 	Window.Handle = SDL_CreateWindow(Window.Title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, flags.Width, flags.Height, orFlags);
-	
-	SDL_GetWindowSize(Window.Handle, &Window.Width, &Window.Height);
+	if (Window.Handle == NULL)
+	{
+		log_fatal("Failed to create the window\n");
+		exit(1);
+	}
+	log_info("Successfully initialized the window.\n");
 }
 
 bool WindowRunning() { return Window.Running; }

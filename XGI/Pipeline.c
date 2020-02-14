@@ -5,7 +5,6 @@
 #include <spirv/spirv_reflect.h>
 #include "Pipeline.h"
 #include "Graphics.h"
-#include "Swapchain.h"
 #include "UniformBuffer.h"
 #include "File.h"
 
@@ -300,8 +299,8 @@ Pipeline PipelineCreate(PipelineConfigure config)
 	{
 		.x = 0.0f,
 		.y = 0.0f,
-		.width = Swapchain.Extent.width,
-		.height = Swapchain.Extent.height,
+		.width = Graphics.Swapchain.Extent.width,
+		.height = Graphics.Swapchain.Extent.height,
 		.minDepth = 0.0f,
 		.maxDepth = 1.0f,
 	};
@@ -309,7 +308,7 @@ Pipeline PipelineCreate(PipelineConfigure config)
 	VkRect2D scissor =
 	{
 		.offset = { 0, 0 },
-		.extent = Swapchain.Extent,
+		.extent = Graphics.Swapchain.Extent,
 	};
 
 	VkPipelineViewportStateCreateInfo viewportState =
@@ -419,7 +418,7 @@ Pipeline PipelineCreate(PipelineConfigure config)
 		.pColorBlendState = &colorBlendState,
 		.pDynamicState = &dynamicState,
 		.layout = pipeline->Layout,
-		.renderPass = Swapchain.RenderPass,
+		.renderPass = Graphics.RenderPass,
 		.subpass = 0,
 		.basePipelineHandle = VK_NULL_HANDLE,
 		.basePipelineIndex = -1,

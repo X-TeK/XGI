@@ -9,8 +9,6 @@
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-#define pi 3.14159265
-
 typedef float Scalar;
 
 typedef struct Vector4 { Scalar X, Y, Z, W; } Vector4;

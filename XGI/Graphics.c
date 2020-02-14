@@ -1,9 +1,8 @@
 #include <SDL2/SDL_vulkan.h>
 #include <string.h>
 #include <stdio.h>
-
+#include "log.h"
 #include "Graphics.h"
-#include "Swapchain.h"
 #include "Window.h"
 #include "VertexBuffer.h"
 #include "LinearMath.h"
@@ -12,51 +11,36 @@ struct Graphics Graphics = { 0 };
 
 static bool CheckValidationLayerSupport()
 {
-	printf("\n[Log] Checking validation layer support...\n");
 	unsigned int availableLayerCount;
 	vkEnumerateInstanceLayerProperties(&availableLayerCount, NULL);
 	VkLayerProperties * availableLayers = malloc(availableLayerCount * sizeof(VkLayerProperties));
 	vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers);
 
 	bool supported = false;
-	printf("\tSupported layers:\n");
 	for (int i = 0; i < availableLayerCount; i++)
 	{
-		printf("\t\t%s\n", availableLayers[i].layerName);
 		if (strcmp(availableLayers[i].layerName, "VK_LAYER_KHRONOS_validation") == 0)
 		{
 			supported = true;
 		}
 	}
-	supported ? printf("[Log] Validation layer is supported\n") : printf("[Warning] Validation layer is not supported\n");
+	if (!supported) { log_warn("Validation layers is not supported\n"); };
 	free(availableLayers);
 	return supported;
 }
 
 static void CheckExtensionSupport()
 {
-	printf("\n[Log] Checking extension support...\n");
 	unsigned int supportedExtensionCount;
 	vkEnumerateInstanceExtensionProperties(NULL, &supportedExtensionCount, NULL);
 	VkExtensionProperties * supportedExtensions = malloc(supportedExtensionCount * sizeof(VkExtensionProperties));
 	vkEnumerateInstanceExtensionProperties(NULL, &supportedExtensionCount, supportedExtensions);
-	printf("\tSupported Extensions:\n");
-	for (int i = 0; i < supportedExtensionCount; i++)
-	{
-		printf("\t\t%s %i\n", supportedExtensions[i].extensionName, supportedExtensions[i].specVersion);
-	}
 	
 	unsigned int requiredExtensionCount;
 	SDL_Vulkan_GetInstanceExtensions(Window.Handle, &requiredExtensionCount, NULL);
 	char ** requiredExtensionNames = (char ** )malloc(requiredExtensionCount * sizeof(char * ));
 	SDL_Vulkan_GetInstanceExtensions(Window.Handle, &requiredExtensionCount, (const char ** )requiredExtensionNames);
-	printf("\tRequired Extensions:\n");
-	for (int i = 0; i < requiredExtensionCount; i++)
-	{
-		printf("\t\t%s\n", requiredExtensionNames[i]);
-	}
 	
-	bool supported = true;
 	for (int i = 0; i < requiredExtensionCount; i++)
 	{
 		bool extensionSupported = false;
@@ -70,19 +54,9 @@ static void CheckExtensionSupport()
 		}
 		if (!extensionSupported)
 		{
-			printf("\t\t%s\n", requiredExtensionNames[i]);
-			supported = false;
-			break;
+			log_fatal("Required extension is not supported: %s\n", requiredExtensionNames[i]);
+			exit(1);
 		}
-	}
-	if (!supported)
-	{
-		printf("[Error] Platform does not support all required extensions\n");
-		exit(-1);
-	}
-	else
-	{
-		printf("[Log] All extensions supported\n");
 	}
 	free(supportedExtensions);
 	free(requiredExtensionNames);
@@ -92,8 +66,6 @@ static void CreateInstance(bool vulkanValidation)
 {
 	bool useValidations = true && CheckValidationLayerSupport();
 	const char * validationLayer = "VK_LAYER_KHRONOS_validation";
-
-	printf("\n[Log] Creating Vulkan instance...\n");
 	
 	VkApplicationInfo appInfo =
 	{
@@ -101,7 +73,7 @@ static void CreateInstance(bool vulkanValidation)
 		.pApplicationName = Window.Title,
 		.applicationVersion = VK_MAKE_VERSION(0, 0, 0),
 		.pEngineName = "XGI",
-		.engineVersion = VK_MAKE_VERSION(0, 0, 0),
+		.engineVersion = VK_MAKE_VERSION(1, 0, 0),
 		.apiVersion = VK_API_VERSION_1_0,
 	};
 	
@@ -126,28 +98,26 @@ static void CreateInstance(bool vulkanValidation)
 	}
 	
 	VkResult result = vkCreateInstance(&createInfo, NULL, &Graphics.Instance);
-	if (result != VK_SUCCESS) { printf("[Error] Failed to create Vulkan instance: %i\n", result); exit(-1); }
+	if (result != VK_SUCCESS) { log_fatal("Failed to create Vulkan instance: %i\n", result); exit(1); }
 	free(extensionNames);
 }
 
 static void CreateSurface()
 {
-	printf("\n[Log] Creating SurfaceKHR...\n");
 	if (!SDL_Vulkan_CreateSurface(Window.Handle, Graphics.Instance, &Graphics.Surface))
 	{
-		printf("[Error] Failed to create SurfaceKHR\n");
-		exit(-1);
+		log_fatal("Failed to create SurfaceKHR\n");
+		exit(1);
 	}
 }
 
 static void ChoosePhysicalDevice(bool useIntegrated)
 {
-	printf("\n[Log] Choosing physical device...\n");
 	Graphics.PhysicalDevice = VK_NULL_HANDLE;
 	
 	unsigned int deviceCount = 0;
 	vkEnumeratePhysicalDevices(Graphics.Instance, &deviceCount, NULL);
-	if (deviceCount == 0) { printf("[Error] No GPU with Vulkan support\n"); exit(-1); }
+	if (deviceCount == 0) { log_fatal("No GPU with Vulkan support\n"); exit(1); }
 	VkPhysicalDevice * devices = (VkPhysicalDevice * )malloc(deviceCount * sizeof(VkPhysicalDevice));
 	vkEnumeratePhysicalDevices(Graphics.Instance, &deviceCount, devices);
 	
@@ -155,13 +125,11 @@ static void ChoosePhysicalDevice(bool useIntegrated)
 	int graphicsQueueIndex = -1;
 	int presentQueueIndex = -1;
 	bool suitableDevice = false;
-	printf("\tPhysical Devices:\n");
 	for (int i = 0; i < deviceCount; i++)
 	{
 		
 		VkPhysicalDeviceProperties deviceProperties;
 		vkGetPhysicalDeviceProperties(devices[i], &deviceProperties);
-		printf("\t\t%s\n", deviceProperties.deviceName);
 		
 		unsigned int queueFamilyCount;
 		vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &queueFamilyCount, NULL);
@@ -171,14 +139,12 @@ static void ChoosePhysicalDevice(bool useIntegrated)
 		{
 			if (queueFamilies[j].queueCount > 0 && queueFamilies[j].queueFlags & VK_QUEUE_GRAPHICS_BIT && graphicsQueueIndex == -1)
 			{
-				printf("Graphics %i\n", j);
 				graphicsQueueIndex = j;
 			}
 			VkBool32 presentSupported = false;
 			vkGetPhysicalDeviceSurfaceSupportKHR(devices[i], j, Graphics.Surface, &presentSupported);
 			if (queueFamilies[j].queueCount > 0 && presentSupported && presentQueueIndex == -1)
 			{
-				printf("Present %i\n", j);
 				presentQueueIndex = j;
 			}
 		}
@@ -192,10 +158,8 @@ static void ChoosePhysicalDevice(bool useIntegrated)
 		vkEnumerateDeviceExtensionProperties(devices[i], NULL, &availableExtensionCount, NULL);
 		VkExtensionProperties * availableExtensions = malloc(availableExtensionCount * sizeof(VkExtensionProperties));
 		vkEnumerateDeviceExtensionProperties(devices[i], NULL, &availableExtensionCount, availableExtensions);
-		printf("\t\tAvailable Extensions:\n");
 		for (int i = 0; i < availableExtensionCount; i++)
 		{
-			printf("\t\t\t%s\n", availableExtensions[i].extensionName);
 			if (strcmp(availableExtensions[i].extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0)
 			{
 				swapchainSupported = true;
@@ -221,19 +185,17 @@ static void ChoosePhysicalDevice(bool useIntegrated)
 	}
 	if (!suitableDevice)
 	{
-		printf("[Error] No suitable device\n");
-		exit(-1);
+		log_error("No suitable device found for Vulkan\n");
+		exit(1);
 	}
 	VkPhysicalDeviceProperties deviceProperties;
 	vkGetPhysicalDeviceProperties(Graphics.PhysicalDevice, &deviceProperties);
-	printf("[Log] Chose device: %s\n", deviceProperties.deviceName);
+	log_info("Using graphics device: %s\n", deviceProperties.deviceName);
 	free(devices);
 }
 
 static void CreateLogicalDevice()
 {
-	printf("\n[Log] Creating logical device...\n");
-	
 	float queuePriority = 1.0f;
 	VkDeviceQueueCreateInfo graphicsQueueInfo =
 	{
@@ -271,12 +233,226 @@ static void CreateLogicalDevice()
 	VkResult result = vkCreateDevice(Graphics.PhysicalDevice, &_DeviceInfo, NULL, &Graphics.Device);
 	if (result != VK_SUCCESS)
 	{
-		printf("[Error] Failed to create logical device: %i\n", result);
-		exit(-1);
+		log_fatal("Failed to create logical device: %i\n", result);
+		exit(1);
 	}
 	
 	vkGetDeviceQueue(Graphics.Device, Graphics.GraphicsQueueIndex, 0, &Graphics.GraphicsQueue);
 	vkGetDeviceQueue(Graphics.Device, Graphics.PresentQueueIndex, 0, &Graphics.PresentQueue);
+}
+
+static void CreateSwapchain(int width, int height)
+{
+	VkSurfaceCapabilitiesKHR availableCapabilities;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(Graphics.PhysicalDevice, Graphics.Surface, &availableCapabilities);
+	
+	unsigned int availableFormatCount = 0;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(Graphics.PhysicalDevice, Graphics.Surface, &availableFormatCount, NULL);
+	VkSurfaceFormatKHR * availableFormats = (VkSurfaceFormatKHR * )malloc(availableFormatCount * sizeof(VkSurfaceFormatKHR));
+	vkGetPhysicalDeviceSurfaceFormatsKHR(Graphics.PhysicalDevice, Graphics.Surface, &availableFormatCount, availableFormats);
+	VkSurfaceFormatKHR surfaceFormat = availableFormats[0];
+	VkFormat targetFormat = VK_FORMAT_B8G8R8A8_UNORM;
+	for (int i = 0; i < availableFormatCount; i++)
+	{
+		if (availableFormats[i].format == targetFormat)
+		{
+			surfaceFormat = availableFormats[i];
+		}
+	}
+	free(availableFormats);
+	
+	unsigned int availablePresentModeCount = 0;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(Graphics.PhysicalDevice, Graphics.Surface, &availablePresentModeCount, NULL);
+	VkPresentModeKHR * availablePresentModes = (VkPresentModeKHR * )malloc(availablePresentModeCount * sizeof(VkPresentModeKHR));
+	vkGetPhysicalDeviceSurfacePresentModesKHR(Graphics.PhysicalDevice, Graphics.Surface, &availablePresentModeCount, availablePresentModes);
+	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+	VkPresentModeKHR targetPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+	//VkPresentModeKHR targetPresentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
+	for (int i = 0; i < availablePresentModeCount; i++)
+	{
+		if (availablePresentModes[i] == targetPresentMode)
+		{
+			presentMode = availablePresentModes[i];
+		}
+	}
+	free(availablePresentModes);
+	
+	VkExtent2D extent =
+	{
+		.width = (unsigned int)width,
+		.height = (unsigned int)height,
+	};
+	extent.width = MAX(availableCapabilities.minImageExtent.width, MIN(availableCapabilities.maxImageExtent.width, extent.width));
+	extent.height = MAX(availableCapabilities.minImageExtent.height, MIN(availableCapabilities.maxImageExtent.height, extent.height));
+	
+	uint32_t imageCount = availableCapabilities.minImageCount;
+	if (availableCapabilities.maxImageCount > availableCapabilities.minImageCount || availableCapabilities.maxImageCount == 0)
+	{
+		imageCount++;
+	}
+
+	VkSwapchainCreateInfoKHR createInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+		.surface = Graphics.Surface,
+		.minImageCount = imageCount,
+		.imageFormat = surfaceFormat.format,
+		.imageColorSpace = surfaceFormat.colorSpace,
+		.imageExtent = extent,
+		.imageArrayLayers = 1,
+		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+		.preTransform = availableCapabilities.currentTransform,
+		.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+		.presentMode = presentMode,
+		.clipped = VK_TRUE,
+		.oldSwapchain = VK_NULL_HANDLE,
+	};
+	
+	const uint32_t queueFamilyIndices[] = { Graphics.GraphicsQueueIndex, Graphics.PresentQueueIndex };
+	if (Graphics.GraphicsQueueIndex != Graphics.PresentQueueIndex)
+	{
+		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+		createInfo.pQueueFamilyIndices = queueFamilyIndices;
+		createInfo.queueFamilyIndexCount = 2;
+	}
+	else
+	{
+		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	}
+	
+	VkResult result = vkCreateSwapchainKHR(Graphics.Device, &createInfo, NULL, &Graphics.Swapchain.Instance);
+	if (result != VK_SUCCESS)
+	{
+		log_fatal("Failed to create swapchain: %i\n", result);
+		exit(1);
+	}
+
+	Graphics.Swapchain.Extent = extent;
+	Graphics.Swapchain.ColorFormat = surfaceFormat.format;
+	Window.Width = Graphics.Swapchain.Extent.width;
+	Window.Height = Graphics.Swapchain.Extent.height;
+}
+
+static void GetSwapchainImages()
+{
+	vkGetSwapchainImagesKHR(Graphics.Device, Graphics.Swapchain.Instance, &Graphics.Swapchain.ImageCount, NULL);
+	Graphics.Swapchain.Images = malloc(Graphics.Swapchain.ImageCount * sizeof(VkImage));
+	vkGetSwapchainImagesKHR(Graphics.Device, Graphics.Swapchain.Instance, &Graphics.Swapchain.ImageCount, Graphics.Swapchain.Images);
+	
+	VkCommandBuffer commandBuffer;
+	VkCommandBufferAllocateInfo commandAllocateInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		.commandPool = Graphics.CommandPool,
+		.commandBufferCount = 1,
+	};
+	vkAllocateCommandBuffers(Graphics.Device, &commandAllocateInfo, &commandBuffer);
+	VkCommandBufferBeginInfo beginInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+	};
+	
+	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+	for (int i = 0; i < Graphics.Swapchain.ImageCount; i++)
+	{
+		VkImageMemoryBarrier memoryBarrier =
+		{
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			.image = Graphics.Swapchain.Images[i],
+			.subresourceRange =
+			{
+				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+				.baseMipLevel = 0,
+				.levelCount = 1,
+				.baseArrayLayer = 0,
+				.layerCount = 1,
+			},
+			.srcAccessMask = 0,
+			.dstAccessMask = 0,
+		};
+		vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, NULL, 0, NULL, 1, &memoryBarrier);
+	}
+	vkEndCommandBuffer(commandBuffer);
+	
+	VkSubmitInfo submitInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		.commandBufferCount = 1,
+		.pCommandBuffers = &commandBuffer,
+	};
+	vkQueueSubmit(Graphics.GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+	vkDeviceWaitIdle(Graphics.Device);
+	
+	vkFreeCommandBuffers(Graphics.Device, Graphics.CommandPool, 1, &commandBuffer);
+}
+
+static void CreateRenderPass()
+{
+	VkAttachmentDescription colorAttachment =
+	{
+		.format = Graphics.Swapchain.ColorFormat,
+		.samples = VK_SAMPLE_COUNT_1_BIT,
+		.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
+		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		.initialLayout = VK_IMAGE_LAYOUT_GENERAL,
+		.finalLayout = VK_IMAGE_LAYOUT_GENERAL,
+	};
+	VkAttachmentReference colorAttachmentReference =
+	{
+		.attachment = 0,
+		.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+	};
+	
+	VkAttachmentDescription depthAttachment =
+	{
+		.format = (VkFormat)TextureFormatDepthStencil,
+		.samples = VK_SAMPLE_COUNT_1_BIT,
+		.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
+		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		.initialLayout = VK_IMAGE_LAYOUT_GENERAL,
+		.finalLayout = VK_IMAGE_LAYOUT_GENERAL,
+	};
+	VkAttachmentReference depthAttachmentReference =
+	{
+		.attachment = 1,
+		.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+	};
+	
+	VkSubpassDescription subpass =
+	{
+		.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+		.colorAttachmentCount = 1,
+		.pColorAttachments = &colorAttachmentReference,
+		.pDepthStencilAttachment = &depthAttachmentReference,
+	};
+	
+	VkAttachmentDescription attachments[] = { colorAttachment, depthAttachment };
+	VkRenderPassCreateInfo renderPassInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+		.attachmentCount = 2,
+		.pAttachments = attachments,
+		.subpassCount = 1,
+		.pSubpasses = &subpass,
+		.dependencyCount = 0,
+		.pDependencies = NULL,
+	};
+	VkResult result = vkCreateRenderPass(Graphics.Device, &renderPassInfo, NULL, &Graphics.RenderPass);
+	if (result != VK_SUCCESS)
+	{
+		log_fatal("Failed to create render pass: %i\n", result);
+		exit(1);
+	}
 }
 
 static void CreateCommandPool()
@@ -291,8 +467,8 @@ static void CreateCommandPool()
 	VkResult result = vkCreateCommandPool(Graphics.Device, &createInfo, NULL, &Graphics.CommandPool);
 	if (result != VK_SUCCESS)
 	{
-		printf("[Error] Failed to create command pool: %i\n", result);
-		exit(-1);
+		log_fatal("Failed to create command pool: %i\n", result);
+		exit(1);
 	}
 }
 
@@ -305,7 +481,12 @@ static void CreateAllocator()
 		.preferredLargeHeapBlockSize = 128 * 1024 * 1024,
 		.frameInUseCount = 1,
 	};
-	vmaCreateAllocator(&allocatorInfo, &Graphics.Allocator);
+	VkResult result = vmaCreateAllocator(&allocatorInfo, &Graphics.Allocator);
+	if (result != VK_SUCCESS)
+	{
+		log_fatal("Failed to create memory allocator: %i\n", result);
+		exit(1);
+	}
 }
 
 static void CreateCompiler()
@@ -354,7 +535,7 @@ static void CreateFrameResources()
 
 void GraphicsInitialize(GraphicsConfigure config)
 {
-	printf("\n[Log] Initializing Graphics...\n");
+	log_info("Initializing the graphics backend...\n");
 	Graphics.FrameResourceCount = config.FrameResourceCount;
 	CheckExtensionSupport();
 	CreateInstance(config.VulkanValidation);
@@ -365,7 +546,123 @@ void GraphicsInitialize(GraphicsConfigure config)
 	CreateAllocator();
 	CreateCompiler();
 	CreateFrameResources();
-	printf("\n[Log] Successfully initialized vulkan\n");
+	GraphicsCreateSwapchain(Window.Width, Window.Height);
+	log_info("Successfully initialized the graphics backend.\n");
+}
+
+void GraphicsCreateSwapchain(int width, int height)
+{
+	log_info("Creating the swapchain...\n");
+	CreateSwapchain(width, height);
+	GetSwapchainImages();
+	CreateRenderPass();
+	log_info("Successfully created the swapchain\n");
+}
+
+void GraphicsAquireNextImage()
+{
+	Graphics.FrameIndex = (Graphics.FrameIndex + 1) % Graphics.FrameResourceCount;
+	unsigned int i = Graphics.FrameIndex;
+	vkWaitForFences(Graphics.Device, 1, &Graphics.FrameResources[i].FrameReady, VK_TRUE, UINT64_MAX);
+	vkResetFences(Graphics.Device, 1, &Graphics.FrameResources[i].FrameReady);
+	
+	for (int j = 0; j < Graphics.FrameResources[i].DestroyVertexBufferQueue->Count; j++)
+	{
+		VertexBuffer vertexBuffer = ListGetValue(Graphics.FrameResources[i].DestroyVertexBufferQueue, j);
+		VertexBufferDestroy(vertexBuffer);
+	}
+	ListClear(Graphics.FrameResources[i].DestroyVertexBufferQueue);
+	for (int j = 0; j < Graphics.FrameResources[i].UpdateDescriptorQueue->Count; j++)
+	{
+		VkWriteDescriptorSet * writeInfo = ListGetValue(Graphics.FrameResources[i].UpdateDescriptorQueue, j);
+		vkUpdateDescriptorSets(Graphics.Device, 1, writeInfo, 0, NULL);
+		free((void *)writeInfo->pBufferInfo);
+		free(writeInfo);
+	}
+	ListClear(Graphics.FrameResources[i].UpdateDescriptorQueue);
+	
+	VkResult result = vkAcquireNextImageKHR(Graphics.Device, Graphics.Swapchain.Instance, UINT64_MAX, Graphics.FrameResources[i].ImageAvailable, VK_NULL_HANDLE, &Graphics.Swapchain.CurrentImageIndex);
+	if (result != VK_SUCCESS) { printf("%i\n", result); }
+	while (result != VK_SUCCESS)
+	{
+		EventHandlerPoll();
+		result = vkAcquireNextImageKHR(Graphics.Device, Graphics.Swapchain.Instance, UINT64_MAX, Graphics.FrameResources[i].ImageAvailable, VK_NULL_HANDLE, &Graphics.Swapchain.CurrentImageIndex);
+	}
+	
+	vkResetCommandBuffer(Graphics.FrameResources[i].CommandBuffer, 0);
+	VkCommandBufferBeginInfo beginInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+	};
+	result = vkBeginCommandBuffer(Graphics.FrameResources[i].CommandBuffer, &beginInfo);
+	if (result != VK_SUCCESS)
+	{
+		printf("[Error] Failed to begin command buffer: %i\n", result);
+		exit(-1);
+	}
+}
+
+void GraphicsPresent()
+{
+	unsigned int i = Graphics.FrameIndex;
+	
+	VkResult result = vkEndCommandBuffer(Graphics.FrameResources[i].CommandBuffer);
+	if (result != VK_SUCCESS)
+	{
+		printf("[Error] Failed to record command buffer: %i\n", result);
+		exit(-1);
+	}
+
+	VkSemaphore * waitSemaphores = malloc((1 + Graphics.PreRenderSemaphores->Count) * sizeof(VkSemaphore));
+	VkPipelineStageFlags * waitStages = malloc((1 + Graphics.PreRenderSemaphores->Count) * sizeof(VkPipelineStageFlags));
+	waitSemaphores[0] = Graphics.FrameResources[i].ImageAvailable;
+	waitStages[0] = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+	for (int i = 0; i < Graphics.PreRenderSemaphores->Count; i++)
+	{
+		waitSemaphores[i + 1] = *(VkSemaphore *)ListGetValue(Graphics.PreRenderSemaphores, i);
+		waitStages[i + 1] = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+	}
+	
+	ListClear(Graphics.PreRenderSemaphores);
+	VkSubmitInfo submitInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		.waitSemaphoreCount = 1 + Graphics.PreRenderSemaphores->Count,
+		.pWaitSemaphores = waitSemaphores,
+		.pWaitDstStageMask = waitStages,
+		.commandBufferCount = 1,
+		.pCommandBuffers = &Graphics.FrameResources[i].CommandBuffer,
+		.signalSemaphoreCount = 1,
+		.pSignalSemaphores = &Graphics.FrameResources[i].RenderFinished,
+	};
+	result = vkQueueSubmit(Graphics.GraphicsQueue, 1, &submitInfo, Graphics.FrameResources[i].FrameReady);
+	if (result != VK_SUCCESS)
+	{
+		printf("[Error] Failed to submit queue: %i\n", result);
+		exit(-1);
+	}
+	free(waitSemaphores);
+	free(waitStages);
+	
+	VkPresentInfoKHR presentInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+		.waitSemaphoreCount = 1,
+		.pWaitSemaphores = &Graphics.FrameResources[i].RenderFinished,
+		.swapchainCount = 1,
+		.pSwapchains = &Graphics.Swapchain.Instance,
+		.pImageIndices = &Graphics.Swapchain.CurrentImageIndex,
+	};
+	vkQueuePresentKHR(Graphics.PresentQueue, &presentInfo);
+}
+
+void GraphicsDestroySwapchain()
+{
+	vkDeviceWaitIdle(Graphics.Device);
+	vkDestroyRenderPass(Graphics.Device, Graphics.RenderPass, NULL);
+	free(Graphics.Swapchain.Images);
+	vkDestroySwapchainKHR(Graphics.Device, Graphics.Swapchain.Instance, NULL);
 }
 
 void GraphicsBegin(FrameBuffer frameBuffer)
@@ -375,7 +672,7 @@ void GraphicsBegin(FrameBuffer frameBuffer)
 	VkRenderPassBeginInfo renderPassBegin =
 	{
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-		.renderPass = Swapchain.RenderPass,
+		.renderPass = Graphics.RenderPass,
 		.framebuffer = Graphics.BoundFrameBuffer->Instance,
 		.renderArea = (VkRect2D)
 		{
@@ -443,15 +740,15 @@ void GraphicsBindPipeline(Pipeline pipeline)
 	{
 		.x = 0.0f,
 		.y = 0.0f,
-		.width = Swapchain.Extent.width,
-		.height = Swapchain.Extent.height,
+		.width = Graphics.Swapchain.Extent.width,
+		.height = Graphics.Swapchain.Extent.height,
 		.minDepth = 0.0f,
 		.maxDepth = 1.0f,
 	};
 	VkRect2D scissor =
 	{
 		.offset = { 0, 0 },
-		.extent = Swapchain.Extent,
+		.extent = Graphics.Swapchain.Extent,
 	};
 	vkCmdSetViewport(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 0, 1, &viewport);
 	vkCmdSetScissor(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 0, 1, &scissor);
@@ -493,7 +790,7 @@ void GraphicsCopyToSwapchain(FrameBuffer frameBuffer)
 		.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
 		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-		.image = Swapchain.Images[Swapchain.CurrentImageIndex],
+		.image = Graphics.Swapchain.Images[Graphics.Swapchain.CurrentImageIndex],
 		.subresourceRange =
 		{
 			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
@@ -525,12 +822,12 @@ void GraphicsCopyToSwapchain(FrameBuffer frameBuffer)
 		.dstOffset = { .x = 0, .y = 0, .z = 0, },
 		.extent =
 		{
-			.width = MIN(Swapchain.Extent.width, frameBuffer->Width),
-			.height = MIN(Swapchain.Extent.height, frameBuffer->Height),
+			.width = MIN(Graphics.Swapchain.Extent.width, frameBuffer->Width),
+			.height = MIN(Graphics.Swapchain.Extent.height, frameBuffer->Height),
 			.depth = 1,
 		},
 	};
-	vkCmdCopyImage(Graphics.FrameResources[i].CommandBuffer, frameBuffer->ColorTexture->Image, VK_IMAGE_LAYOUT_GENERAL, Swapchain.Images[Swapchain.CurrentImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyInfo);
+	vkCmdCopyImage(Graphics.FrameResources[i].CommandBuffer, frameBuffer->ColorTexture->Image, VK_IMAGE_LAYOUT_GENERAL, Graphics.Swapchain.Images[Graphics.Swapchain.CurrentImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyInfo);
 	
 	memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	memoryBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
@@ -545,6 +842,7 @@ void GraphicsStopOperations()
 void GraphicsDeinitialize()
 {
 	vkDeviceWaitIdle(Graphics.Device);
+	GraphicsDestroySwapchain();
 	ListDestroy(Graphics.PreRenderSemaphores);
 	for (int i = 0; i < Graphics.FrameResourceCount; i++)
 	{

@@ -9,6 +9,7 @@
 #include "LinearMath.h"
 #include "UniformBuffer.h"
 #include "FrameBuffer.h"
+#include "EventHandler.h"
 
 typedef struct GraphicsConfigure
 {
@@ -34,11 +35,23 @@ struct Graphics
 	unsigned int GraphicsQueueIndex;
 	VkQueue PresentQueue;
 	unsigned int PresentQueueIndex;
+	
+	struct GraphicsSwapchain
+	{
+		VkSwapchainKHR Instance;
+		VkExtent2D Extent;
+		VkFormat ColorFormat;
+		unsigned int ImageCount;
+		VkImage * Images;
+		unsigned int CurrentImageIndex;
+	} Swapchain;
+	
+	VkRenderPass RenderPass;
 	VkCommandPool CommandPool;
 	VmaAllocator Allocator;
 	shaderc_compiler_t ShaderCompiler;
-	
 	List PreRenderSemaphores;
+	
 	int FrameResourceCount;
 	struct GraphicsFrameResource
 	{
@@ -57,13 +70,24 @@ struct Graphics
 	
 	FrameBuffer BoundFrameBuffer;
 	Pipeline BoundPipeline;
-	
-	int VertexBufferCount;
-	int VertexCount;
 } extern Graphics;
 
 /// This should not be called by the user, it is called in the XGIInitialize function
 void GraphicsInitialize(GraphicsConfigure config);
+
+/// This should not be called, it is automatically called at initialization, and when the window is resized.
+void GraphicsCreateSwapchain(int width, int height);
+
+/// Acquires the next swapchain image for rendering.
+/// This should be called once per a frame, before any rendering operations are done
+void GraphicsAquireNextImage(void);
+
+/// Presents the acquired image to the screen
+/// This should be called once per a frame, after all render calls have been finished
+void GraphicsPresent(void);
+
+/// This should not be called, it is automatically called at deinitialization, and when the window is resized.
+void GraphicsDestroySwapchain(void);
 
 /// Begins rendering on a given framebuffer.
 /// This should only be called after SwapchainAquireNextImage and before SwapchainPresent
