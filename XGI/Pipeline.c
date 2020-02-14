@@ -7,6 +7,7 @@
 #include "Graphics.h"
 #include "UniformBuffer.h"
 #include "File.h"
+#include "log.h"
 
 ShaderData ShaderDataFromMemory(ShaderType type, unsigned long dataSize, void * data, bool precompiled)
 {
@@ -16,8 +17,8 @@ ShaderData ShaderDataFromMemory(ShaderType type, unsigned long dataSize, void * 
 		shaderc_compilation_result_t result = shaderc_compile_into_spv(Graphics.ShaderCompiler, data, dataSize, shaderType, "shader", "main", 0);
 		if (shaderc_result_get_num_errors(result) > 0)
 		{
-			printf("%s\n", shaderc_result_get_error_message(result));
-			exit(-1);
+			log_fatal("Error while compiling shader:\n%s\n", shaderc_result_get_error_message(result));
+			exit(1);
 		}
 		data = (void *)shaderc_result_get_bytes(result);
 		dataSize = shaderc_result_get_length(result);
@@ -43,8 +44,8 @@ ShaderData ShaderDataFromFile(ShaderType type, const char * file, bool precompil
 		shaderc_compilation_result_t result = shaderc_compile_into_spv(Graphics.ShaderCompiler, text, size, shaderType, file, "main", 0);
 		if (shaderc_result_get_num_errors(result) > 0)
 		{
-			printf("%s\n", shaderc_result_get_error_message(result));
-			exit(-1);
+			log_fatal("Error while compiling shader:\n%s\n", shaderc_result_get_error_message(result));
+			exit(1);
 		}
 		void * data = (void *)shaderc_result_get_bytes(result);
 		unsigned long dataSize = shaderc_result_get_length(result);
@@ -143,7 +144,6 @@ static void CreateDescriptorLayout(Pipeline pipeline, int * uboCount, int * samp
 				for (int j = 0; j < stage->DescriptorInfo.binding_count; j++, c++)
 				{
 					SpvReflectDescriptorBinding * binding = stage->DescriptorInfo.bindings[j];
-					printf("%s set:%i binding:%i count:%i\n", binding->name, binding->set, binding->binding, binding->count);
 					layoutBindings[c] = (VkDescriptorSetLayoutBinding)
 					{
 						.binding = binding->binding,
@@ -426,8 +426,8 @@ Pipeline PipelineCreate(PipelineConfigure config)
 	VkResult result = vkCreateGraphicsPipelines(Graphics.Device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, NULL, &pipeline->Instance);
 	if (result != VK_SUCCESS)
 	{
-		printf("[Error] Unable to create graphics pipeline: %i\n", result);
-		exit(-1);
+		log_fatal("Unable to create graphics pipeline: %i\n", result);
+		exit(1);
 	}
 	
 	for (int i = 0; i < config.ShaderCount; i++)

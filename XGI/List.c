@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "List.h"
+#include "log.h"
 
 List ListCreate()
 {
@@ -34,7 +35,8 @@ void ListInsert(List list, void * value, int index)
 	}
 	else
 	{
-		printf("index out of bounds\n");
+		log_fatal("Index out of bounds\n");
+		exit(1);
 	}
 }
 
@@ -49,6 +51,11 @@ void ListOutsert(List list, int index)
 			list->Capacity /= 2;
 			list->Data = realloc(list->Data, list->Capacity * sizeof(void *));
 		}
+	}
+	else
+	{
+		log_fatal("Index out of bounds\n");
+		exit(1);
 	}
 }
 
@@ -79,15 +86,19 @@ void * ListGetValue(List list, int index)
 	if (index < list->Count && index >= 0) { return list->Data[index]; }
 	else
 	{
-		printf("Index out of bounds\n");
-		exit(-1);
-		return NULL;
+		log_fatal("Index out of bounds\n");
+		exit(1);
 	}
 }
 
 void ListSetIndex(List list, int index, void * value)
 {
 	if (index < list->Count && index >= 0) { list->Data[index] = value; }
+	else
+	{
+		log_fatal("Index out of bounds\n");
+		exit(1);
+	}
 }
 
 bool ListContains(List list, void * value)

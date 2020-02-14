@@ -5,6 +5,7 @@
 #include "Texture.h"
 #include "Graphics.h"
 #include "File.h"
+#include "log.h"
 
 TextureData TextureDataFromFile(const char * fileName)
 {
@@ -54,8 +55,8 @@ static void CreateImage(Texture texture)
 
 	if (result != VK_SUCCESS)
 	{
-		printf("[Error] Unable to create image: %i", result);
-		exit(-1);
+		log_fatal("Failed to create image: %i", result);
+		exit(1);
 	}
 }
 
@@ -214,8 +215,8 @@ static void CreateImageView(Texture texture)
 	VkResult result = vkCreateImageView(Graphics.Device, &createInfo, NULL, &texture->ImageView);
 	if (result != VK_SUCCESS)
 	{
-		printf("[Error] Unable to create image view: %i", result);
-		exit(-1);
+		log_fatal("Failed to create image view: %i", result);
+		exit(1);
 	}
 }
 
@@ -238,8 +239,8 @@ static void CreateSampler(Texture texture, TextureConfigure config)
 	VkResult result = vkCreateSampler(Graphics.Device, &samplerInfo, NULL, &texture->Sampler);
 	if (result != VK_SUCCESS)
 	{
-		printf("[Error] Unable to create sampler: %i", result);
-		exit(-1);
+		log_fatal("Failed to create sampler: %i", result);
+		exit(1);
 	}
 }
 

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "FrameBuffer.h"
 #include "Graphics.h"
+#include "log.h"
 
 FrameBuffer FrameBufferCreate(FrameBufferConfigure config)
 {
@@ -39,8 +40,8 @@ FrameBuffer FrameBufferCreate(FrameBufferConfigure config)
 	VkResult result = vkCreateFramebuffer(Graphics.Device, &createInfo, NULL, &frameBuffer->Instance);
 	if (result != VK_SUCCESS)
 	{
-		printf("[Error] Failed to create frame buffer: %i", result);
-		exit(-1);
+		log_fatal("[Error] Failed to create frame buffer: %i\n", result);
+		exit(1);
 	}
 	
 	return frameBuffer;

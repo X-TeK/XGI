@@ -582,7 +582,7 @@ void GraphicsAquireNextImage()
 	ListClear(Graphics.FrameResources[i].UpdateDescriptorQueue);
 	
 	VkResult result = vkAcquireNextImageKHR(Graphics.Device, Graphics.Swapchain.Instance, UINT64_MAX, Graphics.FrameResources[i].ImageAvailable, VK_NULL_HANDLE, &Graphics.Swapchain.CurrentImageIndex);
-	if (result != VK_SUCCESS) { printf("%i\n", result); }
+	if (result != VK_SUCCESS) { log_info("Unsuccessful aquire image: %i\n", result); }
 	while (result != VK_SUCCESS)
 	{
 		EventHandlerPoll();
@@ -598,8 +598,8 @@ void GraphicsAquireNextImage()
 	result = vkBeginCommandBuffer(Graphics.FrameResources[i].CommandBuffer, &beginInfo);
 	if (result != VK_SUCCESS)
 	{
-		printf("[Error] Failed to begin command buffer: %i\n", result);
-		exit(-1);
+		log_fatal("Failed to begin command buffer: %i\n", result);
+		exit(1);
 	}
 }
 
@@ -610,8 +610,8 @@ void GraphicsPresent()
 	VkResult result = vkEndCommandBuffer(Graphics.FrameResources[i].CommandBuffer);
 	if (result != VK_SUCCESS)
 	{
-		printf("[Error] Failed to record command buffer: %i\n", result);
-		exit(-1);
+		log_fatal("Failed to record command buffer: %i\n", result);
+		exit(1);
 	}
 
 	VkSemaphore * waitSemaphores = malloc((1 + Graphics.PreRenderSemaphores->Count) * sizeof(VkSemaphore));
@@ -639,8 +639,8 @@ void GraphicsPresent()
 	result = vkQueueSubmit(Graphics.GraphicsQueue, 1, &submitInfo, Graphics.FrameResources[i].FrameReady);
 	if (result != VK_SUCCESS)
 	{
-		printf("[Error] Failed to submit queue: %i\n", result);
-		exit(-1);
+		log_fatal("Failed to submit queue: %i\n", result);
+		exit(1);
 	}
 	free(waitSemaphores);
 	free(waitStages);
