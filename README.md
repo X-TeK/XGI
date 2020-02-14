@@ -14,7 +14,7 @@ Module            | Description
 ------------------|---------------------
 [`EventHandler`](https://github.com/X-TeK/XGI/wiki/EventHandler.h) | Processes events and manages callbacks
 [`File`](https://github.com/X-TeK/XGI/wiki/File.h) | Provides an easy way to read/write files
-`FrameBuffer`     | Abstracts a color texture and depth-stencil texture for use in rendering
+[`FrameBuffer`](https://github.com/X-TeK/XGI/wiki/FrameBuffer.h) | Abstracts a color texture and depth-stencil texture for use in rendering
 `Graphics`        | Provides all of the commands necessary for rendering
 `Input`           | Provides the functionality to query information about input devices
 `LinearMath`      | Provides all of the linear algebra functions needed for transformations
