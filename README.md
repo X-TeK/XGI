@@ -28,14 +28,15 @@ Module            | Description
 ## How to setup:
 
 ### Windows (using Visual Studio):
-1. Create a new C/C++ project using Visual Studio
-2. Clone or download this repository
-3. Copy the folders XGI, Libraries, and Include into the project directory
-4. Add all the files in the XGI folder to your project
-5. Under the project properties and under the VC++ Directories tab, add the include directory XGI/Include and the library directory XGI/Libraries/Windows32 (or XGI/Libraries/Windows64 if you're targeting x64)
-6. Under C/C++ - Code Generation set the Runtime Library to Multi-threaded (/MT)
-7. Under Linker - Input add SDLmain.lib, SDL2.lib, shaderc_combined.lib and vulkan-1.lib
-8. Create your main function in a new file and run
+1. Install the Vulkan SDK (this part is technically optional but you won't get validation layers without it)
+2. Create a new C/C++ project using Visual Studio
+3. Clone or download this repository
+4. Copy the folders XGI, Libraries, and Include into the project directory
+5. Add all the files in the XGI folder to your project
+6. Under the project properties and under the VC++ Directories tab, add the include directory XGI/Include and the library directory XGI/Libraries/Windows32 (or XGI/Libraries/Windows64 if you're targeting x64)
+7. Under C/C++ - Code Generation set the Runtime Library to Multi-threaded (/MT)
+8. Under Linker - Input add SDLmain.lib, SDL2.lib, shaderc_combined.lib and vulkan-1.lib
+9. Create your main function in a new file and run
 
 ### MacOS (using XCode):
 1. Download and install the Vulkan SDK for macOS
