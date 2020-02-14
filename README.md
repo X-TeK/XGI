@@ -27,13 +27,36 @@ Module            | Description
 
 ## How to setup:
 
-### Windows:
+### Windows (using Visual Studio):
+1. Create a new C/C++ project using Visual Studio
+2. Clone or download this repository
+3. Copy the folders XGI, Libraries, and Include into the project directory
+4. Add all the files in the XGI folder to your project
+5. Under the project properties and under the VC++ Directories tab, add the include directory XGI/Include and the library directory XGI/Libraries/Windows32 (or XGI/Libraries/Windows64 if you're targeting x64)
+6. Under C/C++ - Code Generation set the Runtime Library to Multi-threaded (/MT)
+7. Under Linker - Input add SDLmain.lib, SDL2.lib, shaderc_combined.lib and vulkan-1.lib
+8. Create your main function in a new file and run
 
-### MacOS:
+### MacOS (using XCode):
+1. Download and install the Vulkan SDK for macOS
+- Use version 1.1.114.0 (last time I tried to use a newer version I came across some issues with MoltenVK).
+- To install it run the install_vulkan.py file in the download
+2. Create a new C or C++ project using xcode
+3. Clone or download this repository
+4. Copy the folders XGI, Libraries, and Include into the project directory
+5. Add all the files in the XGI folder to your project
+6. Add $(PROJECT_DIR)/Include to your search headers in the build settings tab
+7. Link the libraries SDL2.framework, libshaderc_combined.a and libvulkan.1.1.114.dylib, from the Library folder in the build phases tab
+8. Create your main function in a new file and run
 
 ### Linux:
+Not tested yet
 
 ### iOS:
+Theoretically possible since XGI uses MoltenVK and SDL2, but I haven't gotten it to work. Besides there's no touch support yet.
+
+### Android:
+Probably possible as well
 
 ## Example:
 ```C
