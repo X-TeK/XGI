@@ -21,7 +21,7 @@ File FileOpen(const char * path, FileMode mode)
 	file->RW = SDL_RWFromFile(path, fileMode);
 	if (file->RW == NULL)
 	{
-		log_fatal("File doesn't exist.\n");
+		log_fatal("%s doesn't exist.\n", path);
 		exit(1);
 	}
 	file->Size = SDL_RWsize(file->RW);

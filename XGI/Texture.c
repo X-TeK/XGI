@@ -8,10 +8,22 @@
 #include "log.h"
 
 TextureData TextureDataFromFile(const char * fileName)
-{
-	if (!FileExists(fileName)) { exit(-1); }
+{	
+	File file = FileOpen(fileName, FileModeReadBinary);
+	unsigned long size = FileGetSize(file);
+	void * data = malloc(size);
+	FileRead(file, 0, size, data);
+	FileClose(file);
+	
 	int width, height, channels;
-	stbi_uc * pixels = stbi_load(fileName, &width, &height, &channels, STBI_rgb_alpha);
+	stbi_uc * pixels = stbi_load_from_memory(data, (int)size, &width, &height, &channels, STBI_rgb_alpha);
+	if (pixels == NULL)
+	{
+		log_fatal("STBI failed to load %s: %s\n", fileName, stbi_failure_reason());
+		exit(1);
+	}
+	
+	free(data);
 	return (TextureData)
 	{
 		.Width = width,

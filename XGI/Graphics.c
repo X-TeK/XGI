@@ -552,7 +552,7 @@ void GraphicsInitialize(GraphicsConfigure config)
 
 void GraphicsCreateSwapchain(int width, int height)
 {
-	log_info("Creating the swapchain...\n");
+	log_info("Creating the swapchain...");
 	CreateSwapchain(width, height);
 	GetSwapchainImages();
 	CreateRenderPass();

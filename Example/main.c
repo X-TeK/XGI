@@ -39,6 +39,7 @@ int main(int argc, char * argv[])
 		.Height = 600,
 		.Title = "XGI Example",
 		.Resizable = true,
+		.HighDPI = true,
 	};
 	// Graphics Configuration
 	GraphicsConfigure graphicsConfig =
