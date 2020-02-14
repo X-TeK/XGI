@@ -125,7 +125,7 @@ int main(int argc, char * argv[])
 		// Set the push constant
 		PipelineSetPushConstant(pipeline, "Transform", &Matrix4x4Identity);
 
-		SwapchainAquireNextImage();
+		GraphicsAquireNextImage();
 		
 		// Render code starts here
 		GraphicsBegin(frameBuffer);
@@ -136,7 +136,7 @@ int main(int argc, char * argv[])
 		// Copy the framebuffer to the swapchain for rendering
 		GraphicsCopyToSwapchain(frameBuffer);
 
-		SwapchainPresent();
+		GraphicsPresent();
 	}
 	GraphicsStopOperations(); // Important to call this right after exiting the main loop
 
