@@ -62,8 +62,6 @@ Module            | Description
 9. `cd ../../`
 10. `./Example/build/xgi_example`
 
-Not tested yet
-
 ### iOS:
 Theoretically possible since XGI uses MoltenVK and SDL2, but I haven't gotten it to work. Besides there's no touch support yet.
 
