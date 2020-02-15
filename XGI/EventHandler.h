@@ -70,10 +70,21 @@ typedef enum EventType
 	EventTypeCount,
 } EventType;
 
-/// Sets a callback for an event
-/// \param event The event enumeration to set the callback for
-/// \param callback A function pointer that was casted to (void (*)(void))
-void EventHandlerSetCallback(EventType event, void (*callback)(void));
+/// Don't call this, it's automatically called in XGIInitialize
+void EventHandlerInitialize(void);
+
+/// Adds a callback for the specified event
+/// \param event The event type to add the callback to
+/// \param callback A function pointer that's casted to void (*)(void)
+void EventHandlerAddCallback(EventType event, void (*callback)(void));
+
+/// Removes an existing callback from the specified event
+/// \param event The event type to remove the callback from
+/// \param callback A function pointer that's casted to void (*)(void) and was previously added as a callback
+void EventHandlerRemoveCallback(EventType event, void (*callback)(void));
+
+/// Don't call this, it's automatically called in XGIDeinitialize
+void EventHandlerDeinitialize(void);
 
 /// Iterates through all of the events and calls each callback, this should be called once per a frame
 void EventHandlerPoll(void);

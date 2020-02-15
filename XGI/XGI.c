@@ -12,11 +12,13 @@ void XGIInitialize(WindowConfigure windowFlags, GraphicsConfigure graphicsFlags)
 	}
 	WindowInitialize(windowFlags);
 	GraphicsInitialize(graphicsFlags);
+	EventHandlerInitialize();
 	log_info("Successfully initialized XGI.\n");
 }
 
 void XGIDeinitialize()
 {
+	EventHandlerDeinitialize();
 	GraphicsDeinitialize();
 	WindowDeinitialize();
 }

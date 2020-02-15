@@ -2,11 +2,49 @@
 #include "Window.h"
 #include "Graphics.h"
 
-static void (*Callbacks[EventTypeCount])(void) = { NULL };
+struct f_pointer { void (*function)(void); };
 
-void EventHandlerSetCallback(EventType event, void (*callback)(void))
+static List CallbackLists[EventTypeCount];
+
+void EventHandlerInitialize()
 {
-	Callbacks[event] = callback;
+	for (int i = 0; i < EventTypeCount; i++)
+	{
+		CallbackLists[i] = ListCreate();
+	}
+}
+
+void EventHandlerAddCallback(EventType event, void (*callback)(void))
+{
+	struct f_pointer * pointer = malloc(sizeof(struct f_pointer));
+	pointer->function = callback;
+	ListPush(CallbackLists[event], pointer);
+}
+
+void EventHandlerRemoveCallback(EventType event, void (*callback)(void))
+{
+	for (int i = 0; i < ListGetCount(CallbackLists[event]); i++)
+	{
+		struct f_pointer * value = ListGetValue(CallbackLists[event], i);
+		if (value->function == callback)
+		{
+			ListOutsert(CallbackLists[event], i);
+			free(value);
+			return;
+		}
+	}
+}
+
+void EventHandlerDeinitialize()
+{
+	for (int i = 0; i < EventTypeCount; i++)
+	{
+		for (int j = 0; j < ListGetCount(CallbackLists[i]); j++)
+		{
+			free(ListGetValue(CallbackLists[i], j));
+		}
+		ListDestroy(CallbackLists[i]);
+	}
 }
 
 void EventHandlerPoll()
@@ -111,178 +149,217 @@ void EventHandlerPoll()
 	}
 }
 
+static void CallAllFunctions(List list)
+{
+	for (int i = 0; i < list->Count; i++)
+	{
+		((struct f_pointer *)ListGetValue(list, i))->function();
+	}
+}
+
 void EventHandlerCallbackQuit()
 {
 	WindowExitLoop();
-	if (Callbacks[EventTypeQuit] != NULL) { Callbacks[EventTypeQuit](); }
+	CallAllFunctions(CallbackLists[EventTypeQuit]);
 }
 
 void EventHandlerCallbackWindowShown()
 {
-	if (Callbacks[EventTypeWindowShown] != NULL) { Callbacks[EventTypeWindowShown](); }
+	CallAllFunctions(CallbackLists[EventTypeWindowShown]);
 }
 
 void EventHandlerCallbackWindowHidden()
 {
-	if (Callbacks[EventTypeWindowHidden] != NULL) { Callbacks[EventTypeWindowHidden](); }
+	CallAllFunctions(CallbackLists[EventTypeWindowHidden]);
 }
 
 void EventHandlerCallbackWindowMoved(int x, int y)
 {
-	if (Callbacks[EventTypeWindowMoved] != NULL) { ((void (*)(int, int))Callbacks[EventTypeWindowMoved])(x, y); }
+	List list = CallbackLists[EventTypeWindowMoved];
+	for (int i = 0; i < list->Count; i++)
+	{
+		((void (*)(int, int))(( (struct f_pointer *)ListGetValue(list, i) )->function))(x, y);
+	}
 }
 
 void EventHandlerCallbackWindowResized(int width, int height)
 {
 	GraphicsDestroySwapchain();
 	GraphicsCreateSwapchain(width, height);
-	if (Callbacks[EventTypeWindowResized] != NULL) { ((void (*)(int, int))Callbacks[EventTypeWindowResized])(Window.Width, Window.Height); }
+	List list = CallbackLists[EventTypeWindowResized];
+	for (int i = 0; i < list->Count; i++)
+	{
+		((void (*)(int, int))(( (struct f_pointer *)ListGetValue(list, i) )->function))(Window.Width, Window.Height);
+	}
 }
 
 void EventHandlerCallbackWindowMinimized()
 {
-	if (Callbacks[EventTypeWindowMinimized] != NULL) { Callbacks[EventTypeWindowMinimized](); }
+	CallAllFunctions(CallbackLists[EventTypeWindowMinimized]);
 }
 
 void EventHandlerCallbackWindowMaximized()
 {
-	if (Callbacks[EventTypeWindowMaximized] != NULL) { Callbacks[EventTypeWindowMaximized](); }
+	CallAllFunctions(CallbackLists[EventTypeWindowMaximized]);
 }
 
 void EventHandlerCallbackWindowRestored()
 {
-	if (Callbacks[EventTypeWindowRestored] != NULL) { Callbacks[EventTypeWindowRestored](); }
+	CallAllFunctions(CallbackLists[EventTypeWindowRestored]);
 }
 
 void EventHandlerCallbackWindowMouseFocusGained()
 {
-	if (Callbacks[EventTypeWindowMouseFocusGained] != NULL) { Callbacks[EventTypeWindowMouseFocusGained](); }
+	CallAllFunctions(CallbackLists[EventTypeWindowMouseFocusGained]);
 }
 
 void EventHandlerCallbackWindowMouseFocusLost()
 {
-	if (Callbacks[EventTypeWindowMouseFocusLost] != NULL) { Callbacks[EventTypeWindowMouseFocusLost](); }
+	CallAllFunctions(CallbackLists[EventTypeWindowMouseFocusLost]);
 }
 
 void EventHandlerCallbackWindowKeyboardFocusGained()
 {
-	if (Callbacks[EventTypeWindowKeyboardFocusGained] != NULL) { Callbacks[EventTypeWindowKeyboardFocusGained](); }
+	CallAllFunctions(CallbackLists[EventTypeWindowKeyboardFocusGained]);
 }
 
 void EventHandlerCallbackWindowKeyboardFocusLost()
 {
-	if (Callbacks[EventTypeWindowKeyboardFocusLost] != NULL) { Callbacks[EventTypeWindowKeyboardFocusLost](); }
+	CallAllFunctions(CallbackLists[EventTypeWindowKeyboardFocusLost]);
 }
 
 void EventHandlerCallbackWindowClose()
 {
-	if (Callbacks[EventTypeWindowClose] != NULL) { Callbacks[EventTypeWindowClose](); }
+	CallAllFunctions(CallbackLists[EventTypeWindowClose]);
 }
 
 void EventHandlerCallbackKeyPressed(Key key)
 {
-	if (Callbacks[EventTypeKeyPressed] != NULL) { ((void (*)(Key))Callbacks[EventTypeKeyPressed])(key); }
+	List list = CallbackLists[EventTypeKeyPressed];
+	for (int i = 0; i < list->Count; i++)
+	{
+		((void (*)(Key))(( (struct f_pointer *)ListGetValue(list, i) )->function))(key);
+	}
 }
 
 void EventHandlerCallbackKeyReleased(Key key)
 {
-	if (Callbacks[EventTypeKeyReleased] != NULL) { ((void (*)(Key))Callbacks[EventTypeKeyReleased])(key); }
+	List list = CallbackLists[EventTypeKeyReleased];
+	for (int i = 0; i < list->Count; i++)
+	{
+		((void (*)(Key))(( (struct f_pointer *)ListGetValue(list, i) )->function))(key);
+	}
 }
 
 void EventHandlerCallbackTextInput(char * text)
 {
-	if (Callbacks[EventTypeTextInput] != NULL) { ((void (*)(char *))Callbacks[EventTypeTextInput])(text); }
+	List list = CallbackLists[EventTypeTextInput];
+	for (int i = 0; i < list->Count; i++)
+	{
+		((void (*)(char *))(( (struct f_pointer *)ListGetValue(list, i) )->function))(text);
+	}
 }
 
 void EventHandlerCallbackKeyMapChanged()
 {
-	if (Callbacks[EventTypeKeyMapChanged] != NULL) { Callbacks[EventTypeKeyMapChanged](); }
+	CallAllFunctions(CallbackLists[EventTypeKeyMapChanged]);
 }
 
 void EventHandlerCallbackMouseMotion(int mouse, int x, int y, int dx, int dy)
 {
-	if (Callbacks[EventTypeMouseMotion] != NULL)
+	List list = CallbackLists[EventTypeMouseMotion];
+	for (int i = 0; i < list->Count; i++)
 	{
-		((void (*)(int, int, int, int, int))Callbacks[EventTypeMouseMotion])(mouse, x, y, dx, dy);
+		((void (*)(int, int, int, int, int))(( (struct f_pointer *)ListGetValue(list, i) )->function))(mouse, x, y, dx, dy);
 	}
 }
 
 void EventHandlerCallbackMouseButtonPressed(int mouse, MouseButton button, int x, int y)
 {
-	if (Callbacks[EventTypeMouseButtonPressed] != NULL)
+	List list = CallbackLists[EventTypeMouseButtonPressed];
+	for (int i = 0; i < list->Count; i++)
 	{
-		((void (*)(int, MouseButton, int, int))Callbacks[EventTypeMouseButtonPressed])(mouse, button, x, y);
+		((void (*)(int, MouseButton, int, int))(( (struct f_pointer *)ListGetValue(list, i) )->function))(mouse, button, x, y);
 	}
 }
 
 void EventHandlerCallbackMouseButtonReleased(int mouse, MouseButton button, int x, int y)
 {
-	if (Callbacks[EventTypeMouseButtonReleased] != NULL)
+	List list = CallbackLists[EventTypeMouseButtonReleased];
+	for (int i = 0; i < list->Count; i++)
 	{
-		((void (*)(int, MouseButton, int, int))Callbacks[EventTypeMouseButtonReleased])(mouse, button, x, y);
+		((void (*)(int, MouseButton, int, int))(( (struct f_pointer *)ListGetValue(list, i) )->function))(mouse, button, x, y);
 	}
 }
 
 void EventHandlerCallbackMouseWheelMotion(int mouse, int dx, int dy)
 {
-	if (Callbacks[EventTypeMouseWheelMotion] != NULL)
+	List list = CallbackLists[EventTypeMouseWheelMotion];
+	for (int i = 0; i < list->Count; i++)
 	{
-		((void (*)(int, int, int))Callbacks[EventTypeMouseWheelMotion])(mouse, dx, dy);
+		((void (*)(int, int, int))(( (struct f_pointer *)ListGetValue(list, i) )->function))(mouse, dx, dy);
 	}
 }
 
 void EventHandlerCallbackControllerAxisMotion(int controller, unsigned char axis, int value)
 {
-	if (Callbacks[EventTypeControllerAxisMotion] != NULL)
+	List list = CallbackLists[EventTypeControllerAxisMotion];
+	for (int i = 0; i < list->Count; i++)
 	{
-		((void (*)(int, unsigned char, int))Callbacks[EventTypeControllerAxisMotion])(controller, axis, value);
+		((void (*)(int, unsigned char, int))(( (struct f_pointer *)ListGetValue(list, i) )->function))(controller, axis, value);
 	}
 }
 
 void EventHandlerCallbackControllerBallMotion(int controller, unsigned char ball, int dx, int dy)
 {
-	if (Callbacks[EventTypeControllerBallMotion] != NULL)
+	List list = CallbackLists[EventTypeControllerBallMotion];
+	for (int i = 0; i < list->Count; i++)
 	{
-		((void (*)(int, unsigned char, int, int))Callbacks[EventTypeControllerBallMotion])(controller, ball, dx, dy);
+		((void (*)(int, unsigned char, int, int))(( (struct f_pointer *)ListGetValue(list, i) )->function))(controller, ball, dx, dy);
 	}
 }
 
 void EventHandlerCallbackControllerHatMotion(int controller, unsigned char hat, ControllerHatPosition position)
 {
-	if (Callbacks[EventTypeControllerHatMotion] != NULL)
+	List list = CallbackLists[EventTypeControllerHatMotion];
+	for (int i = 0; i < list->Count; i++)
 	{
-		((void (*)(int, unsigned char, ControllerHatPosition))Callbacks[EventTypeControllerHatMotion])(controller, hat, position);
+		((void (*)(int, unsigned char, ControllerHatPosition))(( (struct f_pointer *)ListGetValue(list, i) )->function))(controller, hat, position);
 	}
 }
 
 void EventHandlerCallbackControllerButtonPressed(int controller, unsigned char button)
 {
-	if (Callbacks[EventTypeControllerButtonPressed] != NULL)
+	List list = CallbackLists[EventTypeControllerButtonPressed];
+	for (int i = 0; i < list->Count; i++)
 	{
-		((void (*)(int, unsigned char))Callbacks[EventTypeControllerButtonPressed])(controller, button);
+		((void (*)(int, unsigned char))(( (struct f_pointer *)ListGetValue(list, i) )->function))(controller, button);
 	}
 }
 
 void EventHandlerCallbackControllerButtonReleased(int controller, unsigned char button)
 {
-	if (Callbacks[EventTypeControllerButtonReleased] != NULL)
+	List list = CallbackLists[EventTypeControllerButtonReleased];
+	for (int i = 0; i < list->Count; i++)
 	{
-		((void (*)(int, unsigned char))Callbacks[EventTypeControllerButtonReleased])(controller, button);
+		((void (*)(int, unsigned char))(( (struct f_pointer *)ListGetValue(list, i) )->function))(controller, button);
 	}
 }
 
 void EventHandlerCallbackControllerConnected(int controller)
 {
-	if (Callbacks[EventTypeControllerConnected] != NULL)
+	List list = CallbackLists[EventTypeControllerConnected];
+	for (int i = 0; i < list->Count; i++)
 	{
-		((void (*)(int))Callbacks[EventTypeControllerConnected])(controller);
+		((void (*)(int))(( (struct f_pointer *)ListGetValue(list, i) )->function))(controller);
 	}
 }
 
 void EventHandlerCallbackControllerDisconnected(int controller)
 {
-	if (Callbacks[EventTypeControllerDisconnected] != NULL)
+	List list = CallbackLists[EventTypeControllerDisconnected];
+	for (int i = 0; i < list->Count; i++)
 	{
-		((void (*)(int))Callbacks[EventTypeControllerDisconnected])(controller);
+		((void (*)(int))(( (struct f_pointer *)ListGetValue(list, i) )->function))(controller);
 	}
 }
