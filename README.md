@@ -104,6 +104,7 @@ int main(int argc, char * argv[])
 		.Height = 600,
 		.Title = "XGI Example",
 		.Resizable = true,
+		.HighDPI = true,
 	};
 	// Graphics Configuration
 	GraphicsConfigure graphicsConfig =
@@ -178,8 +179,8 @@ int main(int argc, char * argv[])
 	PipelineSetSampler(pipeline, 0, 0, texture);
 
 	// Set the event handler callbacks
-	EventHandlerSetCallback(EventTypeKeyPressed, (void (*)(void))OnKeyPressed);
-	EventHandlerSetCallback(EventTypeWindowResized, (void (*)(void))OnResize);
+	EventHandlerAddCallback(EventTypeKeyPressed, (void (*)(void))OnKeyPressed);
+	EventHandlerAddCallback(EventTypeWindowResized, (void (*)(void))OnResize);
 	
 	// Start the main loop
 	while (WindowRunning())
@@ -190,7 +191,7 @@ int main(int argc, char * argv[])
 		// Set the push constant
 		PipelineSetPushConstant(pipeline, "Transform", &Matrix4x4Identity);
 
-		SwapchainAquireNextImage();
+		GraphicsAquireNextImage();
 		
 		// Render code starts here
 		GraphicsBegin(frameBuffer);
@@ -201,7 +202,7 @@ int main(int argc, char * argv[])
 		// Copy the framebuffer to the swapchain for rendering
 		GraphicsCopyToSwapchain(frameBuffer);
 
-		SwapchainPresent();
+		GraphicsPresent();
 	}
 	GraphicsStopOperations(); // Important to call this right after exiting the main loop
 

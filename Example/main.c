@@ -114,8 +114,8 @@ int main(int argc, char * argv[])
 	PipelineSetSampler(pipeline, 0, 0, texture);
 
 	// Set the event handler callbacks
-	EventHandlerSetCallback(EventTypeKeyPressed, (void (*)(void))OnKeyPressed);
-	EventHandlerSetCallback(EventTypeWindowResized, (void (*)(void))OnResize);
+	EventHandlerAddCallback(EventTypeKeyPressed, (void (*)(void))OnKeyPressed);
+	EventHandlerAddCallback(EventTypeWindowResized, (void (*)(void))OnResize);
 	
 	// Start the main loop
 	while (WindowRunning())
