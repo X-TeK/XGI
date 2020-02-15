@@ -51,7 +51,16 @@ Module            | Description
 8. Create your main function in a new file and run
 
 ### Linux:
-Not tested yet
+1. Ensure you have cmake, ninja and vulkan installed (`sudo apt install cmake ninja-build libvulkan-dev` on Ubuntu).
+2. Clone this repository and https://github.com/google/shaderc (e.g. code/XGI and code/shaderc).
+3. Build libshaderc per the instructions in https://github.com/google/shaderc#getting-and-building-shaderc in `libshaderc/build`.
+4. `cd XGI/Example`
+5. `mkdir build`
+6. `cd build`
+7. `cmake ..`
+8. `make`
+9. `cd ../../`
+10. `./Example/build/xgi_example`
 
 ### iOS:
 Theoretically possible since XGI uses MoltenVK and SDL2, but I haven't gotten it to work. Besides there's no touch support yet.
