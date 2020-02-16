@@ -812,9 +812,10 @@ void GraphicsCopyToSwapchain(FrameBuffer frameBuffer)
 		},
 	};
 	vkCmdPipelineBarrier(Graphics.FrameResources[i].CommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &memoryBarrier);
-
-	VkImageCopy copyInfo =
+	
+	VkImageBlit blitInfo =
 	{
+		.srcOffsets = { { .x = 0, .y = 0, .z = 0}, { .x = frameBuffer->Width, .y = frameBuffer->Height, 1 } },
 		.srcSubresource =
 		{
 			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
@@ -822,7 +823,7 @@ void GraphicsCopyToSwapchain(FrameBuffer frameBuffer)
 			.baseArrayLayer = 0,
 			.layerCount = 1,
 		},
-		.srcOffset = { .x = 0, .y = 0, .z = 0, },
+		.dstOffsets = { { .x = 0, .y = 0, .z = 0}, { .x = Window.Width - 1, .y = Window.Height, 1 } },
 		.dstSubresource =
 		{
 			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
@@ -830,15 +831,8 @@ void GraphicsCopyToSwapchain(FrameBuffer frameBuffer)
 			.baseArrayLayer = 0,
 			.layerCount = 1,
 		},
-		.dstOffset = { .x = 0, .y = 0, .z = 0, },
-		.extent =
-		{
-			.width = MIN(Graphics.Swapchain.Extent.width, frameBuffer->Width),
-			.height = MIN(Graphics.Swapchain.Extent.height, frameBuffer->Height),
-			.depth = 1,
-		},
 	};
-	vkCmdCopyImage(Graphics.FrameResources[i].CommandBuffer, frameBuffer->ColorTexture->Image, VK_IMAGE_LAYOUT_GENERAL, Graphics.Swapchain.Images[Graphics.Swapchain.CurrentImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyInfo);
+	vkCmdBlitImage(Graphics.FrameResources[i].CommandBuffer, frameBuffer->ColorTexture->Image, VK_IMAGE_LAYOUT_GENERAL, Graphics.Swapchain.Images[Graphics.Swapchain.CurrentImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blitInfo, (VkFilter)frameBuffer->Filter);
 	
 	memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	memoryBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;

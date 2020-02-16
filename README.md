@@ -120,6 +120,7 @@ int main(int argc, char * argv[])
 	{
 		.VulkanValidation = true,
 		.FrameResourceCount = 3,
+		.TargetPresentMode = PresentModeImmediateVsync,
 	};
 	XGIInitialize(windowConfig, graphicsConfig);
 	
@@ -225,6 +226,7 @@ int main(int argc, char * argv[])
 	XGIDeinitialize();
 	return 0;
 }
+
 ```
 ```glsl
 // Default.vert
@@ -258,6 +260,6 @@ layout (location = 0) out vec4 FragColor;
 
 void main()
 {
-	FragColor = texture(Texture, VertexUV).bgra;
+	FragColor = texture(Texture, VertexUV);
 }
 ```
