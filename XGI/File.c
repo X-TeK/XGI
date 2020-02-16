@@ -64,3 +64,8 @@ void FileClose(File file)
 	SDL_RWclose(file->RW);
 	free(file);
 }
+
+char * FileCurrentPath()
+{
+	return SDL_GetBasePath();
+}

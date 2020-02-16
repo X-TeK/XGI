@@ -80,4 +80,8 @@ bool FileExists(const char * path);
 /// \param file The file object to close
 void FileClose(File file);
 
+/// Gets the current path that the process is running from.
+/// \return The path that it's running on
+char * FileCurrentPath(void);
+
 #endif
