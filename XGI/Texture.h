@@ -23,7 +23,7 @@ void TextureDataDestroy(TextureData data);
 typedef enum TextureFormat
 {
 	/// Used for creating a color texture
-	TextureFormatColor,
+	TextureFormatColor = VK_FORMAT_R8G8B8A8_UNORM,
 	/// Used for creating a depth-stencil texture
 	TextureFormatDepthStencil = VK_FORMAT_D32_SFLOAT_S8_UINT,
 } TextureFormat;

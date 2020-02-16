@@ -11,6 +11,18 @@
 #include "FrameBuffer.h"
 #include "EventHandler.h"
 
+typedef enum PresentMode
+{
+	/// Images aren't waited till the next v-blanking to be presented, they are presented immediately. Tearing may be visible.
+	PresentModeImmediate = VK_PRESENT_MODE_IMMEDIATE_KHR,
+	/// Images are placed into a queue that waits for the next v-blanking to present each image. Tearing isn't visible.
+	PresentModeVSync = VK_PRESENT_MODE_FIFO_KHR,
+	/// Images are mostly waited until the next v-blanking, unless it's late then it's presented immediately. Tearing may be visible.
+	PresentModeRelaxedVSync = VK_PRESENT_MODE_FIFO_RELAXED_KHR,
+	/// Images are presented each v-blanking except there is no queue to wait on, the next image replaces the previous image waiting. Tearing isn't visible.
+	PresentModeImmediateVsync = VK_PRESENT_MODE_MAILBOX_KHR,
+} PresentMode;
+
 typedef struct GraphicsConfigure
 {
 	/// Whether or not vulkan validation layers should be enabled.
@@ -21,8 +33,11 @@ typedef struct GraphicsConfigure
 	bool TargetIntegratedDevice;
 	/// The number of frame resources to use
 	/// Recommended 3 for maximum cpu and gpu balance
-	/// Anything higher than 1 won't make a difference if the device doesn't support tripple buffering
+	/// Anything higher than 1 won't make much of a difference if the present mode is VSync or RelaxedVsync
 	int FrameResourceCount;
+	/// The present mode to use, if  possible.
+	/// The only one guarenteed to be available is PresentModeVSync
+	PresentMode TargetPresentMode;
 } GraphicsConfigure;
 
 struct Graphics
@@ -39,6 +54,9 @@ struct Graphics
 	struct GraphicsSwapchain
 	{
 		VkSwapchainKHR Instance;
+		PresentMode TargetPresentMode;
+		PresentMode PresentMode;
+		VkExtent2D TargetExtent;
 		VkExtent2D Extent;
 		VkFormat ColorFormat;
 		unsigned int ImageCount;
@@ -77,6 +95,14 @@ void GraphicsInitialize(GraphicsConfigure config);
 
 /// This should not be called, it is automatically called at initialization, and when the window is resized.
 void GraphicsCreateSwapchain(int width, int height);
+
+/// Gets the present mode that is currently in use
+/// \return The present mode that was chosen
+PresentMode GraphicsPresentMode(void);
+
+/// Attempts to set the present mode to the specified one, if it's not supported then it's set to PresentModeVsync
+/// \param presentMode The desired present mode to set
+void GraphicsSetPresentMode(PresentMode presentMode);
 
 /// Acquires the next swapchain image for rendering.
 /// This should be called once per a frame, before any rendering operations are done

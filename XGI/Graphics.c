@@ -265,15 +265,17 @@ static void CreateSwapchain(int width, int height)
 	vkGetPhysicalDeviceSurfacePresentModesKHR(Graphics.PhysicalDevice, Graphics.Surface, &availablePresentModeCount, NULL);
 	VkPresentModeKHR * availablePresentModes = (VkPresentModeKHR * )malloc(availablePresentModeCount * sizeof(VkPresentModeKHR));
 	vkGetPhysicalDeviceSurfacePresentModesKHR(Graphics.PhysicalDevice, Graphics.Surface, &availablePresentModeCount, availablePresentModes);
-	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
-	VkPresentModeKHR targetPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-	//VkPresentModeKHR targetPresentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
+	Graphics.Swapchain.PresentMode = (PresentMode)VK_PRESENT_MODE_FIFO_KHR;
 	for (int i = 0; i < availablePresentModeCount; i++)
 	{
-		if (availablePresentModes[i] == targetPresentMode)
+		if (availablePresentModes[i] == (VkPresentModeKHR)Graphics.Swapchain.TargetPresentMode)
 		{
-			presentMode = availablePresentModes[i];
+			Graphics.Swapchain.PresentMode = (PresentMode)availablePresentModes[i];
 		}
+	}
+	if (Graphics.Swapchain.PresentMode == VK_PRESENT_MODE_FIFO_KHR && Graphics.Swapchain.TargetPresentMode != VK_PRESENT_MODE_FIFO_KHR)
+	{
+		log_warn("Target present mode is not supported");
 	}
 	free(availablePresentModes);
 	
@@ -285,12 +287,8 @@ static void CreateSwapchain(int width, int height)
 	extent.width = MAX(availableCapabilities.minImageExtent.width, MIN(availableCapabilities.maxImageExtent.width, extent.width));
 	extent.height = MAX(availableCapabilities.minImageExtent.height, MIN(availableCapabilities.maxImageExtent.height, extent.height));
 	
-	uint32_t imageCount = availableCapabilities.minImageCount;
-	if (availableCapabilities.maxImageCount > availableCapabilities.minImageCount || availableCapabilities.maxImageCount == 0)
-	{
-		imageCount++;
-	}
-
+	unsigned int imageCount = MAX(availableCapabilities.minImageCount, MIN(3, availableCapabilities.maxImageCount));
+	
 	VkSwapchainCreateInfoKHR createInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -303,7 +301,7 @@ static void CreateSwapchain(int width, int height)
 		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
 		.preTransform = availableCapabilities.currentTransform,
 		.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-		.presentMode = presentMode,
+		.presentMode = (VkPresentModeKHR)Graphics.Swapchain.PresentMode,
 		.clipped = VK_TRUE,
 		.oldSwapchain = VK_NULL_HANDLE,
 	};
@@ -396,12 +394,12 @@ static void CreateRenderPass()
 {
 	VkAttachmentDescription colorAttachment =
 	{
-		.format = Graphics.Swapchain.ColorFormat,
+		.format = (VkFormat)TextureFormatColor,
 		.samples = VK_SAMPLE_COUNT_1_BIT,
 		.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
 		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
+		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE,
 		.initialLayout = VK_IMAGE_LAYOUT_GENERAL,
 		.finalLayout = VK_IMAGE_LAYOUT_GENERAL,
 	};
@@ -417,8 +415,8 @@ static void CreateRenderPass()
 		.samples = VK_SAMPLE_COUNT_1_BIT,
 		.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
 		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
+		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE,
 		.initialLayout = VK_IMAGE_LAYOUT_GENERAL,
 		.finalLayout = VK_IMAGE_LAYOUT_GENERAL,
 	};
@@ -537,11 +535,13 @@ void GraphicsInitialize(GraphicsConfigure config)
 {
 	log_info("Initializing the graphics backend...\n");
 	Graphics.FrameResourceCount = config.FrameResourceCount;
+	Graphics.Swapchain.TargetPresentMode = config.TargetPresentMode;
 	CheckExtensionSupport();
 	CreateInstance(config.VulkanValidation);
 	CreateSurface();
 	ChoosePhysicalDevice(config.TargetIntegratedDevice);
 	CreateLogicalDevice();
+	CreateRenderPass();
 	CreateCommandPool();
 	CreateAllocator();
 	CreateCompiler();
@@ -553,10 +553,22 @@ void GraphicsInitialize(GraphicsConfigure config)
 void GraphicsCreateSwapchain(int width, int height)
 {
 	log_info("Creating the swapchain...");
+	Graphics.Swapchain.TargetExtent = (VkExtent2D) { .width = width, .height = height };
 	CreateSwapchain(width, height);
 	GetSwapchainImages();
-	CreateRenderPass();
 	log_info("Successfully created the swapchain\n");
+}
+
+PresentMode GraphicsPresentMode()
+{
+	return Graphics.Swapchain.PresentMode;
+}
+
+void GraphicsSetPresentMode(PresentMode presentMode)
+{
+	Graphics.Swapchain.TargetPresentMode = presentMode;
+	GraphicsDestroySwapchain();
+	GraphicsCreateSwapchain(Graphics.Swapchain.TargetExtent.width, Graphics.Swapchain.Extent.height);
 }
 
 void GraphicsAquireNextImage()
@@ -660,7 +672,6 @@ void GraphicsPresent()
 void GraphicsDestroySwapchain()
 {
 	vkDeviceWaitIdle(Graphics.Device);
-	vkDestroyRenderPass(Graphics.Device, Graphics.RenderPass, NULL);
 	free(Graphics.Swapchain.Images);
 	vkDestroySwapchainKHR(Graphics.Device, Graphics.Swapchain.Instance, NULL);
 }
@@ -887,6 +898,7 @@ void GraphicsDeinitialize()
 	shaderc_compiler_release(Graphics.ShaderCompiler);
 	vmaDestroyAllocator(Graphics.Allocator);
 	vkDestroyCommandPool(Graphics.Device, Graphics.CommandPool, NULL);
+	vkDestroyRenderPass(Graphics.Device, Graphics.RenderPass, NULL);
 	vkDestroyDevice(Graphics.Device, NULL);
 	vkDestroySurfaceKHR(Graphics.Instance, Graphics.Surface, NULL);
 	vkDestroyInstance(Graphics.Instance, NULL);

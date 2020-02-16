@@ -38,13 +38,12 @@ void TextureDataDestroy(TextureData data)
 
 static void CreateImage(Texture texture)
 {
-	VkFormat format = texture->Format == TextureFormatColor ? Graphics.Swapchain.ColorFormat : (VkFormat)texture->Format;
 	VkImageUsageFlags usage = texture->Format == TextureFormatColor ? VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT : VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 	VkImageCreateInfo imageInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		.imageType = VK_IMAGE_TYPE_2D,
-		.format = format,
+		.format = (VkFormat)texture->Format,
 		.extent =
 		{
 			.width = texture->Width,
@@ -208,13 +207,12 @@ static void CopyImageData(Texture texture, TextureConfigure config)
 static void CreateImageView(Texture texture)
 {
 	VkImageAspectFlags imageAspect = texture->Format == TextureFormatColor ? VK_IMAGE_ASPECT_COLOR_BIT : VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-	VkFormat format = texture->Format == TextureFormatColor ? Graphics.Swapchain.ColorFormat : (VkFormat)texture->Format;
 	VkImageViewCreateInfo createInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 		.image = texture->Image,
 		.viewType = VK_IMAGE_VIEW_TYPE_2D,
-		.format = format,
+		.format = (VkFormat)texture->Format,
 		.subresourceRange =
 		{
 			.aspectMask = imageAspect,

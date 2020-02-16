@@ -46,6 +46,7 @@ int main(int argc, char * argv[])
 	{
 		.VulkanValidation = true,
 		.FrameResourceCount = 3,
+		.TargetPresentMode = PresentModeImmediateVsync,
 	};
 	XGIInitialize(windowConfig, graphicsConfig);
 	
