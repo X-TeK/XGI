@@ -47,12 +47,17 @@ void VertexLayoutDestroy(VertexLayout layout)
 	free(layout);
 }
 
-VertexBuffer VertexBufferCreate(int vertexCount, int vertexSize)
+VertexBuffer VertexBufferCreate(int vertexCount, int vertexSize, int indexCount)
 {
 	VertexBuffer vertexBuffer = malloc(sizeof(struct VertexBuffer));
-	*vertexBuffer = (struct VertexBuffer){ .VertexCount = vertexCount, .VertexSize = vertexSize };
+	*vertexBuffer = (struct VertexBuffer)
+	{
+		.VertexCount = vertexCount,
+		.VertexSize = vertexSize,
+		.IndexCount = indexCount
+	};
 	
-	size_t size = vertexCount * vertexSize;
+	unsigned long size = vertexCount * vertexSize + 4 * indexCount;
 	
 	VkBufferCreateInfo stagingInfo =
 	{
@@ -74,6 +79,7 @@ VertexBuffer VertexBufferCreate(int vertexCount, int vertexSize)
 		.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
 	};
+	if (indexCount > 0) { bufferInfo.usage |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT; }
 	VmaAllocationCreateInfo allocationInfo =
 	{
 		.usage = VMA_MEMORY_USAGE_GPU_ONLY,
@@ -116,6 +122,25 @@ void VertexBufferUnmapVertices(VertexBuffer vertexBuffer)
 	vmaUnmapMemory(Graphics.Allocator, vertexBuffer->StagingAllocation);
 }
 
+unsigned int * VertexBufferMapIndices(VertexBuffer vertexBuffer)
+{
+	if (vertexBuffer->IndexCount > 0)
+	{
+		void * data;
+		vmaMapMemory(Graphics.Allocator, vertexBuffer->StagingAllocation, &data);
+		return (unsigned int *)((unsigned char *)data + vertexBuffer->VertexCount * vertexBuffer->VertexSize);
+	}
+	return NULL;
+}
+
+void VertexBufferUnmapIndices(VertexBuffer vertexBuffer)
+{
+	if (vertexBuffer->IndexCount > 0)
+	{
+		vmaUnmapMemory(Graphics.Allocator, vertexBuffer->StagingAllocation);
+	}
+}
+
 void VertexBufferUpload(VertexBuffer vertexBuffer)
 {
 	vkWaitForFences(Graphics.Device, 1, &vertexBuffer->Fence, VK_TRUE, UINT64_MAX);
@@ -132,7 +157,7 @@ void VertexBufferUpload(VertexBuffer vertexBuffer)
 	{
 		.srcOffset = 0,
 		.dstOffset = 0,
-		.size = vertexBuffer->VertexCount * vertexBuffer->VertexSize,
+		.size = vertexBuffer->VertexCount * vertexBuffer->VertexSize + 4 * vertexBuffer->IndexCount,
 	};
 	vkCmdCopyBuffer(vertexBuffer->CommandBuffer, vertexBuffer->StagingBuffer, vertexBuffer->VertexBuffer, 1, &copyInfo);
 	vkEndCommandBuffer(vertexBuffer->CommandBuffer);

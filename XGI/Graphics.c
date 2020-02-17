@@ -778,10 +778,19 @@ void GraphicsBindPipeline(Pipeline pipeline)
 }
 
 void GraphicsRenderVertexBuffer(VertexBuffer vertexBuffer)
-{	
+{
 	VkDeviceSize offset = 0;
 	vkCmdBindVertexBuffers(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 0, 1, &vertexBuffer->VertexBuffer, &offset);
-	vkCmdDraw(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, vertexBuffer->VertexCount, 1, 0, 0);
+	if (vertexBuffer->IndexCount > 0)
+	{
+		VkDeviceSize offset = vertexBuffer->VertexCount * vertexBuffer->VertexSize;
+		vkCmdBindIndexBuffer(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, vertexBuffer->VertexBuffer, offset, VK_INDEX_TYPE_UINT32);
+		vkCmdDrawIndexed(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, vertexBuffer->IndexCount, 1, 0, 0, 0);
+	}
+	else
+	{
+		vkCmdDraw(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, vertexBuffer->VertexCount, 1, 0, 0);
+	}
 }
 
 void GraphicsEnd()

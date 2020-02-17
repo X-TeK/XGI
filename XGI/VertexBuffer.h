@@ -41,6 +41,7 @@ typedef struct VertexBuffer
 {
 	int VertexCount;
 	int VertexSize;
+	int IndexCount;
 	VkBuffer StagingBuffer;
 	VmaAllocation StagingAllocation;
 	VkBuffer VertexBuffer;
@@ -50,11 +51,13 @@ typedef struct VertexBuffer
 	VkSemaphore Semaphore;
 } * VertexBuffer;
 
-/// Creates a vertex buffer used for rendering
+/// Creates a vertex buffer combined with an index buffer used for rendering.
+/// The index buffer is optional, specifying 0 for the index count will disable it.
 /// \param vertexCount The number of vertices to allocate
 /// \param vertexSize The size of each vertex
+/// \param indexCount The number of indices, this is optional and specifying 0 will disable the index buffer
 /// \return The newly created vertex buffer
-VertexBuffer VertexBufferCreate(int vertexCount, int vertexSize);
+VertexBuffer VertexBufferCreate(int vertexCount, int vertexSize, int indexCount);
 
 /// Allows for copying data into a vertex buffer.
 /// This function only stages the memory onto the cpu, call VertexBufferUpload for it to be visible on the gpu.
@@ -66,6 +69,20 @@ void * VertexBufferMapVertices(VertexBuffer vertexBuffer);
 /// It let's the gpu know that the memory isn't in use.
 /// \param vertexBuffer The vertexbuffer that had its vertices mapped.
 void VertexBufferUnmapVertices(VertexBuffer vertexBuffer);
+
+/// Allows for copying data into the index buffer.
+/// If the index buffer is disabled this returns NULL.
+/// Like VertexBufferMapVertices, this only stages the memory onto the CPU and needs VertexBufferUpload to be used on the GPU.
+/// The indices are actually stored in the same VkBuffer object as the vertices, just at an offset.
+/// \param vertexBuffer The vertexbuffer to copy data to
+/// \return A uint32 pointer to memory that is pre-allocated to sizeof(uint32) * indexCount
+unsigned int * VertexBufferMapIndices(VertexBuffer vertexBuffer);
+
+/// Must be called after copying memory with VertexBufferMapIndices.
+/// It let's the gpu know that the memory isn't in use.
+/// This does nothing if the index buffer is disabled.
+/// \param vertexBuffer The vertexbuffer that had its vertices mapped.
+void VertexBufferUnmapIndices(VertexBuffer vertexBuffer);
 
 /// Pushes the memory staged in VertexBufferMapVertices to the GPU for use in shaders.
 /// If this isn't called then the gpu will render garbage data.
