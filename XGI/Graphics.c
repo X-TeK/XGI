@@ -767,22 +767,23 @@ void GraphicsBindPipeline(Pipeline pipeline)
 	};
 	vkCmdSetViewport(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 0, 1, &viewport);
 	vkCmdSetScissor(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 0, 1, &scissor);
-	vkCmdSetLineWidth(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, pipeline->LineWidth);
-	vkCmdSetStencilReference(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_STENCIL_FACE_FRONT_BIT, pipeline->FrontStencilReference);
-	vkCmdSetStencilReference(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_STENCIL_FACE_BACK_BIT, pipeline->BackStencilReference);
-	
-	if (pipeline->UsesPushConstant)
-	{
-		vkCmdPushConstants(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, pipeline->Layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, pipeline->PushConstantSize, pipeline->PushConstantData);
-	}
-	if (pipeline->UsesDescriptors)
-	{
-		vkCmdBindDescriptorSets(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout, 0, 1, &pipeline->DescriptorSet[Graphics.FrameIndex], 0, NULL);
-	}
 }
 
 void GraphicsRenderVertexBuffer(VertexBuffer vertexBuffer)
 {
+	vkCmdSetLineWidth(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, Graphics.BoundPipeline->LineWidth);
+	vkCmdSetStencilReference(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_STENCIL_FACE_FRONT_BIT, Graphics.BoundPipeline->FrontStencilReference);
+	vkCmdSetStencilReference(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_STENCIL_FACE_BACK_BIT, Graphics.BoundPipeline->BackStencilReference);
+	
+	if (Graphics.BoundPipeline->UsesPushConstant)
+	{
+		vkCmdPushConstants(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, Graphics.BoundPipeline->Layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, Graphics.BoundPipeline->PushConstantSize, Graphics.BoundPipeline->PushConstantData);
+	}
+	if (Graphics.BoundPipeline->UsesDescriptors)
+	{
+		vkCmdBindDescriptorSets(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Graphics.BoundPipeline->Layout, 0, 1, &Graphics.BoundPipeline->DescriptorSet[Graphics.FrameIndex], 0, NULL);
+	}
+	
 	VkDeviceSize offset = 0;
 	vkCmdBindVertexBuffers(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, 0, 1, &vertexBuffer->VertexBuffer, &offset);
 	if (vertexBuffer->IndexCount > 0)
