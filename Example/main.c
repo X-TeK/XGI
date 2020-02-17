@@ -89,19 +89,18 @@ int main(int argc, char * argv[])
 
 	// Create the vertex buffer
 	vertexBuffer = VertexBufferCreate(4, sizeof(Vertex), 6);
+	unsigned int * bufferIndices;
+	Vertex * vertices = VertexBufferMapVertices(vertexBuffer, &bufferIndices);
 	// Set the vertex data
-	Vertex * vertices = VertexBufferMapVertices(vertexBuffer);
 	vertices[0] = (Vertex){ { -1.0, -1.0, 0.0 }, { 0.0, 0.0 } };
 	vertices[1] = (Vertex){ { 1.0, -1.0, 0.0 }, { 1.0, 0.0 } };
 	vertices[2] = (Vertex){ { 1.0, 1.0, 0.0 }, { 1.0, 1.0 } };
 	vertices[3] = (Vertex){ { -1.0, 1.0, 0.0 }, { 0.0, 1.0 } };
-	VertexBufferUnmapVertices(vertexBuffer);
 	// Set the index buffer data
-	unsigned int * bufferIndices = VertexBufferMapIndices(vertexBuffer);
 	unsigned int indices[] = { 0, 1, 2, 0, 2, 3 };
 	memcpy(bufferIndices, indices, sizeof(indices));
-	VertexBufferUnmapIndices(vertexBuffer);
 	// Make the buffer visible on the gpu
+	VertexBufferUnmapVertices(vertexBuffer);
 	VertexBufferUpload(vertexBuffer);
 
 	// Create the texture

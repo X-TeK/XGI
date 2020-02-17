@@ -54,7 +54,8 @@ VertexBuffer VertexBufferCreate(int vertexCount, int vertexSize, int indexCount)
 	{
 		.VertexCount = vertexCount,
 		.VertexSize = vertexSize,
-		.IndexCount = indexCount
+		.IndexCount = indexCount,
+		.MappingVertices = false,
 	};
 	
 	unsigned long size = vertexCount * vertexSize + 4 * indexCount;
@@ -110,35 +111,20 @@ VertexBuffer VertexBufferCreate(int vertexCount, int vertexSize, int indexCount)
 	return vertexBuffer;
 }
 
-void * VertexBufferMapVertices(VertexBuffer vertexBuffer)
+void * VertexBufferMapVertices(VertexBuffer vertexBuffer, unsigned int ** indices)
 {
 	void * data;
 	vmaMapMemory(Graphics.Allocator, vertexBuffer->StagingAllocation, &data);
+	if (vertexBuffer->IndexCount > 0)
+	{
+		*indices = (unsigned int *)((unsigned char *)data + vertexBuffer->VertexCount * vertexBuffer->VertexSize);
+	}
 	return data;
 }
 
 void VertexBufferUnmapVertices(VertexBuffer vertexBuffer)
 {
 	vmaUnmapMemory(Graphics.Allocator, vertexBuffer->StagingAllocation);
-}
-
-unsigned int * VertexBufferMapIndices(VertexBuffer vertexBuffer)
-{
-	if (vertexBuffer->IndexCount > 0)
-	{
-		void * data;
-		vmaMapMemory(Graphics.Allocator, vertexBuffer->StagingAllocation, &data);
-		return (unsigned int *)((unsigned char *)data + vertexBuffer->VertexCount * vertexBuffer->VertexSize);
-	}
-	return NULL;
-}
-
-void VertexBufferUnmapIndices(VertexBuffer vertexBuffer)
-{
-	if (vertexBuffer->IndexCount > 0)
-	{
-		vmaUnmapMemory(Graphics.Allocator, vertexBuffer->StagingAllocation);
-	}
 }
 
 void VertexBufferUpload(VertexBuffer vertexBuffer)
