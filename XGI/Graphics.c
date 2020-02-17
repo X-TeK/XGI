@@ -213,7 +213,11 @@ static void CreateLogicalDevice()
 	};
 	VkDeviceQueueCreateInfo queues[2] = { graphicsQueueInfo, presentQueueInfo };
 	
-	VkPhysicalDeviceFeatures deviceFeatures = { 0 };
+	VkPhysicalDeviceFeatures deviceFeatures =
+	{
+		.fillModeNonSolid = true,
+		.samplerAnisotropy = true,
+	};
 	
 	const char * extensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 	

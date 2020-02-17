@@ -21,6 +21,8 @@ FrameBuffer FrameBufferCreate(FrameBufferConfigure config)
 		.Format = TextureFormatColor,
 		.Filter = config.Filter,
 		.AddressMode = config.AddressMode,
+		.AnisotropicFiltering = false,
+		.LoadFromData = false,
 	};
 	frameBuffer->ColorTexture = TextureCreate(textureConfig);
 	textureConfig.Format = TextureFormatDepthStencil;

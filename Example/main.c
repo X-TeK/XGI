@@ -110,6 +110,7 @@ int main(int argc, char * argv[])
 		.Format = TextureFormatColor,
 		.Filter = TextureFilterNearest,
 		.AddressMode = TextureAddressModeRepeat,
+		.AnisotropicFiltering = false,
 		.LoadFromData = true,
 		.Data = data,
 	};
