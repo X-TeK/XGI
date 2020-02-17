@@ -162,14 +162,18 @@ int main(int argc, char * argv[])
 	pipeline = PipelineCreate(pipelineConfig);
 
 	// Create the vertex buffer
-	vertexBuffer = VertexBufferCreate(6, sizeof(Vertex));
-	Vertex * vertices = VertexBufferMapVertices(vertexBuffer);
+	vertexBuffer = VertexBufferCreate(4, sizeof(Vertex), 6);
+	unsigned int * bufferIndices;
+	Vertex * vertices = VertexBufferMapVertices(vertexBuffer, &bufferIndices);
+	// Set the vertex data
 	vertices[0] = (Vertex){ { -1.0, -1.0, 0.0 }, { 0.0, 0.0 } };
 	vertices[1] = (Vertex){ { 1.0, -1.0, 0.0 }, { 1.0, 0.0 } };
 	vertices[2] = (Vertex){ { 1.0, 1.0, 0.0 }, { 1.0, 1.0 } };
-	vertices[3] = vertices[0];
-	vertices[4] = vertices[2];
-	vertices[5] = (Vertex){ { -1.0, 1.0, 0.0 }, { 0.0, 1.0 } };
+	vertices[3] = (Vertex){ { -1.0, 1.0, 0.0 }, { 0.0, 1.0 } };
+	// Set the index buffer data
+	unsigned int indices[] = { 0, 1, 2, 0, 2, 3 };
+	memcpy(bufferIndices, indices, sizeof(indices));
+	// Make the buffer visible on the gpu
 	VertexBufferUnmapVertices(vertexBuffer);
 	VertexBufferUpload(vertexBuffer);
 
@@ -180,6 +184,7 @@ int main(int argc, char * argv[])
 		.Format = TextureFormatColor,
 		.Filter = TextureFilterNearest,
 		.AddressMode = TextureAddressModeRepeat,
+		.AnisotropicFiltering = false,
 		.LoadFromData = true,
 		.Data = data,
 	};
@@ -226,7 +231,6 @@ int main(int argc, char * argv[])
 	XGIDeinitialize();
 	return 0;
 }
-
 ```
 ```glsl
 // Default.vert
