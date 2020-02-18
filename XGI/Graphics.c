@@ -584,13 +584,13 @@ void GraphicsAquireNextImage()
 	
 	for (int j = 0; j < Graphics.FrameResources[i].DestroyVertexBufferQueue->Count; j++)
 	{
-		VertexBuffer vertexBuffer = ListGetValue(Graphics.FrameResources[i].DestroyVertexBufferQueue, j);
+		VertexBuffer vertexBuffer = ListIndex(Graphics.FrameResources[i].DestroyVertexBufferQueue, j);
 		VertexBufferDestroy(vertexBuffer);
 	}
 	ListClear(Graphics.FrameResources[i].DestroyVertexBufferQueue);
 	for (int j = 0; j < Graphics.FrameResources[i].UpdateDescriptorQueue->Count; j++)
 	{
-		VkWriteDescriptorSet * writeInfo = ListGetValue(Graphics.FrameResources[i].UpdateDescriptorQueue, j);
+		VkWriteDescriptorSet * writeInfo = ListIndex(Graphics.FrameResources[i].UpdateDescriptorQueue, j);
 		vkUpdateDescriptorSets(Graphics.Device, 1, writeInfo, 0, NULL);
 		free((void *)writeInfo->pBufferInfo);
 		free(writeInfo);
@@ -636,7 +636,7 @@ void GraphicsPresent()
 	waitStages[0] = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 	for (int i = 0; i < Graphics.PreRenderSemaphores->Count; i++)
 	{
-		waitSemaphores[i + 1] = *(VkSemaphore *)ListGetValue(Graphics.PreRenderSemaphores, i);
+		waitSemaphores[i + 1] = *(VkSemaphore *)ListIndex(Graphics.PreRenderSemaphores, i);
 		waitStages[i + 1] = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 	}
 	
@@ -867,31 +867,31 @@ void GraphicsDeinitialize()
 	{
 		for (int j = 0; j < Graphics.FrameResources[i].DestroyVertexBufferQueue->Count; j++)
 		{
-			VertexBuffer vertexBuffer = ListGetValue(Graphics.FrameResources[i].DestroyVertexBufferQueue, j);
+			VertexBuffer vertexBuffer = ListIndex(Graphics.FrameResources[i].DestroyVertexBufferQueue, j);
 			VertexBufferDestroy(vertexBuffer);
 		}
 		ListDestroy(Graphics.FrameResources[i].DestroyVertexBufferQueue);
 		for (int j = 0; j < Graphics.FrameResources[i].DestroyUniformBufferQueue->Count; j++)
 		{
-			UniformBuffer uniformBuffer = ListGetValue(Graphics.FrameResources[i].DestroyUniformBufferQueue, j);
+			UniformBuffer uniformBuffer = ListIndex(Graphics.FrameResources[i].DestroyUniformBufferQueue, j);
 			UniformBufferDestroy(uniformBuffer);
 		}
 		ListDestroy(Graphics.FrameResources[i].DestroyUniformBufferQueue);
 		for (int j = 0; j < Graphics.FrameResources[i].DestroyFrameBufferQueue->Count; j++)
 		{
-			FrameBuffer frameBuffer = ListGetValue(Graphics.FrameResources[i].DestroyFrameBufferQueue, j);
+			FrameBuffer frameBuffer = ListIndex(Graphics.FrameResources[i].DestroyFrameBufferQueue, j);
 			FrameBufferDestroy(frameBuffer);
 		}
 		ListDestroy(Graphics.FrameResources[i].DestroyFrameBufferQueue);
 		for (int j = 0; j < Graphics.FrameResources[i].DestroyPipelineQueue->Count; j++)
 		{
-			Pipeline pipeline = ListGetValue(Graphics.FrameResources[i].DestroyPipelineQueue, j);
+			Pipeline pipeline = ListIndex(Graphics.FrameResources[i].DestroyPipelineQueue, j);
 			PipelineDestroy(pipeline);
 		}
 		ListDestroy(Graphics.FrameResources[i].DestroyPipelineQueue);
 		for (int j = 0; j < Graphics.FrameResources[i].DestroyTextureQueue->Count; j++)
 		{
-			Texture texture = ListGetValue(Graphics.FrameResources[i].DestroyTextureQueue, j);
+			Texture texture = ListIndex(Graphics.FrameResources[i].DestroyTextureQueue, j);
 			TextureDestroy(texture);
 		}
 		ListDestroy(Graphics.FrameResources[i].DestroyTextureQueue);

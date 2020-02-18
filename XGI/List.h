@@ -18,18 +18,18 @@ List ListCreate(void);
 /// Gets he number of elements in a list
 /// \param list The list
 /// \return The number of values in the list
-int ListGetCount(List list);
+int ListCount(List list);
 
 /// Inserts a value at a specified index
 /// \param list The list to insert at
 /// \param value The value to insert
 /// \param index The index to insert at
-void ListInsert(List list, void * value, int index);
+void ListAdd(List list, void * value, int index);
 
 /// Removes the value at the specifed index
 /// \param list The list to remove from
 /// \param index The index to remove from
-void ListOutsert(List list, int index);
+void ListRemove(List list, int index);
 
 /// Adds a value to the end of a list
 /// \param list The list to append at
@@ -59,7 +59,7 @@ void ListRemoveAll(List list, void * value);
 /// \param list The list to index
 /// \param index The desired index
 /// \return The value at the specified index
-void * ListGetValue(List list, int index);
+void * ListIndex(List list, int index);
 
 /// Sets the value at the specified index in a list
 /// \param list The list to set

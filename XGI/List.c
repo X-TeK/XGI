@@ -15,12 +15,12 @@ List ListCreate()
 	return list;
 }
 
-int ListGetCount(List list)
+int ListCount(List list)
 {
 	return list->Count;
 }
 
-void ListInsert(List list, void * value, int index)
+void ListAdd(List list, void * value, int index)
 {
 	if (index <= list->Count && index >= 0)
 	{
@@ -40,7 +40,7 @@ void ListInsert(List list, void * value, int index)
 	}
 }
 
-void ListOutsert(List list, int index)
+void ListRemove(List list, int index)
 {
 	if (index < list->Count && index >= 0)
 	{
@@ -61,27 +61,27 @@ void ListOutsert(List list, int index)
 
 void ListPush(List list, void * value)
 {
-	ListInsert(list, value, list->Count);
+	ListAdd(list, value, list->Count);
 }
 
 void ListPop(List list)
 {
-	ListOutsert(list, list->Count - 1);
+	ListRemove(list, list->Count - 1);
 }
 
 void ListRemoveAll(List list, void * value)
 {
 	for (int i = 0; i < list->Count; i++)
 	{
-		if (ListGetValue(list, i) == value)
+		if (ListIndex(list, i) == value)
 		{
-			ListOutsert(list, i);
+			ListRemove(list, i);
 			i--;
 		}
 	}
 }
 
-void * ListGetValue(List list, int index)
+void * ListIndex(List list, int index)
 {
 	if (index < list->Count && index >= 0) { return list->Data[index]; }
 	else
@@ -105,7 +105,7 @@ bool ListContains(List list, void * value)
 {
 	for (int i = 0; i < list->Count; i++)
 	{
-		if (ListGetValue(list, i) == value) { return true; }
+		if (ListIndex(list, i) == value) { return true; }
 	}
 	return false;
 }
@@ -114,7 +114,7 @@ void ListClear(List list)
 {
 	for (int i = list->Count - 1; i >= 0; i--)
 	{
-		ListOutsert(list, i);
+		ListRemove(list, i);
 	}
 }
 
