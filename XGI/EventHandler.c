@@ -1,21 +1,40 @@
 #include "EventHandler.h"
 #include "Window.h"
 #include "Graphics.h"
+#include "log.h"
 
 struct f_pointer { void (*function)(void); };
 
 static List CallbackLists[EventTypeCount];
+static bool Initialized = false;
 
 void EventHandlerInitialize()
 {
-	for (int i = 0; i < EventTypeCount; i++)
+	if (!Initialized)
 	{
-		CallbackLists[i] = ListCreate();
+		Initialized = true;
+		for (int i = 0; i < EventTypeCount; i++)
+		{
+			CallbackLists[i] = ListCreate();
+		}
+	}
+	else
+	{
+		log_warn("Trying to initialize EventHandler when it's already been initialized.\n");
 	}
 }
 
 void EventHandlerAddCallback(EventType event, void (*callback)(void))
 {
+	if (event >= EventTypeCount || event < 0)
+	{
+		log_error("Event type %i is not in the valid range of enumerations.\n", event);
+		exit(1);
+	}
+	if (callback == NULL)
+	{
+		log_warn("Passing null as the function pointer.\n");
+	}
 	struct f_pointer * pointer = malloc(sizeof(struct f_pointer));
 	pointer->function = callback;
 	ListPush(CallbackLists[event], pointer);
@@ -23,6 +42,11 @@ void EventHandlerAddCallback(EventType event, void (*callback)(void))
 
 void EventHandlerRemoveCallback(EventType event, void (*callback)(void))
 {
+	if (event >= EventTypeCount || event < 0)
+	{
+		log_error("Event type %i is not in the valid range of enumerations.\n", event);
+		exit(1);
+	}
 	for (int i = 0; i < ListCount(CallbackLists[event]); i++)
 	{
 		struct f_pointer * value = ListIndex(CallbackLists[event], i);
@@ -33,6 +57,7 @@ void EventHandlerRemoveCallback(EventType event, void (*callback)(void))
 			return;
 		}
 	}
+	log_warn("Trying to remove callback %p, but it does not exist under event %i.\n", callback, event);
 }
 
 void EventHandlerDeinitialize()
