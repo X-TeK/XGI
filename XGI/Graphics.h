@@ -50,6 +50,9 @@ struct Graphics
 	unsigned int GraphicsQueueIndex;
 	VkQueue PresentQueue;
 	unsigned int PresentQueueIndex;
+	bool ComputeQueueSupported;
+	VkQueue ComputeQueue;
+	unsigned int ComputeQueueIndex;
 	
 	struct GraphicsSwapchain
 	{

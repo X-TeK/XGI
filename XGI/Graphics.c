@@ -122,12 +122,19 @@ static void ChoosePhysicalDevice(bool useIntegrated)
 	vkEnumeratePhysicalDevices(Graphics.Instance, &deviceCount, devices);
 	
 	Graphics.PhysicalDevice = devices[0];
-	int graphicsQueueIndex = -1;
-	int presentQueueIndex = -1;
+	
+	struct
+	{
+		bool GraphicsFound;
+		int Graphics;
+		bool PresentFound;
+		int Present;
+		bool ComputeFound;
+		int Compute;
+	} queues = { .GraphicsFound = false, .PresentFound = false, .ComputeFound = false };
 	bool suitableDevice = false;
 	for (int i = 0; i < deviceCount; i++)
 	{
-		
 		VkPhysicalDeviceProperties deviceProperties;
 		vkGetPhysicalDeviceProperties(devices[i], &deviceProperties);
 		
@@ -137,23 +144,27 @@ static void ChoosePhysicalDevice(bool useIntegrated)
 		vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &queueFamilyCount, queueFamilies);
 		for (int j = 0; j < queueFamilyCount; j++)
 		{
-			if (queueFamilies[j].queueCount > 0 && queueFamilies[j].queueFlags & VK_QUEUE_GRAPHICS_BIT && graphicsQueueIndex == -1)
+			if (queueFamilies[j].queueCount > 0 && queueFamilies[j].queueFlags & VK_QUEUE_GRAPHICS_BIT && !queues.GraphicsFound)
 			{
-				graphicsQueueIndex = j;
+				queues.GraphicsFound = true;
+				queues.Graphics = j;
+			}
+			if (queueFamilies[j].queueCount > 0 && queueFamilies[j].queueFlags & VK_QUEUE_COMPUTE_BIT && !queues.ComputeFound)
+			{
+				queues.ComputeFound = true;
+				queues.Compute = j;
 			}
 			VkBool32 presentSupported = false;
 			vkGetPhysicalDeviceSurfaceSupportKHR(devices[i], j, Graphics.Surface, &presentSupported);
-			if (queueFamilies[j].queueCount > 0 && presentSupported && presentQueueIndex == -1)
+			if (queueFamilies[j].queueCount > 0 && presentSupported && !queues.PresentFound)
 			{
-				presentQueueIndex = j;
+				queues.PresentFound = true;
+				queues.Present = j;
 			}
 		}
 		free(queueFamilies);
 		
-		bool graphicsQueueSupported = graphicsQueueIndex > -1;
-		bool presentQueueSupported = presentQueueIndex > -1;
 		bool swapchainSupported = false;
-		
 		unsigned int availableExtensionCount;
 		vkEnumerateDeviceExtensionProperties(devices[i], NULL, &availableExtensionCount, NULL);
 		VkExtensionProperties * availableExtensions = malloc(availableExtensionCount * sizeof(VkExtensionProperties));
@@ -167,11 +178,17 @@ static void ChoosePhysicalDevice(bool useIntegrated)
 		}
 		free(availableExtensions);
 		
-		if (graphicsQueueSupported && presentQueueSupported && swapchainSupported)
+		Graphics.ComputeQueueSupported = false;
+		if (queues.ComputeFound)
+		{
+			Graphics.ComputeQueueSupported = true;
+			Graphics.ComputeQueueIndex = queues.Compute;
+		}
+		if (queues.GraphicsFound && queues.PresentFound && swapchainSupported)
 		{
 			suitableDevice = true;
-			Graphics.GraphicsQueueIndex = graphicsQueueIndex;
-			Graphics.PresentQueueIndex = presentQueueIndex;
+			Graphics.GraphicsQueueIndex = queues.Graphics;
+			Graphics.PresentQueueIndex = queues.Present;
 			Graphics.PhysicalDevice = devices[i];
 			if (!useIntegrated && deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 			{
@@ -197,6 +214,9 @@ static void ChoosePhysicalDevice(bool useIntegrated)
 static void CreateLogicalDevice()
 {
 	float queuePriority = 1.0f;
+	int queueCount = 0;
+	VkDeviceQueueCreateInfo queueInfos[3];
+	
 	VkDeviceQueueCreateInfo graphicsQueueInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -204,6 +224,9 @@ static void CreateLogicalDevice()
 		.queueCount = 1,
 		.pQueuePriorities = &queuePriority,
 	};
+	queueInfos[queueCount] = graphicsQueueInfo;
+	queueCount++;
+	
 	VkDeviceQueueCreateInfo presentQueueInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -211,22 +234,40 @@ static void CreateLogicalDevice()
 		.queueCount = 1,
 		.pQueuePriorities = &queuePriority,
 	};
-	VkDeviceQueueCreateInfo queues[2] = { graphicsQueueInfo, presentQueueInfo };
+	if (Graphics.PresentQueueIndex != Graphics.GraphicsQueueIndex)
+	{
+		queueInfos[queueCount] = presentQueueInfo;
+		queueCount++;
+	}
+	
+	if (Graphics.ComputeQueueSupported)
+	{
+		VkDeviceQueueCreateInfo computeQueueInfo =
+		{
+			.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+			.queueFamilyIndex = Graphics.ComputeQueueIndex,
+			.queueCount = 1,
+			.pQueuePriorities = &queuePriority,
+		};
+		if (Graphics.ComputeQueueIndex != Graphics.GraphicsQueueIndex && Graphics.ComputeQueueIndex != Graphics.ComputeQueueIndex)
+		{
+			queueInfos[queueCount] = computeQueueInfo;
+			queueCount++;
+		}
+	}
 	
 	VkPhysicalDeviceFeatures deviceFeatures =
 	{
 		.fillModeNonSolid = true,
 		.samplerAnisotropy = true,
 	};
-	
 	const char * extensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 	
-	int queueCount = Graphics.GraphicsQueueIndex == Graphics.PresentQueueIndex ? 1 : 2;
-	VkDeviceCreateInfo _DeviceInfo =
+	VkDeviceCreateInfo deviceInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
 		.queueCreateInfoCount = queueCount,
-		.pQueueCreateInfos = queues,
+		.pQueueCreateInfos = queueInfos,
 		.pEnabledFeatures = &deviceFeatures,
 		.enabledExtensionCount = 1,
 		.ppEnabledExtensionNames = extensions,
@@ -234,7 +275,7 @@ static void CreateLogicalDevice()
 		.ppEnabledLayerNames = NULL,
 	};
 	
-	VkResult result = vkCreateDevice(Graphics.PhysicalDevice, &_DeviceInfo, NULL, &Graphics.Device);
+	VkResult result = vkCreateDevice(Graphics.PhysicalDevice, &deviceInfo, NULL, &Graphics.Device);
 	if (result != VK_SUCCESS)
 	{
 		log_fatal("Failed to create logical device: %i\n", result);
@@ -243,6 +284,7 @@ static void CreateLogicalDevice()
 	
 	vkGetDeviceQueue(Graphics.Device, Graphics.GraphicsQueueIndex, 0, &Graphics.GraphicsQueue);
 	vkGetDeviceQueue(Graphics.Device, Graphics.PresentQueueIndex, 0, &Graphics.PresentQueue);
+	if (Graphics.ComputeQueueSupported) { vkGetDeviceQueue(Graphics.Device, Graphics.ComputeQueueIndex, 0, &Graphics.ComputeQueue); }
 }
 
 static void CreateSwapchain(int width, int height)
@@ -480,7 +522,7 @@ static void CreateAllocator()
 	{
 		.physicalDevice = Graphics.PhysicalDevice,
 		.device = Graphics.Device,
-		.preferredLargeHeapBlockSize = 128 * 1024 * 1024,
+		.preferredLargeHeapBlockSize = 32 * 1024 * 1024,
 		.frameInUseCount = 1,
 	};
 	VkResult result = vmaCreateAllocator(&allocatorInfo, &Graphics.Allocator);
