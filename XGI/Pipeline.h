@@ -16,6 +16,8 @@ typedef enum ShaderType
 	ShaderTypeVertex = VK_SHADER_STAGE_VERTEX_BIT,
 	/// Fragment Shader
 	ShaderTypeFragment = VK_SHADER_STAGE_FRAGMENT_BIT,
+	/// Compute Shader (only usable for compute pipeline creation)
+	ShaderTypeCompute = VK_SHADER_STAGE_COMPUTE_BIT,
 } ShaderType;
 
 typedef enum PolygonMode
@@ -233,5 +235,11 @@ void PipelineQueueDestroy(Pipeline pipeline);
 /// Don't call this unless it's at the initialize or the deinitialize of the application, otherwise use PipelineQueueDestroy
 /// \param pipeline The pipeline to destroy
 void PipelineDestroy(Pipeline pipeline);
+
+typedef Pipeline ComputePipeline;
+
+ComputePipeline ComputePipelineCreate(ShaderData shader);
+
+void ComputePipelineDestroy(ComputePipeline pipeline);
 
 #endif

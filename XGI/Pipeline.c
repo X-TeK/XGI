@@ -13,7 +13,13 @@ ShaderData ShaderDataFromMemory(ShaderType type, unsigned long dataSize, void * 
 {
 	if (!precompiled)
 	{
-		shaderc_shader_kind shaderType = type == ShaderTypeVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
+		shaderc_shader_kind shaderType;
+		switch (type)
+		{
+			case ShaderTypeVertex: shaderType = shaderc_vertex_shader; break;
+			case ShaderTypeFragment: shaderType = shaderc_fragment_shader; break;
+			case ShaderTypeCompute: shaderType = shaderc_compute_shader; break;
+		}
 		shaderc_compilation_result_t result = shaderc_compile_into_spv(Graphics.ShaderCompiler, data, dataSize, shaderType, "shader", "main", 0);
 		if (shaderc_result_get_num_errors(result) > 0)
 		{
@@ -40,7 +46,13 @@ ShaderData ShaderDataFromFile(ShaderType type, const char * file, bool precompil
 		char * text = malloc(size);
 		FileRead(shader, 0, size, text);
 		FileClose(shader);
-		shaderc_shader_kind shaderType = type == ShaderTypeVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
+		shaderc_shader_kind shaderType;
+		switch (type)
+		{
+			case ShaderTypeVertex: shaderType = shaderc_vertex_shader; break;
+			case ShaderTypeFragment: shaderType = shaderc_fragment_shader; break;
+			case ShaderTypeCompute: shaderType = shaderc_compute_shader; break;
+		}
 		shaderc_compilation_result_t result = shaderc_compile_into_spv(Graphics.ShaderCompiler, text, size, shaderType, file, "main", 0);
 		if (shaderc_result_get_num_errors(result) > 0)
 		{
@@ -96,9 +108,11 @@ static VkPushConstantRange GetPushConstantRange(Pipeline pipeline)
 			pipeline->PushConstantInfo = pushConstants[0];
 			pipeline->PushConstantData = malloc(pushConstants[0].size);
 			pipeline->PushConstantSize = pushConstants[0].size;
+			VkShaderStageFlags stages = 0;
+			for (int j = 0; j < pipeline->StageCount; j++) { stages |= pipeline->Stages[j].ShaderType; }
 			return (VkPushConstantRange)
 			{
-				.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+				.stageFlags = stages,
 				.offset = pushConstants[0].offset,
 				.size = pushConstants[0].size,
 			};
@@ -541,9 +555,56 @@ void PipelineDestroy(Pipeline pipeline)
 		vkDestroyDescriptorPool(Graphics.Device, pipeline->DescriptorPool, NULL);
 	}
 	if (pipeline->UsesPushConstant) { free(pipeline->PushConstantData); }
-	spvReflectDestroyShaderModule(&pipeline->Stages[0].Module);
-	spvReflectDestroyShaderModule(&pipeline->Stages[1].Module);
+	for (int i = 0; i < pipeline->StageCount; i++) { spvReflectDestroyShaderModule(&pipeline->Stages[i].Module); }
 	free(pipeline->Stages);
 	vkDestroyPipeline(Graphics.Device, pipeline->Instance, NULL);
 	free(pipeline);
+}
+
+ComputePipeline ComputePipelineCreate(ShaderData shader)
+{
+	ComputePipeline pipeline = malloc(sizeof(struct Pipeline));
+	*pipeline = (struct Pipeline){ 0 };
+	
+	PipelineConfigure config =
+	{
+		.ShaderCount = 1,
+		.Shaders = { shader },
+	};
+	CreateLayout(pipeline, config);
+	
+	VkShaderModule module;
+	VkShaderModuleCreateInfo moduleInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+		.codeSize = config.Shaders[0].DataSize,
+		.pCode = config.Shaders[0].Data,
+	};
+	vkCreateShaderModule(Graphics.Device, &moduleInfo, NULL, &module);
+	
+	VkPipelineShaderStageCreateInfo stageInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+		.stage = VK_SHADER_STAGE_COMPUTE_BIT,
+		.module = module,
+		.pName = "main",
+	};
+	
+	VkComputePipelineCreateInfo pipelineInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
+		.basePipelineHandle = VK_NULL_HANDLE,
+		.basePipelineIndex = 0,
+		.stage = stageInfo,
+		.layout = pipeline->Layout,
+	};
+	vkCreateComputePipelines(Graphics.Device, VK_NULL_HANDLE, 1, &pipelineInfo, NULL, &pipeline->Instance);
+	vkDestroyShaderModule(Graphics.Device, module, NULL);
+	
+	return pipeline;
+}
+
+void ComputePipelineDestroy(ComputePipeline pipeline)
+{
+	PipelineDestroy(pipeline);
 }
