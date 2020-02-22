@@ -551,6 +551,7 @@ static void CreateFrameResources()
 			.commandBufferCount = 1,
 		};
 		vkAllocateCommandBuffers(Graphics.Device, &allocateInfo, &Graphics.FrameResources[i].CommandBuffer);
+		vkAllocateCommandBuffers(Graphics.Device, &allocateInfo, &Graphics.FrameResources[i].ComputeCommandBuffer);
 		
 		VkSemaphoreCreateInfo semaphoreInfo =
 		{
@@ -558,6 +559,7 @@ static void CreateFrameResources()
 		};
 		vkCreateSemaphore(Graphics.Device, &semaphoreInfo, NULL, &Graphics.FrameResources[i].ImageAvailable);
 		vkCreateSemaphore(Graphics.Device, &semaphoreInfo, NULL, &Graphics.FrameResources[i].RenderFinished);
+		vkCreateSemaphore(Graphics.Device, &semaphoreInfo, NULL, &Graphics.FrameResources[i].ComputeFinished);
 		
 		VkFenceCreateInfo fenceInfo =
 		{
@@ -565,6 +567,7 @@ static void CreateFrameResources()
 			.flags = VK_FENCE_CREATE_SIGNALED_BIT,
 		};
 		vkCreateFence(Graphics.Device, &fenceInfo, NULL, &Graphics.FrameResources[i].FrameReady);
+		vkCreateFence(Graphics.Device, &fenceInfo, NULL, &Graphics.FrameResources[i].ComputeFence);
 		
 		Graphics.FrameResources[i].DestroyVertexBufferQueue = ListCreate();
 		Graphics.FrameResources[i].DestroyTextureQueue = ListCreate();
@@ -615,6 +618,63 @@ void GraphicsSetPresentMode(PresentMode presentMode)
 	Graphics.Swapchain.TargetPresentMode = presentMode;
 	GraphicsDestroySwapchain();
 	GraphicsCreateSwapchain(Graphics.Swapchain.TargetExtent.width, Graphics.Swapchain.Extent.height);
+}
+
+void GraphicsStartCompute()
+{
+	vkWaitForFences(Graphics.Device, 1, &Graphics.FrameResources[Graphics.FrameIndex].ComputeFence, VK_TRUE, UINT64_MAX);
+	vkResetFences(Graphics.Device, 1, &Graphics.FrameResources[Graphics.FrameIndex].ComputeFence);
+	vkResetCommandBuffer(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, 0);
+	VkCommandBufferBeginInfo beginInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+	};
+	vkBeginCommandBuffer(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, &beginInfo);
+}
+
+void GraphicsDispatch(ComputePipeline pipeline, int xGroups, int yGroups, int zGroups)
+{
+	vkCmdBindPipeline(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->Instance);
+	if (pipeline->UsesPushConstant)
+	{
+		vkCmdPushConstants(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, pipeline->Layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, pipeline->PushConstantSize, pipeline->PushConstantData);
+	}
+	if (pipeline->UsesDescriptors)
+	{
+		vkCmdBindDescriptorSets(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->Layout, 0, 1, &pipeline->DescriptorSet[Graphics.FrameIndex], 0, NULL);
+	}
+	vkCmdDispatch(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, xGroups, yGroups, zGroups);
+}
+
+void GraphicsEndCompute()
+{
+	VkResult result = vkEndCommandBuffer(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer);
+	if (result != VK_SUCCESS)
+	{
+		log_fatal("Failed to record compute command buffer: %i\n", result);
+		exit(1);
+	}
+	
+	VkSubmitInfo submitInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		.waitSemaphoreCount = 0,
+		.pWaitSemaphores = NULL,
+		.pWaitDstStageMask = NULL,
+		.commandBufferCount = 1,
+		.pCommandBuffers = &Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer,
+		.signalSemaphoreCount = 1,
+		.pSignalSemaphores = &Graphics.FrameResources[Graphics.FrameIndex].ComputeFinished,
+	};
+	result = vkQueueSubmit(Graphics.GraphicsQueue, 1, &submitInfo, Graphics.FrameResources[Graphics.FrameIndex].ComputeFence);
+	if (result != VK_SUCCESS)
+	{
+		log_fatal("Failed to submit queue: %i\n", result);
+		exit(1);
+	}
+	
+	ListPush(Graphics.PreRenderSemaphores, &Graphics.FrameResources[Graphics.FrameIndex].ComputeFinished);
 }
 
 void GraphicsAquireNextImage()
@@ -682,7 +742,6 @@ void GraphicsPresent()
 		waitStages[i + 1] = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 	}
 	
-	ListClear(Graphics.PreRenderSemaphores);
 	VkSubmitInfo submitInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -702,6 +761,7 @@ void GraphicsPresent()
 	}
 	free(waitSemaphores);
 	free(waitStages);
+	ListClear(Graphics.PreRenderSemaphores);
 	
 	VkPresentInfoKHR presentInfo =
 	{
@@ -940,9 +1000,12 @@ void GraphicsDeinitialize()
 		
 		ListDestroy(Graphics.FrameResources[i].UpdateDescriptorQueue);
 		vkDestroyFence(Graphics.Device, Graphics.FrameResources[i].FrameReady, NULL);
+		vkDestroyFence(Graphics.Device, Graphics.FrameResources[i].ComputeFence, NULL);
 		vkDestroySemaphore(Graphics.Device, Graphics.FrameResources[i].RenderFinished, NULL);
 		vkDestroySemaphore(Graphics.Device, Graphics.FrameResources[i].ImageAvailable, NULL);
+		vkDestroySemaphore(Graphics.Device, Graphics.FrameResources[i].ComputeFinished, NULL);
 		vkFreeCommandBuffers(Graphics.Device, Graphics.CommandPool, 1, &Graphics.FrameResources[i].CommandBuffer);
+		vkFreeCommandBuffers(Graphics.Device, Graphics.CommandPool, 1, &Graphics.FrameResources[i].ComputeCommandBuffer);
 	}
 	free(Graphics.FrameResources);
 	shaderc_compiler_release(Graphics.ShaderCompiler);

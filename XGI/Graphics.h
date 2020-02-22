@@ -80,6 +80,9 @@ struct Graphics
 		VkSemaphore ImageAvailable;
 		VkSemaphore RenderFinished;
 		VkFence FrameReady;
+		VkCommandBuffer ComputeCommandBuffer;
+		VkSemaphore ComputeFinished;
+		VkFence ComputeFence;
 		List DestroyVertexBufferQueue;
 		List DestroyUniformBufferQueue;
 		List DestroyFrameBufferQueue;
@@ -106,6 +109,10 @@ PresentMode GraphicsPresentMode(void);
 /// Attempts to set the present mode to the specified one, if it's not supported then it's set to PresentModeVsync
 /// \param presentMode The desired present mode to set
 void GraphicsSetPresentMode(PresentMode presentMode);
+
+void GraphicsStartCompute(void);
+void GraphicsDispatch(ComputePipeline pipeline, int xGroups, int yGroups, int zGroups);
+void GraphicsEndCompute(void);
 
 /// Acquires the next swapchain image for rendering.
 /// This should be called once per a frame, before any rendering operations are done
