@@ -59,7 +59,7 @@ void UniformBufferSetVariable(UniformBuffer uniformBuffer, const char * variable
 
 void UniformBufferQueueDestroy(UniformBuffer uniformBuffer)
 {
-	ListPush(Graphics.FrameResources[Graphics.FrameIndex].DestroyUniformBufferQueue, uniformBuffer);
+	ListPush(Graphics.FrameResources[Graphics.FrameIndex].Queues[GraphicsQueueDestroyUniformBuffer], uniformBuffer);
 }
 
 void UniformBufferDestroy(UniformBuffer uniformBuffer)

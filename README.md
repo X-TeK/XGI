@@ -203,11 +203,10 @@ int main(int argc, char * argv[])
 		EventHandlerPoll();
 		
 		// Update code starts here
-		// Set the push constant
 		PipelineSetPushConstant(pipeline, "Transform", &Matrix4x4Identity);
-
-		GraphicsAquireNextImage();
 		
+		GraphicsUpdate();
+		GraphicsAquireNextImage();
 		// Render code starts here
 		GraphicsBegin(frameBuffer);
 		GraphicsClearColor(ColorFromHex(0x204080ff));
@@ -220,7 +219,7 @@ int main(int argc, char * argv[])
 		GraphicsPresent();
 	}
 	GraphicsStopOperations(); // Important to call this right after exiting the main loop
-
+	
 	// Deinitialization code starts here
 	TextureDestroy(texture);
 	VertexBufferDestroy(vertexBuffer);

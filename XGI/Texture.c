@@ -276,7 +276,7 @@ Texture TextureCreate(TextureConfigure config)
 
 void TextureQueueDestroy(Texture texture)
 {
-	ListPush(Graphics.FrameResources[Graphics.FrameIndex].DestroyTextureQueue, texture);
+	ListPush(Graphics.FrameResources[Graphics.FrameIndex].Queues[GraphicsQueueDestroyTexture], texture);
 }
 
 void TextureDestroy(Texture texture)

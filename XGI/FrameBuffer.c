@@ -74,7 +74,7 @@ FrameBuffer FrameBufferResize(FrameBuffer frameBuffer, unsigned int width, unsig
 
 void FrameBufferQueueDestroy(FrameBuffer frameBuffer)
 {
-	ListPush(Graphics.FrameResources[Graphics.FrameIndex].DestroyFrameBufferQueue, frameBuffer);
+	ListPush(Graphics.FrameResources[Graphics.FrameIndex].Queues[GraphicsQueueDestroyFrameBuffer], frameBuffer);
 }
 
 void FrameBufferDestroy(FrameBuffer frameBuffer)

@@ -501,7 +501,7 @@ void PipelineSetUniform(Pipeline pipeline, int binding, int arrayIndex, struct U
 				.dstSet = pipeline->DescriptorSet[i],
 				.pBufferInfo = bufferInfo,
 			};
-			ListPush(Graphics.FrameResources[i].UpdateDescriptorQueue, writeInfo);
+			ListPush(Graphics.FrameResources[i].Queues[GraphicsQueueUploadDescriptor], writeInfo);
 		}
 	}
 }
@@ -530,7 +530,7 @@ void PipelineSetSampler(Pipeline pipeline, int binding, int arrayIndex, Texture 
 				.dstSet = pipeline->DescriptorSet[i],
 				.pImageInfo = imageInfo,
 			};
-			ListPush(Graphics.FrameResources[i].UpdateDescriptorQueue, writeInfo);
+			ListPush(Graphics.FrameResources[i].Queues[GraphicsQueueUploadDescriptor], writeInfo);
 		}
 	}
 }
@@ -560,7 +560,7 @@ void PipelineSetStorageBuffer(Pipeline pipeline, int binding, int arrayIndex, St
 				.dstSet = pipeline->DescriptorSet[i],
 				.pBufferInfo = bufferInfo,
 			};
-			ListPush(Graphics.FrameResources[i].UpdateDescriptorQueue, writeInfo);
+			ListPush(Graphics.FrameResources[i].Queues[GraphicsQueueUploadDescriptor], writeInfo);
 		}
 	}
 }
@@ -581,7 +581,7 @@ void PipelineSetBackStencilReference(Pipeline pipeline, unsigned int reference)
 
 void PipelineQueueDestroy(Pipeline pipeline)
 {
-	ListPush(Graphics.FrameResources[Graphics.FrameIndex].DestroyPipelineQueue, pipeline);
+	ListPush(Graphics.FrameResources[Graphics.FrameIndex].Queues[GraphicsQueueDestroyPipeline], pipeline);
 }
 
 void PipelineDestroy(Pipeline pipeline)

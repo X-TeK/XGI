@@ -86,14 +86,6 @@ int main(int argc, char * argv[])
 		.StencilTest = false,
 	};
 	pipeline = PipelineCreate(pipelineConfig);
-	
-	ComputePipeline compute = ComputePipelineCreate(ShaderDataFromFile(ShaderTypeCompute, "Example/Shaders/test.comp", false));
-	StorageBuffer storage = StorageBufferCreate(compute, 0, 1);
-	Vector2 * positions = StorageBufferMapVariable(storage, "pos");
-	positions[0] = Vector2One;
-	StorageBufferUnmapVariable(storage);
-	StorageBufferUpload(storage);
-	PipelineSetStorageBuffer(compute, 0, 0, storage);
 
 	// Create the vertex buffer
 	vertexBuffer = VertexBufferCreate(4, sizeof(Vertex), 6);
@@ -138,11 +130,8 @@ int main(int argc, char * argv[])
 		
 		// Update code starts here
 		PipelineSetPushConstant(pipeline, "Transform", &Matrix4x4Identity);
-		GraphicsUpdate();
-		GraphicsStartCompute();
-		GraphicsDispatch(compute, 1, 1, 1);
-		GraphicsEndCompute();
 		
+		GraphicsUpdate();
 		GraphicsAquireNextImage();
 		// Render code starts here
 		GraphicsBegin(frameBuffer);
@@ -156,11 +145,6 @@ int main(int argc, char * argv[])
 		GraphicsPresent();
 	}
 	GraphicsStopOperations(); // Important to call this right after exiting the main loop
-
-	StorageBufferDownload(storage);
-	positions = StorageBufferMapVariable(storage, "pos");
-	printf("%f %f\n", positions->X, positions->Y);
-	StorageBufferUnmapVariable(storage);
 	
 	// Deinitialization code starts here
 	TextureDestroy(texture);
@@ -168,8 +152,6 @@ int main(int argc, char * argv[])
 	PipelineDestroy(pipeline);
 	FrameBufferDestroy(frameBuffer);
 	VertexLayoutDestroy(vertexLayout);
-	ComputePipelineDestroy(compute);
-	StorageBufferDestroy(storage);
 
 	XGIDeinitialize();
 	return 0;

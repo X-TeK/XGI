@@ -180,7 +180,7 @@ void StorageBufferDownload(StorageBuffer storageBuffer)
 
 void StorageBufferQueueDestroy(StorageBuffer storageBuffer)
 {
-	ListPush(Graphics.FrameResources[Graphics.FrameIndex].DestroyStorageBufferQueue, storageBuffer);
+	ListPush(Graphics.FrameResources[Graphics.FrameIndex].Queues[GraphicsQueueDestroyStorageBuffer], storageBuffer);
 }
 
 void StorageBufferDestroy(StorageBuffer storageBuffer)

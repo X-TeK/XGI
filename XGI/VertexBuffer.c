@@ -161,7 +161,7 @@ void VertexBufferUpload(VertexBuffer vertexBuffer)
 
 void VertexBufferQueueDestroy(VertexBuffer vertexBuffer)
 {
-	ListPush(Graphics.FrameResources[Graphics.FrameIndex].DestroyVertexBufferQueue, vertexBuffer);
+	ListPush(Graphics.FrameResources[Graphics.FrameIndex].Queues[GraphicsQueueDestroyVertexBuffer], vertexBuffer);
 }
 
 void VertexBufferDestroy(VertexBuffer vertexBuffer)

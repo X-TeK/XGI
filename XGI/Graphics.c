@@ -569,13 +569,10 @@ static void CreateFrameResources()
 		vkCreateFence(Graphics.Device, &fenceInfo, NULL, &Graphics.FrameResources[i].FrameReady);
 		vkCreateFence(Graphics.Device, &fenceInfo, NULL, &Graphics.FrameResources[i].ComputeFence);
 		
-		Graphics.FrameResources[i].DestroyVertexBufferQueue = ListCreate();
-		Graphics.FrameResources[i].DestroyTextureQueue = ListCreate();
-		Graphics.FrameResources[i].DestroyPipelineQueue = ListCreate();
-		Graphics.FrameResources[i].DestroyFrameBufferQueue = ListCreate();
-		Graphics.FrameResources[i].DestroyStorageBufferQueue = ListCreate();
-		Graphics.FrameResources[i].DestroyUniformBufferQueue = ListCreate();
-		Graphics.FrameResources[i].UpdateDescriptorQueue = ListCreate();
+		for (int j = 0; j < GraphicsQueueCount; j++)
+		{
+			Graphics.FrameResources[i].Queues[j] = ListCreate();
+		}
 	}
 	Graphics.FrameIndex = 0;
 	Graphics.PreRenderSemaphores = ListCreate();
@@ -685,20 +682,47 @@ void GraphicsUpdate()
 	vkWaitForFences(Graphics.Device, 1, &Graphics.FrameResources[i].FrameReady, VK_TRUE, UINT64_MAX);
 	vkResetFences(Graphics.Device, 1, &Graphics.FrameResources[i].FrameReady);
 	
-	for (int j = 0; j < Graphics.FrameResources[i].DestroyVertexBufferQueue->Count; j++)
+	for (int j = 0; j < Graphics.FrameResources[i].Queues[0]->Count; j++)
 	{
-		VertexBuffer vertexBuffer = ListIndex(Graphics.FrameResources[i].DestroyVertexBufferQueue, j);
+		VertexBuffer vertexBuffer = ListIndex(Graphics.FrameResources[i].Queues[0], j);
 		VertexBufferDestroy(vertexBuffer);
 	}
-	ListClear(Graphics.FrameResources[i].DestroyVertexBufferQueue);
-	for (int j = 0; j < Graphics.FrameResources[i].UpdateDescriptorQueue->Count; j++)
+	for (int j = 0; j < Graphics.FrameResources[i].Queues[1]->Count; j++)
 	{
-		VkWriteDescriptorSet * writeInfo = ListIndex(Graphics.FrameResources[i].UpdateDescriptorQueue, j);
+		UniformBuffer uniformBuffer = ListIndex(Graphics.FrameResources[i].Queues[1], j);
+		UniformBufferDestroy(uniformBuffer);
+	}
+	for (int j = 0; j < Graphics.FrameResources[i].Queues[2]->Count; j++)
+	{
+		FrameBuffer frameBuffer = ListIndex(Graphics.FrameResources[i].Queues[2], j);
+		FrameBufferDestroy(frameBuffer);
+	}
+	for (int j = 0; j < Graphics.FrameResources[i].Queues[3]->Count; j++)
+	{
+		StorageBuffer storageBuffer = ListIndex(Graphics.FrameResources[i].Queues[3], j);
+		StorageBufferDestroy(storageBuffer);
+	}
+	for (int j = 0; j < Graphics.FrameResources[i].Queues[4]->Count; j++)
+	{
+		Pipeline pipeline = ListIndex(Graphics.FrameResources[i].Queues[4], j);
+		PipelineDestroy(pipeline);
+	}
+	for (int j = 0; j < Graphics.FrameResources[i].Queues[5]->Count; j++)
+	{
+		Texture texture = ListIndex(Graphics.FrameResources[i].Queues[5], j);
+		TextureDestroy(texture);
+	}
+	for (int j = 0; j < Graphics.FrameResources[i].Queues[6]->Count; j++)
+	{
+		VkWriteDescriptorSet * writeInfo = ListIndex(Graphics.FrameResources[i].Queues[6], j);
 		vkUpdateDescriptorSets(Graphics.Device, 1, writeInfo, 0, NULL);
 		free((void *)writeInfo->pBufferInfo);
 		free(writeInfo);
 	}
-	ListClear(Graphics.FrameResources[i].UpdateDescriptorQueue);
+	for (int j = 0; j < GraphicsQueueCount; j++)
+	{
+		ListClear(Graphics.FrameResources[i].Queues[j]);
+	}
 }
 
 void GraphicsAquireNextImage()
@@ -973,44 +997,41 @@ void GraphicsDeinitialize()
 	ListDestroy(Graphics.PreRenderSemaphores);
 	for (int i = 0; i < Graphics.FrameResourceCount; i++)
 	{
-		for (int j = 0; j < Graphics.FrameResources[i].DestroyVertexBufferQueue->Count; j++)
+		for (int j = 0; j < Graphics.FrameResources[i].Queues[0]->Count; j++)
 		{
-			VertexBuffer vertexBuffer = ListIndex(Graphics.FrameResources[i].DestroyVertexBufferQueue, j);
+			VertexBuffer vertexBuffer = ListIndex(Graphics.FrameResources[i].Queues[0], j);
 			VertexBufferDestroy(vertexBuffer);
 		}
-		ListDestroy(Graphics.FrameResources[i].DestroyVertexBufferQueue);
-		for (int j = 0; j < Graphics.FrameResources[i].DestroyUniformBufferQueue->Count; j++)
+		for (int j = 0; j < Graphics.FrameResources[i].Queues[1]->Count; j++)
 		{
-			UniformBuffer uniformBuffer = ListIndex(Graphics.FrameResources[i].DestroyUniformBufferQueue, j);
+			UniformBuffer uniformBuffer = ListIndex(Graphics.FrameResources[i].Queues[1], j);
 			UniformBufferDestroy(uniformBuffer);
 		}
-		ListDestroy(Graphics.FrameResources[i].DestroyUniformBufferQueue);
-		for (int j = 0; j < Graphics.FrameResources[i].DestroyFrameBufferQueue->Count; j++)
+		for (int j = 0; j < Graphics.FrameResources[i].Queues[2]->Count; j++)
 		{
-			FrameBuffer frameBuffer = ListIndex(Graphics.FrameResources[i].DestroyFrameBufferQueue, j);
+			FrameBuffer frameBuffer = ListIndex(Graphics.FrameResources[i].Queues[2], j);
 			FrameBufferDestroy(frameBuffer);
 		}
-		ListDestroy(Graphics.FrameResources[i].DestroyFrameBufferQueue);
-		for (int j = 0; j < Graphics.FrameResources[i].DestroyStorageBufferQueue->Count; j++)
+		for (int j = 0; j < Graphics.FrameResources[i].Queues[3]->Count; j++)
 		{
-			StorageBuffer storageBuffer = ListIndex(Graphics.FrameResources[i].DestroyStorageBufferQueue, j);
+			StorageBuffer storageBuffer = ListIndex(Graphics.FrameResources[i].Queues[3], j);
 			StorageBufferDestroy(storageBuffer);
 		}
-		ListDestroy(Graphics.FrameResources[i].DestroyStorageBufferQueue);
-		for (int j = 0; j < Graphics.FrameResources[i].DestroyPipelineQueue->Count; j++)
+		for (int j = 0; j < Graphics.FrameResources[i].Queues[4]->Count; j++)
 		{
-			Pipeline pipeline = ListIndex(Graphics.FrameResources[i].DestroyPipelineQueue, j);
+			Pipeline pipeline = ListIndex(Graphics.FrameResources[i].Queues[4], j);
 			PipelineDestroy(pipeline);
 		}
-		ListDestroy(Graphics.FrameResources[i].DestroyPipelineQueue);
-		for (int j = 0; j < Graphics.FrameResources[i].DestroyTextureQueue->Count; j++)
+		for (int j = 0; j < Graphics.FrameResources[i].Queues[5]->Count; j++)
 		{
-			Texture texture = ListIndex(Graphics.FrameResources[i].DestroyTextureQueue, j);
+			Texture texture = ListIndex(Graphics.FrameResources[i].Queues[5], j);
 			TextureDestroy(texture);
 		}
-		ListDestroy(Graphics.FrameResources[i].DestroyTextureQueue);
+		for (int j = 0; j < GraphicsQueueCount; j++)
+		{
+			ListDestroy(Graphics.FrameResources[i].Queues[j]);
+		}
 		
-		ListDestroy(Graphics.FrameResources[i].UpdateDescriptorQueue);
 		vkDestroyFence(Graphics.Device, Graphics.FrameResources[i].FrameReady, NULL);
 		vkDestroyFence(Graphics.Device, Graphics.FrameResources[i].ComputeFence, NULL);
 		vkDestroySemaphore(Graphics.Device, Graphics.FrameResources[i].RenderFinished, NULL);

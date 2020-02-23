@@ -83,13 +83,15 @@ struct Graphics
 		VkCommandBuffer ComputeCommandBuffer;
 		VkSemaphore ComputeFinished;
 		VkFence ComputeFence;
-		List DestroyVertexBufferQueue;
-		List DestroyUniformBufferQueue;
-		List DestroyFrameBufferQueue;
-		List DestroyStorageBufferQueue;
-		List DestroyPipelineQueue;
-		List DestroyTextureQueue;
-		List UpdateDescriptorQueue;
+		List Queues[7];
+		#define GraphicsQueueDestroyVertexBuffer 0
+		#define GraphicsQueueDestroyUniformBuffer 1
+		#define GraphicsQueueDestroyFrameBuffer 2
+		#define GraphicsQueueDestroyStorageBuffer 3
+		#define GraphicsQueueDestroyPipeline 4
+		#define GraphicsQueueDestroyTexture 5
+		#define GraphicsQueueUploadDescriptor 6
+		#define GraphicsQueueCount 7
 	} * FrameResources;
 	int FrameIndex;
 	
