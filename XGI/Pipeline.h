@@ -6,9 +6,11 @@
 #include <spirv/spirv_reflect.h>
 #include "VertexBuffer.h"
 #include "UniformBuffer.h"
+#include "StorageBuffer.h"
 #include "Texture.h"
 
 struct UniformBuffer;
+struct StorageBuffer;
 
 typedef enum ShaderType
 {
@@ -202,7 +204,7 @@ void PipelineSetPushConstant(Pipeline pipeline, const char * variableName, void 
 /// \param uniform The uniform buffer object containing the data to set
 void PipelineSetUniform(Pipeline pipeline, int binding, int arrayIndex, struct UniformBuffer * uniform);
 
-/// Sets a sampler2D to a binding in the shader
+/// Sets a sampler2D to a binding in the shader.
 /// This is not like push constants where the sampler can be chagned in between draw calls.
 /// If the sampler needs to be changed then make the binding an array of samplers and use push constants to change which array index.
 /// \param pipeline The pipeline to modify
@@ -210,6 +212,14 @@ void PipelineSetUniform(Pipeline pipeline, int binding, int arrayIndex, struct U
 /// \param arrayIndex The index in the array to set (0 if it's not an array)
 /// \param texture The texture to sample
 void PipelineSetSampler(Pipeline pipeline, int binding, int arrayIndex, Texture texture);
+
+/// Sets a storage buffer to a binding in the shader.
+/// This is not like push constants where the buffer can be changed in between draw calls.
+/// \param pipeline The pipeline to set
+/// \param binding The binding number specified in the shader to set
+/// \param arrayIndex The index in the array to set (0 if it's not an array)
+/// \param storage The storage buffer to set
+void PipelineSetStorageBuffer(Pipeline pipeline, int binding, int arrayIndex, struct StorageBuffer * storage);
 
 /// Sets the line width used for drawing
 /// \param pipeline The pipeline to modify

@@ -6,6 +6,7 @@
 #include "Pipeline.h"
 #include "Graphics.h"
 #include "UniformBuffer.h"
+#include "StorageBuffer.h"
 #include "File.h"
 #include "log.h"
 
@@ -121,7 +122,7 @@ static VkPushConstantRange GetPushConstantRange(Pipeline pipeline)
 	return pushConstantRange;
 }
 
-static void CreateDescriptorLayout(Pipeline pipeline, int * uboCount, int * samplerCount)
+static void CreateDescriptorLayout(Pipeline pipeline, int * uboCount, int * samplerCount, int * storageCount)
 {
 	unsigned int bindingCount = 0;
 	pipeline->UsesDescriptors = false;
@@ -150,7 +151,7 @@ static void CreateDescriptorLayout(Pipeline pipeline, int * uboCount, int * samp
 			struct PipelineStage * stage = pipeline->Stages + i;
 			unsigned int setCount;
 			spvReflectEnumerateDescriptorSets(&stage->Module, &setCount, NULL);
-			SpvReflectDescriptorSet* sets = malloc(setCount * sizeof(SpvReflectDescriptorSet));
+			SpvReflectDescriptorSet * sets = malloc(setCount * sizeof(SpvReflectDescriptorSet));
 			spvReflectEnumerateDescriptorSets(&stage->Module, &setCount, &sets);
 
 			if (setCount > 0)
@@ -167,6 +168,7 @@ static void CreateDescriptorLayout(Pipeline pipeline, int * uboCount, int * samp
 					};
 					if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) { (*samplerCount) += binding->count; }
 					if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) { (*uboCount) += binding->count; }
+					if (binding->descriptor_type == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER) { (*storageCount) += binding->count; }
 				}
 			}
 		}
@@ -182,7 +184,7 @@ static void CreateDescriptorLayout(Pipeline pipeline, int * uboCount, int * samp
 	}
 }
 
-static void CreateDescriptorPool(Pipeline pipeline, int uboCount, int samplerCount)
+static void CreateDescriptorPool(Pipeline pipeline, int uboCount, int samplerCount, int storageCount)
 {
 	if (pipeline->UsesDescriptors)
 	{
@@ -203,6 +205,15 @@ static void CreateDescriptorPool(Pipeline pipeline, int uboCount, int samplerCou
 			{
 				.descriptorCount = samplerCount * Graphics.FrameResourceCount,
 				.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			};
+			i++;
+		}
+		if (storageCount > 0)
+		{
+			poolSizes[i] = (VkDescriptorPoolSize)
+			{
+				.descriptorCount = storageCount * Graphics.FrameResourceCount,
+				.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
 			};
 			i++;
 		}
@@ -253,10 +264,9 @@ static void CreateLayout(Pipeline pipeline, PipelineConfigure config)
 {
 	CreateReflectModules(pipeline, config);
 	VkPushConstantRange pushConstantRange = GetPushConstantRange(pipeline);
-	int samplerCount = 0;
-	int uboCount = 0;
-	CreateDescriptorLayout(pipeline, &uboCount, &samplerCount);
-	CreateDescriptorPool(pipeline, uboCount, samplerCount);
+	int samplerCount = 0, uboCount = 0, storageCount = 0;
+	CreateDescriptorLayout(pipeline, &uboCount, &samplerCount, &storageCount);
+	CreateDescriptorPool(pipeline, uboCount, samplerCount, storageCount);
 	CreatePipelineLayout(pipeline, pushConstantRange);
 	CreateDescriptorSets(pipeline);
 }
@@ -519,6 +529,36 @@ void PipelineSetSampler(Pipeline pipeline, int binding, int arrayIndex, Texture 
 				.dstBinding = binding,
 				.dstSet = pipeline->DescriptorSet[i],
 				.pImageInfo = imageInfo,
+			};
+			ListPush(Graphics.FrameResources[i].UpdateDescriptorQueue, writeInfo);
+		}
+	}
+}
+
+void PipelineSetStorageBuffer(Pipeline pipeline, int binding, int arrayIndex, StorageBuffer storage)
+{
+	if (pipeline->UsesDescriptors)
+	{
+		for (int i = 0; i < Graphics.FrameResourceCount; i++)
+		{
+			VkDescriptorBufferInfo * bufferInfo = malloc(sizeof(VkDescriptorBufferInfo));
+			*bufferInfo = (VkDescriptorBufferInfo)
+			{
+				.buffer = storage->Buffer,
+				.offset = 0,
+				.range = storage->Size,
+			};
+			
+			VkWriteDescriptorSet * writeInfo = malloc(sizeof(VkWriteDescriptorSet));
+			*writeInfo = (VkWriteDescriptorSet)
+			{
+				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+				.descriptorCount = 1,
+				.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+				.dstArrayElement = arrayIndex,
+				.dstBinding = binding,
+				.dstSet = pipeline->DescriptorSet[i],
+				.pBufferInfo = bufferInfo,
 			};
 			ListPush(Graphics.FrameResources[i].UpdateDescriptorQueue, writeInfo);
 		}

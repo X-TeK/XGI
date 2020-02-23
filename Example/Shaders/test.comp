@@ -1,0 +1,12 @@
+#version 450
+
+layout (binding = 0) buffer StorageBuffer
+{
+	vec2 a;
+	vec2 pos[];
+};
+
+void main()
+{
+	pos[gl_GlobalInvocationID.x] = vec2(0.5, 0.5);
+}

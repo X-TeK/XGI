@@ -573,6 +573,7 @@ static void CreateFrameResources()
 		Graphics.FrameResources[i].DestroyTextureQueue = ListCreate();
 		Graphics.FrameResources[i].DestroyPipelineQueue = ListCreate();
 		Graphics.FrameResources[i].DestroyFrameBufferQueue = ListCreate();
+		Graphics.FrameResources[i].DestroyStorageBufferQueue = ListCreate();
 		Graphics.FrameResources[i].DestroyUniformBufferQueue = ListCreate();
 		Graphics.FrameResources[i].UpdateDescriptorQueue = ListCreate();
 	}
@@ -677,7 +678,7 @@ void GraphicsEndCompute()
 	ListPush(Graphics.PreRenderSemaphores, &Graphics.FrameResources[Graphics.FrameIndex].ComputeFinished);
 }
 
-void GraphicsAquireNextImage()
+void GraphicsUpdate()
 {
 	Graphics.FrameIndex = (Graphics.FrameIndex + 1) % Graphics.FrameResourceCount;
 	unsigned int i = Graphics.FrameIndex;
@@ -698,6 +699,11 @@ void GraphicsAquireNextImage()
 		free(writeInfo);
 	}
 	ListClear(Graphics.FrameResources[i].UpdateDescriptorQueue);
+}
+
+void GraphicsAquireNextImage()
+{
+	unsigned int i = Graphics.FrameIndex;
 	
 	VkResult result = vkAcquireNextImageKHR(Graphics.Device, Graphics.Swapchain.Instance, UINT64_MAX, Graphics.FrameResources[i].ImageAvailable, VK_NULL_HANDLE, &Graphics.Swapchain.CurrentImageIndex);
 	if (result != VK_SUCCESS) { log_info("Unsuccessful aquire image: %i\n", result); }
@@ -985,6 +991,12 @@ void GraphicsDeinitialize()
 			FrameBufferDestroy(frameBuffer);
 		}
 		ListDestroy(Graphics.FrameResources[i].DestroyFrameBufferQueue);
+		for (int j = 0; j < Graphics.FrameResources[i].DestroyStorageBufferQueue->Count; j++)
+		{
+			StorageBuffer storageBuffer = ListIndex(Graphics.FrameResources[i].DestroyStorageBufferQueue, j);
+			StorageBufferDestroy(storageBuffer);
+		}
+		ListDestroy(Graphics.FrameResources[i].DestroyStorageBufferQueue);
 		for (int j = 0; j < Graphics.FrameResources[i].DestroyPipelineQueue->Count; j++)
 		{
 			Pipeline pipeline = ListIndex(Graphics.FrameResources[i].DestroyPipelineQueue, j);

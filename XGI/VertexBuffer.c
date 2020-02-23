@@ -55,7 +55,6 @@ VertexBuffer VertexBufferCreate(int vertexCount, int vertexSize, int indexCount)
 		.VertexCount = vertexCount,
 		.VertexSize = vertexSize,
 		.IndexCount = indexCount,
-		.MappingVertices = false,
 	};
 	
 	unsigned long size = vertexCount * vertexSize + 4 * indexCount;
@@ -101,12 +100,12 @@ VertexBuffer VertexBufferCreate(int vertexCount, int vertexSize, int indexCount)
 		.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
 		.flags = VK_FENCE_CREATE_SIGNALED_BIT,
 	};
-	vkCreateFence(Graphics.Device, &fenceInfo, NULL, &vertexBuffer->Fence);
+	vkCreateFence(Graphics.Device, &fenceInfo, NULL, &vertexBuffer->UploadFence);
 	VkSemaphoreCreateInfo semaphoreInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
 	};
-	vkCreateSemaphore(Graphics.Device, &semaphoreInfo, NULL, &vertexBuffer->Semaphore);
+	vkCreateSemaphore(Graphics.Device, &semaphoreInfo, NULL, &vertexBuffer->UploadSemaphore);
 	
 	return vertexBuffer;
 }
@@ -129,8 +128,8 @@ void VertexBufferUnmapVertices(VertexBuffer vertexBuffer)
 
 void VertexBufferUpload(VertexBuffer vertexBuffer)
 {
-	vkWaitForFences(Graphics.Device, 1, &vertexBuffer->Fence, VK_TRUE, UINT64_MAX);
-	vkResetFences(Graphics.Device, 1, &vertexBuffer->Fence);
+	vkWaitForFences(Graphics.Device, 1, &vertexBuffer->UploadFence, VK_TRUE, UINT64_MAX);
+	vkResetFences(Graphics.Device, 1, &vertexBuffer->UploadFence);
 	
 	VkCommandBufferBeginInfo beginInfo =
 	{
@@ -154,10 +153,10 @@ void VertexBufferUpload(VertexBuffer vertexBuffer)
 		.commandBufferCount = 1,
 		.pCommandBuffers = &vertexBuffer->CommandBuffer,
 		.signalSemaphoreCount = 1,
-		.pSignalSemaphores = &vertexBuffer->Semaphore,
+		.pSignalSemaphores = &vertexBuffer->UploadSemaphore,
 	};
-	vkQueueSubmit(Graphics.GraphicsQueue, 1, &submitInfo, vertexBuffer->Fence);
-	ListPush(Graphics.PreRenderSemaphores, &vertexBuffer->Semaphore);
+	vkQueueSubmit(Graphics.GraphicsQueue, 1, &submitInfo, vertexBuffer->UploadFence);
+	ListPush(Graphics.PreRenderSemaphores, &vertexBuffer->UploadSemaphore);
 }
 
 void VertexBufferQueueDestroy(VertexBuffer vertexBuffer)
@@ -167,9 +166,9 @@ void VertexBufferQueueDestroy(VertexBuffer vertexBuffer)
 
 void VertexBufferDestroy(VertexBuffer vertexBuffer)
 {
-	vkWaitForFences(Graphics.Device, 1, &vertexBuffer->Fence, VK_TRUE, UINT64_MAX);
-	vkDestroyFence(Graphics.Device, vertexBuffer->Fence, NULL);
-	vkDestroySemaphore(Graphics.Device, vertexBuffer->Semaphore, NULL);
+	vkWaitForFences(Graphics.Device, 1, &vertexBuffer->UploadFence, VK_TRUE, UINT64_MAX);
+	vkDestroyFence(Graphics.Device, vertexBuffer->UploadFence, NULL);
+	vkDestroySemaphore(Graphics.Device, vertexBuffer->UploadSemaphore, NULL);
 	vkFreeCommandBuffers(Graphics.Device, Graphics.CommandPool, 1, &vertexBuffer->CommandBuffer);
 	vmaDestroyBuffer(Graphics.Allocator, vertexBuffer->StagingBuffer, vertexBuffer->StagingAllocation);
 	vmaDestroyBuffer(Graphics.Allocator, vertexBuffer->VertexBuffer, vertexBuffer->VertexAllocation);

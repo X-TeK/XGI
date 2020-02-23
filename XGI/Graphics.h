@@ -86,6 +86,7 @@ struct Graphics
 		List DestroyVertexBufferQueue;
 		List DestroyUniformBufferQueue;
 		List DestroyFrameBufferQueue;
+		List DestroyStorageBufferQueue;
 		List DestroyPipelineQueue;
 		List DestroyTextureQueue;
 		List UpdateDescriptorQueue;
@@ -110,12 +111,29 @@ PresentMode GraphicsPresentMode(void);
 /// \param presentMode The desired present mode to set
 void GraphicsSetPresentMode(PresentMode presentMode);
 
+/// Begins recording commands for use on a compute pipeline.
+/// This should be called once a frame and all compute pipeline dispatches should be called after this.
 void GraphicsStartCompute(void);
+
+/// Dispatches a compute pipeline based off of 3 work group dimensions.
+/// This should be called within GraphicsStartCompute and GraphicsEndCompute.
+/// \param pipeline The compute pipeline to dispatch
+/// \param xGroups The number of work groups in the x direction
+/// \param yGroups The number of work groups in the y direction
+/// \param zGroups The number of work groups in the z direction
 void GraphicsDispatch(ComputePipeline pipeline, int xGroups, int yGroups, int zGroups);
+
+/// Ends recording of compute pipeline dispatches.
+/// This should be called once a frame and should only be called after GraphicsStartCompute.
 void GraphicsEndCompute(void);
 
+/// Advances the engine to the next frame resource.
+/// Also processes anything in queues at this point (like VertexBufferQueueDestroy).
+/// This should be called once per a frame, before any graphics or compute operations are done.
+void GraphicsUpdate(void);
+
 /// Acquires the next swapchain image for rendering.
-/// This should be called once per a frame, before any rendering operations are done
+/// This should be called once per a frame, specifically before any rendering operations are called
 void GraphicsAquireNextImage(void);
 
 /// Presents the acquired image to the screen

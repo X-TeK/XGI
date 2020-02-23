@@ -12,6 +12,7 @@
 #include "Texture.h"
 #include "UniformBuffer.h"
 #include "VertexBuffer.h"
+#include "StorageBuffer.h"
 #include "Window.h"
 
 /// Initializes the engine
