@@ -10,17 +10,15 @@ static bool Initialized = false;
 
 void EventHandlerInitialize()
 {
-	if (!Initialized)
+	if (Initialized)
 	{
-		Initialized = true;
-		for (int i = 0; i < EventTypeCount; i++)
-		{
-			CallbackLists[i] = ListCreate();
-		}
+		log_error("Trying to initialize EventHandler but it's already initialized.\n");
+		exit(1);
 	}
-	else
+	Initialized = true;
+	for (int i = 0; i < EventTypeCount; i++)
 	{
-		log_warn("Trying to initialize EventHandler when it's already been initialized.\n");
+		CallbackLists[i] = ListCreate();
 	}
 }
 
@@ -28,7 +26,7 @@ void EventHandlerAddCallback(EventType event, void (*callback)(void))
 {
 	if (event >= EventTypeCount || event < 0)
 	{
-		log_error("Event type %i is not in the valid range of enumerations.\n", event);
+		log_error("Trying to remove callback, but EventType %i is not in the valid range of enumerations.\n", event);
 		exit(1);
 	}
 	if (callback == NULL)
@@ -44,7 +42,7 @@ void EventHandlerRemoveCallback(EventType event, void (*callback)(void))
 {
 	if (event >= EventTypeCount || event < 0)
 	{
-		log_error("Event type %i is not in the valid range of enumerations.\n", event);
+		log_error("Trying to remove callback, but EventType %i is not in the valid range of enumerations.\n", event);
 		exit(1);
 	}
 	for (int i = 0; i < ListCount(CallbackLists[event]); i++)
@@ -62,6 +60,12 @@ void EventHandlerRemoveCallback(EventType event, void (*callback)(void))
 
 void EventHandlerDeinitialize()
 {
+	if (!Initialized)
+	{
+		log_error("Trying to deinitialize EventHandler, but it's not already initialized.\n");
+		exit(1);
+	}
+	Initialized = false;
 	for (int i = 0; i < EventTypeCount; i++)
 	{
 		for (int j = 0; j < ListCount(CallbackLists[i]); j++)
@@ -74,6 +78,11 @@ void EventHandlerDeinitialize()
 
 void EventHandlerPoll()
 {
+	if (!Initialized)
+	{
+		log_error("Trying to poll events, but EventHandler isn't initialized.\n");
+		exit(1);
+	}
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
 	{

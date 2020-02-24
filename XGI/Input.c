@@ -1,13 +1,24 @@
 #include "Input.h"
 #include "Window.h"
+#include "log.h"
 
 bool KeyboardIsKeyPressed(Key key)
 {
+	if (key < 0 || key >= KeyScancodeCount)
+	{
+		log_fatal("Trying to detect if key is pressed, but Key %i is outside the valid range of enumerations.\n", key);
+		exit(1);
+	}
 	return SDL_GetKeyboardState(NULL)[key];
 }
 
 bool MouseIsButtonPressed(MouseButton button)
 {
+	if (button < 0 || button >= KeyScancodeCount)
+	{
+		log_fatal("Trying to detect if a mouse button is pressed, but MouseButton %i is outside the valid range of enumerations.\n", button);
+		exit(1);
+	}
 	return SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(button);
 }
 

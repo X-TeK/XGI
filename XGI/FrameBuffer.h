@@ -36,22 +36,22 @@ FrameBuffer FrameBufferCreate(FrameBufferConfigure config);
 /// Gets the width from a framebuffer object
 /// \param frameBuffer The framebuffer object
 /// \return The width
-unsigned int FrameBufferGetWidth(FrameBuffer frameBuffer);
+unsigned int FrameBufferWidth(FrameBuffer frameBuffer);
 
 /// Gets the height from a framebuffer object
 /// \param frameBuffer The framebuffer object
 /// \return The height
-unsigned int FrameBufferGetHeight(FrameBuffer frameBuffer);
+unsigned int FrameBufferHeight(FrameBuffer frameBuffer);
 
 /// Gets the texture filter from a framebuffer object
 /// \param frameBuffer The framebuffer object
 /// \return The texture filter
-TextureFilter FrameBufferGetFilter(FrameBuffer frameBuffer);
+TextureFilter FrameBufferFilter(FrameBuffer frameBuffer);
 
 /// Gets the address mode from a framebuffer object
 /// \param frameBuffer The framebuffer object
 /// \return The address mode
-TextureAddressMode FrameBufferGetAddressMode(FrameBuffer frameBuffer);
+TextureAddressMode FrameBufferAddressMode(FrameBuffer frameBuffer);
 
 /// Resizes a framebuffer object by destroying it and creating a new one.
 /// Anything previously drawn on it must be draw again.

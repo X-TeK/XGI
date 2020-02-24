@@ -159,6 +159,7 @@ typedef struct PipelineConfigure
 
 typedef struct Pipeline
 {
+	bool IsCompute;
 	VkPipeline Instance;
 	VkPipelineLayout Layout;
 	VertexLayout VertexLayout;

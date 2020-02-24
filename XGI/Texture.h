@@ -26,6 +26,7 @@ typedef enum TextureFormat
 	TextureFormatColor = VK_FORMAT_R8G8B8A8_UNORM,
 	/// Used for creating a depth-stencil texture
 	TextureFormatDepthStencil = VK_FORMAT_D32_SFLOAT_S8_UINT,
+	TextureFormatCount,
 } TextureFormat;
 
 typedef enum TextureFilter
@@ -36,6 +37,7 @@ typedef enum TextureFilter
 	TextureFilterNearest = VK_FILTER_NEAREST,
 	/// Not sure, haven't tested yet
 	TextureFilterCubic = VK_FILTER_CUBIC_IMG,
+	TextureFilterCount,
 } TextureFilter;
 
 typedef enum TextureAddressMode
@@ -46,6 +48,7 @@ typedef enum TextureAddressMode
 	TextureAddressModeMirroredRepeat = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
 	/// Clamps to one color outside the uv bounds
 	TextureAddressModeClamp = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+	TextureAddressModeCount,
 } TextureAddressMode;
 
 typedef struct TextureConfigure

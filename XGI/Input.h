@@ -47,6 +47,7 @@ typedef enum MouseButton
 	MouseButtonRight = SDL_BUTTON_RIGHT,
 	MouseButtonX1 = SDL_BUTTON_X1,
 	MouseButtonX2 = SDL_BUTTON_X2,
+	MouesButtonCount,
 } MouseButton;
 
 typedef enum ControllerHatPosition
@@ -60,6 +61,7 @@ typedef enum ControllerHatPosition
 	ControllerHatPositionLeftDown = SDL_HAT_LEFTDOWN,
 	ControllerHatPositionRightDown = SDL_HAT_RIGHTDOWN,
 	ControllerHatPositionCentered = SDL_HAT_CENTERED,
+	ControllerHatPositionCount,
 } ControllerHatPosition;
 
 typedef enum ControllerPowerLevel
@@ -71,6 +73,7 @@ typedef enum ControllerPowerLevel
 	ControllerPowerLevelFull = SDL_JOYSTICK_POWER_FULL,
 	ControllerPowerLevelWired = SDL_JOYSTICK_POWER_WIRED,
 	ControllerPowerLevelMax = SDL_JOYSTICK_POWER_MAX,
+	ControllerPowerLevelCount,
 } ControllerPowerLevel;
 
 /// Detects if a key is pressed

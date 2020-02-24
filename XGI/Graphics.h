@@ -21,6 +21,7 @@ typedef enum PresentMode
 	PresentModeRelaxedVSync = VK_PRESENT_MODE_FIFO_RELAXED_KHR,
 	/// Images are presented each v-blanking except there is no queue to wait on, the next image replaces the previous image waiting. Tearing isn't visible.
 	PresentModeImmediateVsync = VK_PRESENT_MODE_MAILBOX_KHR,
+	PresentModeCount,
 } PresentMode;
 
 typedef struct GraphicsConfigure

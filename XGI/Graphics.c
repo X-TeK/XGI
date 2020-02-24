@@ -54,7 +54,7 @@ static void CheckExtensionSupport()
 		}
 		if (!extensionSupported)
 		{
-			log_fatal("Required extension is not supported: %s\n", requiredExtensionNames[i]);
+			log_fatal("Trying to initialize Vulkan, but a required extension is not supported: %s\n", requiredExtensionNames[i]);
 			exit(1);
 		}
 	}
@@ -64,7 +64,7 @@ static void CheckExtensionSupport()
 
 static void CreateInstance(bool vulkanValidation)
 {
-	bool useValidations = true && CheckValidationLayerSupport();
+	bool useValidations = vulkanValidation && CheckValidationLayerSupport();
 	const char * validationLayer = "VK_LAYER_KHRONOS_validation";
 	
 	VkApplicationInfo appInfo =
@@ -98,7 +98,7 @@ static void CreateInstance(bool vulkanValidation)
 	}
 	
 	VkResult result = vkCreateInstance(&createInfo, NULL, &Graphics.Instance);
-	if (result != VK_SUCCESS) { log_fatal("Failed to create Vulkan instance: %i\n", result); exit(1); }
+	if (result != VK_SUCCESS) { log_fatal("Trying to initialize Vulkan, but failed to create VkInstance: %i\n", result); exit(1); }
 	free(extensionNames);
 }
 
@@ -106,7 +106,7 @@ static void CreateSurface()
 {
 	if (!SDL_Vulkan_CreateSurface(Window.Handle, Graphics.Instance, &Graphics.Surface))
 	{
-		log_fatal("Failed to create SurfaceKHR\n");
+		log_fatal("Trying to initialize Vulkan, but failed to create VkSurfaceKHR\n");
 		exit(1);
 	}
 }
@@ -117,7 +117,7 @@ static void ChoosePhysicalDevice(bool useIntegrated)
 	
 	unsigned int deviceCount = 0;
 	vkEnumeratePhysicalDevices(Graphics.Instance, &deviceCount, NULL);
-	if (deviceCount == 0) { log_fatal("No GPU with Vulkan support\n"); exit(1); }
+	if (deviceCount == 0) { log_fatal("Trying to initialize Vulkan, but there is no GPU with Vulkan support.\n"); exit(1); }
 	VkPhysicalDevice * devices = (VkPhysicalDevice * )malloc(deviceCount * sizeof(VkPhysicalDevice));
 	vkEnumeratePhysicalDevices(Graphics.Instance, &deviceCount, devices);
 	
@@ -202,7 +202,7 @@ static void ChoosePhysicalDevice(bool useIntegrated)
 	}
 	if (!suitableDevice)
 	{
-		log_error("No suitable device found for Vulkan\n");
+		log_error("Trying to initialize Vulkan, but there is no suitable device found for Vulkan.\n");
 		exit(1);
 	}
 	VkPhysicalDeviceProperties deviceProperties;
@@ -278,7 +278,7 @@ static void CreateLogicalDevice()
 	VkResult result = vkCreateDevice(Graphics.PhysicalDevice, &deviceInfo, NULL, &Graphics.Device);
 	if (result != VK_SUCCESS)
 	{
-		log_fatal("Failed to create logical device: %i\n", result);
+		log_fatal("Trying to initialize Vulkan, but failed to create VkDevice: %i\n", result);
 		exit(1);
 	}
 	
@@ -321,7 +321,7 @@ static void CreateSwapchain(int width, int height)
 	}
 	if (Graphics.Swapchain.PresentMode == VK_PRESENT_MODE_FIFO_KHR && Graphics.Swapchain.TargetPresentMode != VK_PRESENT_MODE_FIFO_KHR)
 	{
-		log_warn("Target present mode is not supported");
+		log_warn("Target PresentMode %i is not supported.\n", Graphics.Swapchain.TargetPresentMode);
 	}
 	free(availablePresentModes);
 	
@@ -332,8 +332,13 @@ static void CreateSwapchain(int width, int height)
 	};
 	extent.width = MAX(availableCapabilities.minImageExtent.width, MIN(availableCapabilities.maxImageExtent.width, extent.width));
 	extent.height = MAX(availableCapabilities.minImageExtent.height, MIN(availableCapabilities.maxImageExtent.height, extent.height));
+	if (extent.width != width || extent.height != height)
+	{
+		log_warn("Tried to create swapchain with dimensions (%i, %i) but (%i, %i) was chosen instead.\n", width, height, extent.width, extent.height);
+	}
 	
 	unsigned int imageCount = MAX(availableCapabilities.minImageCount, MIN(3, availableCapabilities.maxImageCount));
+	log_info("Initializing swapchain with %i images.\n", imageCount);
 	
 	VkSwapchainCreateInfoKHR createInfo =
 	{
@@ -367,7 +372,7 @@ static void CreateSwapchain(int width, int height)
 	VkResult result = vkCreateSwapchainKHR(Graphics.Device, &createInfo, NULL, &Graphics.Swapchain.Instance);
 	if (result != VK_SUCCESS)
 	{
-		log_fatal("Failed to create swapchain: %i\n", result);
+		log_fatal("Trying to create swapchain, but failed to create VkSwapchainKHR: %i\n", result);
 		exit(1);
 	}
 
@@ -494,7 +499,7 @@ static void CreateRenderPass()
 	VkResult result = vkCreateRenderPass(Graphics.Device, &renderPassInfo, NULL, &Graphics.RenderPass);
 	if (result != VK_SUCCESS)
 	{
-		log_fatal("Failed to create render pass: %i\n", result);
+		log_fatal("Trying to initialize Graphics, but failed to create VkRenderPass: %i\n", result);
 		exit(1);
 	}
 }
@@ -511,7 +516,7 @@ static void CreateCommandPool()
 	VkResult result = vkCreateCommandPool(Graphics.Device, &createInfo, NULL, &Graphics.CommandPool);
 	if (result != VK_SUCCESS)
 	{
-		log_fatal("Failed to create command pool: %i\n", result);
+		log_fatal("Trying to initialize Graphics, but failed to create VkCommandPool: %i\n", result);
 		exit(1);
 	}
 }
@@ -528,7 +533,7 @@ static void CreateAllocator()
 	VkResult result = vmaCreateAllocator(&allocatorInfo, &Graphics.Allocator);
 	if (result != VK_SUCCESS)
 	{
-		log_fatal("Failed to create memory allocator: %i\n", result);
+		log_fatal("Trying to initialize Graphics, but failed to create VmaAllocator: %i\n", result);
 		exit(1);
 	}
 }
@@ -578,8 +583,25 @@ static void CreateFrameResources()
 	Graphics.PreRenderSemaphores = ListCreate();
 }
 
+static bool Initialized = false;
+
+static void ValidateInitialized()
+{
+	if (!Initialized)
+	{
+		log_fatal("Trying to perform graphics operations, but Graphics is not initialized.\n");
+		exit(1);
+	}
+}
+
 void GraphicsInitialize(GraphicsConfigure config)
 {
+	if (Initialized)
+	{
+		log_fatal("Trying to initialize Graphics, but it's already initialized.\n");
+		exit(1);
+	}
+	Initialized = true;
 	log_info("Initializing the graphics backend...\n");
 	Graphics.FrameResourceCount = config.FrameResourceCount;
 	Graphics.Swapchain.TargetPresentMode = config.TargetPresentMode;
@@ -599,84 +621,54 @@ void GraphicsInitialize(GraphicsConfigure config)
 
 void GraphicsCreateSwapchain(int width, int height)
 {
-	log_info("Creating the swapchain...");
+	log_info("Creating the swapchain...\n");
 	Graphics.Swapchain.TargetExtent = (VkExtent2D) { .width = width, .height = height };
 	CreateSwapchain(width, height);
 	GetSwapchainImages();
-	log_info("Successfully created the swapchain\n");
+	log_info("Successfully created the swapchain.\n");
 }
 
 PresentMode GraphicsPresentMode()
 {
+	ValidateInitialized();
 	return Graphics.Swapchain.PresentMode;
 }
 
 void GraphicsSetPresentMode(PresentMode presentMode)
 {
+	ValidateInitialized();
+	if (presentMode < 0 || presentMode >= PresentModeCount)
+	{
+		log_fatal("Trying to set PresentMode %i, but it's outside the valid range of enumerations.\n", presentMode);
+		exit(1);
+	}
 	Graphics.Swapchain.TargetPresentMode = presentMode;
 	GraphicsDestroySwapchain();
 	GraphicsCreateSwapchain(Graphics.Swapchain.TargetExtent.width, Graphics.Swapchain.Extent.height);
 }
 
-void GraphicsStartCompute()
+static bool Updated = false;
+static bool ComputeRecorded;
+static void ValidateUpdated()
 {
-	vkWaitForFences(Graphics.Device, 1, &Graphics.FrameResources[Graphics.FrameIndex].ComputeFence, VK_TRUE, UINT64_MAX);
-	vkResetFences(Graphics.Device, 1, &Graphics.FrameResources[Graphics.FrameIndex].ComputeFence);
-	vkResetCommandBuffer(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, 0);
-	VkCommandBufferBeginInfo beginInfo =
+	if (!Updated)
 	{
-		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-	};
-	vkBeginCommandBuffer(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, &beginInfo);
-}
-
-void GraphicsDispatch(ComputePipeline pipeline, int xGroups, int yGroups, int zGroups)
-{
-	vkCmdBindPipeline(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->Instance);
-	if (pipeline->UsesPushConstant)
-	{
-		vkCmdPushConstants(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, pipeline->Layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, pipeline->PushConstantSize, pipeline->PushConstantData);
-	}
-	if (pipeline->UsesDescriptors)
-	{
-		vkCmdBindDescriptorSets(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->Layout, 0, 1, &pipeline->DescriptorSet[Graphics.FrameIndex], 0, NULL);
-	}
-	vkCmdDispatch(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, xGroups, yGroups, zGroups);
-}
-
-void GraphicsEndCompute()
-{
-	VkResult result = vkEndCommandBuffer(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer);
-	if (result != VK_SUCCESS)
-	{
-		log_fatal("Failed to record compute command buffer: %i\n", result);
+		log_fatal("Trying to perform graphics operations, but GraphicsUpdate has not been called since GraphicsPresent.\n");
 		exit(1);
 	}
-	
-	VkSubmitInfo submitInfo =
-	{
-		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-		.waitSemaphoreCount = 0,
-		.pWaitSemaphores = NULL,
-		.pWaitDstStageMask = NULL,
-		.commandBufferCount = 1,
-		.pCommandBuffers = &Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer,
-		.signalSemaphoreCount = 1,
-		.pSignalSemaphores = &Graphics.FrameResources[Graphics.FrameIndex].ComputeFinished,
-	};
-	result = vkQueueSubmit(Graphics.GraphicsQueue, 1, &submitInfo, Graphics.FrameResources[Graphics.FrameIndex].ComputeFence);
-	if (result != VK_SUCCESS)
-	{
-		log_fatal("Failed to submit queue: %i\n", result);
-		exit(1);
-	}
-	
-	ListPush(Graphics.PreRenderSemaphores, &Graphics.FrameResources[Graphics.FrameIndex].ComputeFinished);
 }
 
 void GraphicsUpdate()
 {
+	ValidateInitialized();
+	if (Updated)
+	{
+		log_fatal("Trying to update graphics, but it already has been updated and GraphicsPresent has not been called since then.\n");
+		exit(1);
+	}
+	Updated = true;
+	ComputeRecorded = false;
+	
 	Graphics.FrameIndex = (Graphics.FrameIndex + 1) % Graphics.FrameResourceCount;
 	unsigned int i = Graphics.FrameIndex;
 	vkWaitForFences(Graphics.Device, 1, &Graphics.FrameResources[i].FrameReady, VK_TRUE, UINT64_MAX);
@@ -725,8 +717,134 @@ void GraphicsUpdate()
 	}
 }
 
+static bool RecordingCompute = false;
+static bool RecordingGraphics = false;
+
+void GraphicsStartCompute()
+{
+	ValidateInitialized();
+	ValidateUpdated();
+	if (RecordingCompute)
+	{
+		log_fatal("Trying to start compute command recording, but GraphicsStartCompute has already been called.\n");
+		exit(1);
+	}
+	if (RecordingGraphics)
+	{
+		log_fatal("Trying to start compute command recording, but unable to while graphics commands are being recorded.\n");
+		exit(1);
+	}
+	if (ComputeRecorded)
+	{
+		log_fatal("Trying to start compute command recording, but compute commands can only be recorded once per an update.\n");
+		exit(1);
+	}
+	RecordingCompute = true;
+	
+	vkWaitForFences(Graphics.Device, 1, &Graphics.FrameResources[Graphics.FrameIndex].ComputeFence, VK_TRUE, UINT64_MAX);
+	vkResetFences(Graphics.Device, 1, &Graphics.FrameResources[Graphics.FrameIndex].ComputeFence);
+	vkResetCommandBuffer(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, 0);
+	VkCommandBufferBeginInfo beginInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+	};
+	vkBeginCommandBuffer(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, &beginInfo);
+}
+
+void GraphicsDispatch(ComputePipeline pipeline, int xGroups, int yGroups, int zGroups)
+{
+	ValidateInitialized();
+	ValidateUpdated();
+	if (!RecordingCompute)
+	{
+		log_fatal("Trying to call a compute command, but compute recording was never started with GraphicsStartCompute.\n");
+		exit(1);
+	}
+	if (pipeline == NULL)
+	{
+		log_fatal("Trying to dispatch an uninitialized pipeline.\n");
+		exit(1);
+	}
+	if (!pipeline->IsCompute)
+	{
+		log_fatal("Trying to dispatch a pipeline that's not a compute pipeline.\n");
+		exit(1);
+	}
+	if (xGroups < 0 || yGroups < 0 || zGroups < 0)
+	{
+		log_fatal("Trying to dispatch compute operations, but one or more work groups is negative.\n");
+		exit(1);
+	}
+	
+	vkCmdBindPipeline(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->Instance);
+	if (pipeline->UsesPushConstant)
+	{
+		vkCmdPushConstants(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, pipeline->Layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, pipeline->PushConstantSize, pipeline->PushConstantData);
+	}
+	if (pipeline->UsesDescriptors)
+	{
+		vkCmdBindDescriptorSets(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->Layout, 0, 1, &pipeline->DescriptorSet[Graphics.FrameIndex], 0, NULL);
+	}
+	vkCmdDispatch(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer, xGroups, yGroups, zGroups);
+}
+
+void GraphicsEndCompute()
+{
+	ValidateInitialized();
+	ValidateUpdated();
+	if (!RecordingCompute)
+	{
+		log_fatal("Trying to end compute recording, but compute recording was never started with GraphicsStartCompute.\n");
+		exit(1);
+	}
+	RecordingCompute = false;
+	ComputeRecorded = true;
+	
+	VkResult result = vkEndCommandBuffer(Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer);
+	if (result != VK_SUCCESS)
+	{
+		log_fatal("Trying to end compute recording, but failed to record compute command buffer: %i\n", result);
+		exit(1);
+	}
+	
+	VkSubmitInfo submitInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		.waitSemaphoreCount = 0,
+		.pWaitSemaphores = NULL,
+		.pWaitDstStageMask = NULL,
+		.commandBufferCount = 1,
+		.pCommandBuffers = &Graphics.FrameResources[Graphics.FrameIndex].ComputeCommandBuffer,
+		.signalSemaphoreCount = 1,
+		.pSignalSemaphores = &Graphics.FrameResources[Graphics.FrameIndex].ComputeFinished,
+	};
+	result = vkQueueSubmit(Graphics.GraphicsQueue, 1, &submitInfo, Graphics.FrameResources[Graphics.FrameIndex].ComputeFence);
+	if (result != VK_SUCCESS)
+	{
+		log_fatal("Trying to send compute operations, but failed to submit queue: %i\n", result);
+		exit(1);
+	}
+	
+	ListPush(Graphics.PreRenderSemaphores, &Graphics.FrameResources[Graphics.FrameIndex].ComputeFinished);
+}
+
 void GraphicsAquireNextImage()
 {
+	ValidateInitialized();
+	ValidateUpdated();
+	if (RecordingCompute)
+	{
+		log_fatal("Trying to start graphics command recording, but unable to since compute commands are currently being recorded.\n");
+		exit(1);
+	}
+	if (RecordingGraphics)
+	{
+		log_fatal("Trying to start graphics command recording, but recording has already started.\n");
+		exit(1);
+	}
+	RecordingGraphics = true;
+	
 	unsigned int i = Graphics.FrameIndex;
 	
 	VkResult result = vkAcquireNextImageKHR(Graphics.Device, Graphics.Swapchain.Instance, UINT64_MAX, Graphics.FrameResources[i].ImageAvailable, VK_NULL_HANDLE, &Graphics.Swapchain.CurrentImageIndex);
@@ -744,21 +862,30 @@ void GraphicsAquireNextImage()
 		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
 	};
 	result = vkBeginCommandBuffer(Graphics.FrameResources[i].CommandBuffer, &beginInfo);
-	if (result != VK_SUCCESS)
+}
+
+static void ValidateRecordingGraphics()
+{
+	if (!RecordingGraphics)
 	{
-		log_fatal("Failed to begin command buffer: %i\n", result);
-		exit(1);
+		log_fatal("Trying to perform graphics operations, but graphics recording was never started with GraphicsAquireNextImage.\n");
 	}
 }
 
 void GraphicsPresent()
 {
+	ValidateInitialized();
+	ValidateUpdated();
+	ValidateRecordingGraphics();
+	Updated = false;
+	RecordingGraphics = false;
+	
 	unsigned int i = Graphics.FrameIndex;
 	
 	VkResult result = vkEndCommandBuffer(Graphics.FrameResources[i].CommandBuffer);
 	if (result != VK_SUCCESS)
 	{
-		log_fatal("Failed to record command buffer: %i\n", result);
+		log_fatal("Trying to end graphics recording, but failed to record command buffer: %i\n", result);
 		exit(1);
 	}
 
@@ -786,7 +913,7 @@ void GraphicsPresent()
 	result = vkQueueSubmit(Graphics.GraphicsQueue, 1, &submitInfo, Graphics.FrameResources[i].FrameReady);
 	if (result != VK_SUCCESS)
 	{
-		log_fatal("Failed to submit queue: %i\n", result);
+		log_fatal("Trying to send graphics commands, but failed to submit queue: %i\n", result);
 		exit(1);
 	}
 	free(waitSemaphores);
@@ -812,8 +939,30 @@ void GraphicsDestroySwapchain()
 	vkDestroySwapchainKHR(Graphics.Device, Graphics.Swapchain.Instance, NULL);
 }
 
+static void ValidateRenderingBegan()
+{
+	if (Graphics.BoundFrameBuffer == NULL)
+	{
+		log_fatal("Trying to perform rendering operations, but rendering has not began on any FrameBuffer.\n");
+		exit(1);
+	}
+}
+
 void GraphicsBegin(FrameBuffer frameBuffer)
 {
+	ValidateInitialized();
+	ValidateUpdated();
+	ValidateRecordingGraphics();
+	if (Graphics.BoundFrameBuffer != NULL)
+	{
+		log_fatal("Trying to begin rendering on a FrameBuffer, but GraphicsEnd was never called after the last GraphicsBegin.\n");
+		exit(1);
+	}
+	if (frameBuffer == NULL)
+	{
+		log_fatal("Trying to begin rendering on an uninitialized FrameBuffer.\n");
+		exit(1);
+	}
 	Graphics.BoundFrameBuffer = frameBuffer;
 	
 	VkRenderPassBeginInfo renderPassBegin =
@@ -860,27 +1009,43 @@ static void Clear(Color clearColor, float depth, int stencil, VkImageAspectFlagB
 
 void GraphicsClearColor(Color clearColor)
 {
+	ValidateRenderingBegan();
 	Clear(clearColor, 0.0, 0, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
 void GraphicsClearDepth(Scalar depth)
 {
+	ValidateRenderingBegan();
 	Clear(ColorBlack, depth, 0, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
 void GraphicsClearStencil(unsigned int stencil)
 {
+	ValidateRenderingBegan();
 	Clear(ColorBlack, 0.0, stencil, VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 void GraphicsClear(Color clearColor, Scalar depth, int stencil)
 {
+	ValidateRenderingBegan();
 	GraphicsClearColor(clearColor);
 	Clear(clearColor, depth, stencil, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 void GraphicsBindPipeline(Pipeline pipeline)
 {
+	ValidateRenderingBegan();
+	if (pipeline == NULL)
+	{
+		log_fatal("Trying to bind an uninitialized pipeline.\n");
+		exit(1);
+	}
+	if (pipeline->IsCompute)
+	{
+		log_fatal("Trying to bind a compute shader pipeline for rendering operations.\n");
+		exit(1);
+	}
+	
 	Graphics.BoundPipeline = pipeline;
 	vkCmdBindPipeline(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Instance);
 	VkViewport viewport =
@@ -903,6 +1068,18 @@ void GraphicsBindPipeline(Pipeline pipeline)
 
 void GraphicsRenderVertexBuffer(VertexBuffer vertexBuffer)
 {
+	ValidateRenderingBegan();
+	if (vertexBuffer == NULL)
+	{
+		log_fatal("Trying to render an uninitialized VertexBuffer.\n");
+		exit(1);
+	}
+	if (Graphics.BoundPipeline == NULL)
+	{
+		log_fatal("Trying to render a VertexBuffer, but no Pipeline object has been bound yet.\n");
+		exit(1);
+	}
+	
 	vkCmdSetLineWidth(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, Graphics.BoundPipeline->LineWidth);
 	vkCmdSetStencilReference(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_STENCIL_FACE_FRONT_BIT, Graphics.BoundPipeline->FrontStencilReference);
 	vkCmdSetStencilReference(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_STENCIL_FACE_BACK_BIT, Graphics.BoundPipeline->BackStencilReference);
@@ -932,12 +1109,24 @@ void GraphicsRenderVertexBuffer(VertexBuffer vertexBuffer)
 
 void GraphicsEnd()
 {
+	ValidateRenderingBegan();
 	vkCmdEndRenderPass(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer);
 	Graphics.BoundFrameBuffer = NULL;
 }
 
 void GraphicsCopyToSwapchain(FrameBuffer frameBuffer)
 {
+	ValidateRecordingGraphics();
+	if (Graphics.BoundFrameBuffer != NULL)
+	{
+		log_fatal("Trying to copy FrameBuffer to swapchain, but unable to during GraphicsBegin, call GraphicsEnd first.\n");
+		exit(1);
+	}
+	if (frameBuffer == NULL)
+	{
+		log_fatal("Trying to copy an uninitialized FrameBuffer to the swapchain.\n");
+	}
+	
 	unsigned int i = Graphics.FrameIndex;
 	
 	VkImageMemoryBarrier memoryBarrier =
@@ -992,6 +1181,7 @@ void GraphicsStopOperations()
 
 void GraphicsDeinitialize()
 {
+	ValidateInitialized();
 	vkDeviceWaitIdle(Graphics.Device);
 	GraphicsDestroySwapchain();
 	ListDestroy(Graphics.PreRenderSemaphores);

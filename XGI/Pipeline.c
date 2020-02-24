@@ -276,6 +276,7 @@ Pipeline PipelineCreate(PipelineConfigure config)
 	Pipeline pipeline = malloc(sizeof(struct Pipeline));
 	*pipeline = (struct Pipeline)
 	{
+		.IsCompute = false,
 		.VertexLayout = config.VertexLayout,
 		.LineWidth = config.LineWidth,
 		.FrontStencilReference = config.FrontStencil.Reference,
@@ -604,7 +605,7 @@ void PipelineDestroy(Pipeline pipeline)
 ComputePipeline ComputePipelineCreate(ShaderData shader)
 {
 	ComputePipeline pipeline = malloc(sizeof(struct Pipeline));
-	*pipeline = (struct Pipeline){ 0 };
+	*pipeline = (struct Pipeline){ .IsCompute = true, };
 	
 	PipelineConfigure config =
 	{

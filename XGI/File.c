@@ -6,7 +6,7 @@ static void ValidateFileObject(File file)
 {
 	if (file == NULL)
 	{
-		log_fatal("Trying to perform operations on an uninitialized file object.\n");
+		log_fatal("Trying to perform operations on an uninitialized File object.\n");
 		exit(1);
 	}
 }
@@ -26,7 +26,7 @@ File FileOpen(const char * path, FileMode mode)
 		case FileModeAppendBinary: fileMode = "ab"; break;
 		case FileModeReadWrite: fileMode = "r+"; break;
 		case FileModeReadWriteBinary: fileMode = "r+b"; break;
-		default: log_fatal("Trying to open file with an unknown file mode %i.\n", mode); exit(1);
+		default: log_fatal("Trying to open a file with an unknown FileMode %i.\n", mode); exit(1);
 	}
 	file->RW = SDL_RWFromFile(path, fileMode);
 	if (file->RW == NULL)
@@ -55,12 +55,12 @@ void FileRead(File file, unsigned long offset, unsigned long size, void * data)
 	ValidateFileObject(file);
 	if (offset > file->Size)
 	{
-		log_fatal("Read offset + size (%l + %l) is outside the bounds of the file size %l.\n", offset, size, file->Size);
+		log_fatal("Trying to read from the file, but offset + size (%l + %l) is outside the bounds of the file size %l.\n", offset, size, file->Size);
 		exit(1);
 	}
 	if (data == NULL)
 	{
-		log_fatal("Cannot write data from file object %p into a null pointer\n", file);
+		log_fatal("Trying to copy data from the file into the pointer, but the supplied pointer is NULL.\n");
 		exit(1);
 	}
 	SDL_RWseek(file->RW, offset, RW_SEEK_SET);
@@ -73,12 +73,12 @@ void FileWrite(File file, unsigned long offset, unsigned long size, void * data)
 	ValidateFileObject(file);
 	if (offset > file->Size)
 	{
-		log_fatal("Write offset + size (%l + %l) is outside the bounds of the file size %l.\n", offset, size, file->Size);
+		log_fatal("Trying to write to the file, but offset + size (%l + %l) is outside the bounds of the file size %l.\n", offset, size, file->Size);
 		exit(1);
 	}
 	if (data == NULL)
 	{
-		log_fatal("Cannot write to file object %p by using a null pointer.\n", file);
+		log_fatal("Trying to copy data from the pointer into the file, but the supplied pointer is NULL.\n", file);
 		exit(1);
 	}
 	SDL_RWseek(file->RW, offset, RW_SEEK_SET);
