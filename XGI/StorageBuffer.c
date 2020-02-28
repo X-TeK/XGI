@@ -86,11 +86,6 @@ StorageBuffer StorageBufferCreate(struct Pipeline * pipeline, int binding, int i
 	vkCreateFence(Graphics.Device, &fenceInfo, NULL, &storageBuffer->UploadFence);
 	fenceInfo.flags = 0;
 	vkCreateFence(Graphics.Device, &fenceInfo, NULL, &storageBuffer->DownloadFence);
-	VkSemaphoreCreateInfo semaphoreInfo =
-	{
-		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
-	};
-	vkCreateSemaphore(Graphics.Device, &semaphoreInfo, NULL, &storageBuffer->UploadSemaphore);
 	
 	return storageBuffer;
 }
@@ -141,11 +136,10 @@ void StorageBufferUpload(StorageBuffer storageBuffer)
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 		.commandBufferCount = 1,
 		.pCommandBuffers = &storageBuffer->UploadCommandBuffer,
-		.signalSemaphoreCount = 1,
-		.pSignalSemaphores = &storageBuffer->UploadSemaphore,
+		.signalSemaphoreCount = 0,
+		.pSignalSemaphores = NULL,
 	};
 	vkQueueSubmit(Graphics.GraphicsQueue, 1, &submitInfo, storageBuffer->UploadFence);
-	ListPush(Graphics.PreRenderSemaphores, &storageBuffer->UploadSemaphore);
 }
 
 void StorageBufferDownload(StorageBuffer storageBuffer)
@@ -188,7 +182,6 @@ void StorageBufferDestroy(StorageBuffer storageBuffer)
 	vkWaitForFences(Graphics.Device, 1, &storageBuffer->UploadFence, VK_TRUE, UINT64_MAX);
 	vkDestroyFence(Graphics.Device, storageBuffer->UploadFence, NULL);
 	vkDestroyFence(Graphics.Device, storageBuffer->DownloadFence, NULL);
-	vkDestroySemaphore(Graphics.Device, storageBuffer->UploadSemaphore, NULL);
 	vkFreeCommandBuffers(Graphics.Device, Graphics.CommandPool, 1, &storageBuffer->UploadCommandBuffer);
 	vkFreeCommandBuffers(Graphics.Device, Graphics.CommandPool, 1, &storageBuffer->DownloadCommandBuffer);
 	vmaDestroyBuffer(Graphics.Allocator, storageBuffer->StagingBuffer, storageBuffer->StagingAllocation);

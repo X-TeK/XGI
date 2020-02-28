@@ -101,11 +101,6 @@ VertexBuffer VertexBufferCreate(int vertexCount, int vertexSize, int indexCount)
 		.flags = VK_FENCE_CREATE_SIGNALED_BIT,
 	};
 	vkCreateFence(Graphics.Device, &fenceInfo, NULL, &vertexBuffer->UploadFence);
-	VkSemaphoreCreateInfo semaphoreInfo =
-	{
-		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
-	};
-	vkCreateSemaphore(Graphics.Device, &semaphoreInfo, NULL, &vertexBuffer->UploadSemaphore);
 	
 	return vertexBuffer;
 }
@@ -152,11 +147,10 @@ void VertexBufferUpload(VertexBuffer vertexBuffer)
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 		.commandBufferCount = 1,
 		.pCommandBuffers = &vertexBuffer->CommandBuffer,
-		.signalSemaphoreCount = 1,
-		.pSignalSemaphores = &vertexBuffer->UploadSemaphore,
+		.signalSemaphoreCount = 0,
+		.pSignalSemaphores = NULL,
 	};
 	vkQueueSubmit(Graphics.GraphicsQueue, 1, &submitInfo, vertexBuffer->UploadFence);
-	ListPush(Graphics.PreRenderSemaphores, &vertexBuffer->UploadSemaphore);
 }
 
 void VertexBufferQueueDestroy(VertexBuffer vertexBuffer)
@@ -168,7 +162,6 @@ void VertexBufferDestroy(VertexBuffer vertexBuffer)
 {
 	vkWaitForFences(Graphics.Device, 1, &vertexBuffer->UploadFence, VK_TRUE, UINT64_MAX);
 	vkDestroyFence(Graphics.Device, vertexBuffer->UploadFence, NULL);
-	vkDestroySemaphore(Graphics.Device, vertexBuffer->UploadSemaphore, NULL);
 	vkFreeCommandBuffers(Graphics.Device, Graphics.CommandPool, 1, &vertexBuffer->CommandBuffer);
 	vmaDestroyBuffer(Graphics.Allocator, vertexBuffer->StagingBuffer, vertexBuffer->StagingAllocation);
 	vmaDestroyBuffer(Graphics.Allocator, vertexBuffer->VertexBuffer, vertexBuffer->VertexAllocation);

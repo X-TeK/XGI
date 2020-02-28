@@ -114,13 +114,18 @@ FrameBuffer FrameBufferResize(FrameBuffer frameBuffer, unsigned int width, unsig
 		.AddressMode = frameBuffer->AddressMode,
 	};
 	FrameBuffer resized = FrameBufferCreate(config);
-	FrameBufferDestroy(frameBuffer);
+	FrameBufferQueueDestroy(frameBuffer);
 	return resized;
 }
 
 void FrameBufferQueueDestroy(FrameBuffer frameBuffer)
 {
 	ValidateFrameBufferObject(frameBuffer);
+	if (ListContains(Graphics.FrameResources[Graphics.FrameIndex].Queues[GraphicsQueueDestroyFrameBuffer], frameBuffer))
+	{
+		log_fatal("Trying to queue destroy a FrameBuffer that was already placed into the queue to be destroyed.\n");
+		exit(1);
+	}
 	ListPush(Graphics.FrameResources[Graphics.FrameIndex].Queues[GraphicsQueueDestroyFrameBuffer], frameBuffer);
 }
 

@@ -48,7 +48,6 @@ typedef struct VertexBuffer
 	VmaAllocation VertexAllocation;
 	VkCommandBuffer CommandBuffer;
 	VkFence UploadFence;
-	VkSemaphore UploadSemaphore;
 } * VertexBuffer;
 
 /// Creates a vertex buffer combined with an index buffer used for rendering.

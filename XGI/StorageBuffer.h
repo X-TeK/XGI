@@ -19,7 +19,6 @@ typedef struct StorageBuffer
 	VkCommandBuffer DownloadCommandBuffer;
 	VkFence UploadFence;
 	VkFence DownloadFence;
-	VkSemaphore UploadSemaphore;
 } * StorageBuffer;
 
 /// Creates a storage buffer for use in shaders.
