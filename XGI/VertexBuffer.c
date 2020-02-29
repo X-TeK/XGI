@@ -29,6 +29,10 @@ VertexLayout VertexLayoutCreate(int attributeCount, VertexAttribute * attributes
 			case VertexAttributeVector2: size += 8; break;
 			case VertexAttributeFloat: size += 4; break;
 			case VertexAttributeByte4: size += 4; break;
+			case VertexAttributeDoubleVector4: size += 32; break;
+			case VertexAttributeDoubleVector3: size += 24; break;
+			case VertexAttributeDoubleVector2: size += 16; break;
+			case VertexAttributeDouble: size += 8; break;
 		}
 	}
 	layout->Binding = (VkVertexInputBindingDescription)
@@ -109,7 +113,7 @@ void * VertexBufferMapVertices(VertexBuffer vertexBuffer, unsigned int ** indice
 {
 	void * data;
 	vmaMapMemory(Graphics.Allocator, vertexBuffer->StagingAllocation, &data);
-	if (vertexBuffer->IndexCount > 0)
+	if (vertexBuffer->IndexCount > 0 && indices != NULL)
 	{
 		*indices = (unsigned int *)((unsigned char *)data + vertexBuffer->VertexCount * vertexBuffer->VertexSize);
 	}

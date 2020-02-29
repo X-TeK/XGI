@@ -62,9 +62,9 @@ Vector2 WindowUsableDisplayDimensions(int index)
 
 Vector3 WindowDisplayDPI(int index)
 {
-	Vector3 dpi;
-	SDL_GetDisplayDPI(index, &dpi.X, &dpi.Y, &dpi.Z);
-	return dpi;
+	float x, y, z;
+	SDL_GetDisplayDPI(index, &x, &y, &z);
+	return (Vector3){ x, y, z };
 }
 
 const char * WindowDisplayName(int index) { return SDL_GetDisplayName(index); }

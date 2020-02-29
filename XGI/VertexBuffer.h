@@ -17,6 +17,14 @@ typedef enum VertexAttribute
 	VertexAttributeVector2 = VK_FORMAT_R32G32_SFLOAT,
 	/// Corresponds to float in shaders
 	VertexAttributeFloat = VK_FORMAT_R32_SFLOAT,
+	/// Corresponds to dvec4 in shaders
+	VertexAttributeDoubleVector4 = VK_FORMAT_R64G64B64A64_SFLOAT,
+	/// Corresponds to dvec3 in shaders
+	VertexAttributeDoubleVector3 = VK_FORMAT_R64G64B64_SFLOAT,
+	/// Corresponds to dvec2 in shaders
+	VertexAttributeDoubleVector2 = VK_FORMAT_R64G64_SFLOAT,
+	/// Corresponds to double in shaders
+	VertexAttributeDouble = VK_FORMAT_R64_SFLOAT,
 } VertexAttribute;
 
 typedef struct VertexLayout
