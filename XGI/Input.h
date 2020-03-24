@@ -37,6 +37,15 @@ typedef enum Key
 	KeyRight = SDL_SCANCODE_RIGHT, KeyLeft = SDL_SCANCODE_LEFT, KeyDown = SDL_SCANCODE_DOWN, KeyUp = SDL_SCANCODE_UP,
 	KeyNumLockClear = SDL_SCANCODE_NUMLOCKCLEAR,
 	
+	KeyLeftControl = SDL_SCANCODE_LCTRL,
+	KeyLeftShift = SDL_SCANCODE_LSHIFT,
+	KeyLeftAlt = SDL_SCANCODE_LALT,
+	KeyLeftCommand = SDL_SCANCODE_LGUI,
+	KeyRightControl = SDL_SCANCODE_RCTRL,
+	KeyRightShift = SDL_SCANCODE_RSHIFT,
+	KeyRightAlt = SDL_SCANCODE_RALT,
+	KeyRightCommand = SDL_SCANCODE_RGUI,
+	
 	KeyScancodeCount = SDL_NUM_SCANCODES
 } Key;
 

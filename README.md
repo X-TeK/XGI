@@ -35,7 +35,7 @@ Module            | Description
 5. Add all the files in the XGI folder to your project
 6. Under the project properties and under the VC++ Directories tab, add the include directory XGI/Include and the library directory XGI/Libraries/Windows32 (or XGI/Libraries/Windows64 if you're targeting x64)
 7. Under C/C++ - Code Generation set the Runtime Library to Multi-threaded (/MT)
-8. Under Linker - Input add SDLmain.lib, SDL2.lib, shaderc_combined.lib and vulkan-1.lib
+8. Under Linker - Input add SDL2main.lib, SDL2.lib, shaderc_combined.lib and vulkan-1.lib
 9. Create your main function in a new file and run
 
 ### MacOS (using XCode):
