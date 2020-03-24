@@ -133,8 +133,6 @@ typedef struct PipelineConfigure
 	ShaderData Shaders[5];
 	/// The vertex primitive that determines how the pipeline draws the vertices
 	VertexPrimitive Primitive;
-	/// The line width to use
-	Scalar LineWidth;
 	/// The polygon mode used for rasterization
 	PolygonMode PolygonMode;
 	/// What the pipeline should cull
@@ -163,7 +161,6 @@ typedef struct Pipeline
 	VkPipeline Instance;
 	VkPipelineLayout Layout;
 	VertexLayout VertexLayout;
-	Scalar LineWidth;
 	unsigned int FrontStencilReference;
 	unsigned int BackStencilReference;
 	
@@ -221,11 +218,6 @@ void PipelineSetSampler(Pipeline pipeline, int binding, int arrayIndex, Texture 
 /// \param arrayIndex The index in the array to set (0 if it's not an array)
 /// \param storage The storage buffer to set
 void PipelineSetStorageBuffer(Pipeline pipeline, int binding, int arrayIndex, struct StorageBuffer * storage);
-
-/// Sets the line width used for drawing
-/// \param pipeline The pipeline to modify
-/// \param lineWidth The new line width to set
-void PipelineSetLineWidth(Pipeline pipeline, Scalar lineWidth);
 
 /// Sets the front stencil reference value (the value that's compared against for front facing triangles)
 /// \param pipeline The pipeline to modify

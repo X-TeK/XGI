@@ -278,7 +278,6 @@ Pipeline PipelineCreate(PipelineConfigure config)
 	{
 		.IsCompute = false,
 		.VertexLayout = config.VertexLayout,
-		.LineWidth = config.LineWidth,
 		.FrontStencilReference = config.FrontStencil.Reference,
 		.BackStencilReference = config.BackStencil.Reference,
 	};
@@ -351,7 +350,7 @@ Pipeline PipelineCreate(PipelineConfigure config)
 		.depthClampEnable = VK_FALSE,
 		.rasterizerDiscardEnable = VK_FALSE,
 		.polygonMode = (VkPolygonMode)config.PolygonMode,
-		.lineWidth = config.LineWidth,
+		.lineWidth = 1.0f,
 		.cullMode = (VkCullModeFlagBits)config.CullMode,
 		.frontFace = config.CullClockwise ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE,
 		.depthBiasEnable = VK_FALSE,
@@ -418,13 +417,12 @@ Pipeline PipelineCreate(PipelineConfigure config)
 	{
 		VK_DYNAMIC_STATE_VIEWPORT,
 		VK_DYNAMIC_STATE_SCISSOR,
-		VK_DYNAMIC_STATE_LINE_WIDTH,
 		VK_DYNAMIC_STATE_STENCIL_REFERENCE,
 	};
 	VkPipelineDynamicStateCreateInfo dynamicState =
 	{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-		.dynamicStateCount = 4,
+		.dynamicStateCount = 3,
 		.pDynamicStates = dynamicStates,
 	};
 	
@@ -564,11 +562,6 @@ void PipelineSetStorageBuffer(Pipeline pipeline, int binding, int arrayIndex, St
 			ListPush(Graphics.FrameResources[i].Queues[GraphicsQueueUploadDescriptor], writeInfo);
 		}
 	}
-}
-
-void PipelineSetLineWidth(Pipeline pipeline, Scalar lineWidth)
-{
-	pipeline->LineWidth = lineWidth;
 }
 
 void PipelineSetFrontStencilReference(Pipeline pipeline, unsigned int reference)

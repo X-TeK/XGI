@@ -1080,7 +1080,6 @@ void GraphicsRenderVertexBuffer(VertexBuffer vertexBuffer)
 		exit(1);
 	}
 	
-	vkCmdSetLineWidth(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, Graphics.BoundPipeline->LineWidth);
 	vkCmdSetStencilReference(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_STENCIL_FACE_FRONT_BIT, Graphics.BoundPipeline->FrontStencilReference);
 	vkCmdSetStencilReference(Graphics.FrameResources[Graphics.FrameIndex].CommandBuffer, VK_STENCIL_FACE_BACK_BIT, Graphics.BoundPipeline->BackStencilReference);
 	

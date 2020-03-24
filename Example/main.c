@@ -77,7 +77,6 @@ int main(int argc, char * argv[])
 			ShaderDataFromFile(ShaderTypeFragment, "Example/Shaders/Default.frag", false),
 		},
 		.Primitive = VertexPrimitiveTriangleList,
-		.LineWidth = 1.0,
 		.PolygonMode = PolygonModeFill,
 		.CullMode = CullModeNone,
 		.CullClockwise = true,
