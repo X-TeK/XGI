@@ -1,4 +1,4 @@
-# XGI : X-TeK Graphics Programming Interface
+# LLGDK : Low Level Game Development Kit
 
 **An easy to use graphics library built on top of Vulkan.**
 
@@ -12,10 +12,10 @@
 ## Modules:
 Module            | Description
 ------------------|---------------------
-[`EventHandler`](https://github.com/X-TeK/XGI/wiki/EventHandler.h) | Processes events and manages callbacks
-[`File`](https://github.com/X-TeK/XGI/wiki/File.h) | Provides an easy way to read/write files
-[`FrameBuffer`](https://github.com/X-TeK/XGI/wiki/FrameBuffer.h) | Abstracts a color texture and depth-stencil texture for use in rendering
-[`Graphics`](https://github.com/X-TeK/XGI/wiki/Graphics.h) | Provides all of the commands necessary for rendering
+`EventHandler`    | Processes events and manages callbacks
+`File`            | Provides an easy way to read/write files
+`FrameBuffer`     | Abstracts a color texture and depth-stencil texture for use in rendering
+`Graphics`        | Provides all of the commands necessary for rendering
 `Input`           | Provides the functionality to query information about input devices
 `LinearMath`      | Provides all of the linear algebra functions needed for transformations
 `List`            | Provides a dynamic and generic list object (uses void \*)
@@ -54,7 +54,7 @@ Module            | Description
 1. Ensure you have cmake, ninja and vulkan installed (`sudo apt install cmake ninja-build libvulkan-dev` on Ubuntu).
 2. Clone this repository and https://github.com/google/shaderc (e.g. code/XGI and code/shaderc).
 3. Build libshaderc per the instructions in https://github.com/google/shaderc#getting-and-building-shaderc in `libshaderc/build`.
-4. `cd XGI/Example`
+4. `cd LLGDK/Example`
 5. `mkdir build`
 6. `cd build`
 7. `cmake ..`
@@ -63,7 +63,7 @@ Module            | Description
 10. `./Example/build/xgi_example`
 
 ### iOS:
-Theoretically possible since XGI uses MoltenVK and SDL2, but I haven't gotten it to work. Besides there's no touch support yet.
+Theoretically possible since LLGDK uses MoltenVK and SDL2, but I haven't gotten it to work. Besides there's no touch support yet.
 
 ### Android:
 Probably possible as well
