@@ -2,6 +2,8 @@
 
 **An easy to use graphics library built on top of Vulkan.**
 
+## WARNING: This library is outdated, it's in the process of being refractored and renamed (old name was XGI)
+
 ## Features:
 - A low level, yet easy to use, graphics library
 - A drastic abstraction over vulkan, but still provides much control to the programmer
